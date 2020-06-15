@@ -118,44 +118,9 @@ def getRecdefsEval(model, unfold_recdefs_python):
     eval_model = evaluateUntilFixpoint(recdef_lookup, model)
     return eval_model
 
-# add offset to true models to avoid non-unique keys
-def addOffset(model, f):
-    newModel = deepcopyModel(model)
-    for key in model.keys():
-        if not isinstance(model[key],dict):
-            # For entries corresponding to constants
-            value = model[key]
-            if isinstance(value, list):
-                # For 'elem' entry
-               new_out = [f(i) for i in value]
-            elif isinstance(value, bool):
-                new_out = value
-            elif isinstance(value, set):
-                # Assuming that the elements are intergers
-                new_out = {f(elem) for elem in value}
-            else:
-                new_out = f(value)
-            newModel[key] = new_out
-        else:
-            newDict = {}
-            for fctkey in model[key].keys():
-                new_in = f(fctkey)
-                if isinstance(model[key][fctkey], bool):
-                    new_out = model[key][fctkey]
-                elif isinstance(model[key][fctkey], set):
-                    # Assuming that the elements are integers
-                    old_out = model[key][fctkey]
-                    new_out = {f(value) for value in old_out}
-                else:
-                    new_out = f(model[key][fctkey])
-                newDict[new_in] = new_out
-            newModel[key] = newDict
-    return newModel
-
-
 # Get true models (with offsets added) with recdef evaluations such that they
 # satisfy axioms.
-def getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, N = 'full'):
+def getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_model_offset, num_true_models = 'full'):
     true_models_base = getTrueModels(elems, fcts_z3)
     evaluated_models = []
     for model_base in true_models_base:
@@ -168,11 +133,11 @@ def getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, N = 'fu
 
     final_models = []
     for i in range(len(filtered_models)):
-        final_models = final_models + [addOffset(filtered_models[i], lambda x: x + 50*(i+1))]
+        final_models = final_models + [addOffset(filtered_models[i], lambda x: true_model_offset + 50*(i+1) + x)]
 
-    if N == 'full' or (isinstance(N,int) and N > len(final_models)):
+    if num_true_models == 'full' or (isinstance(num_true_models,int) and num_true_models > len(final_models)):
         return final_models
-    elif isinstance(N,int) and N < len(final_models):
-        return random.choices(final_models,k = N)
+    elif isinstance(num_true_models,int) and num_true_models < len(final_models):
+        return random.choices(final_models,k = num_true_models)
     else:
         raise ValueError('Must specify either a number of models or \'full\'')

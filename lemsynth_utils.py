@@ -2,7 +2,7 @@ from z3 import *
 import re
 
 ############################
-# Support for models
+# Support for python models
 
 # Implementing a copy function because dictionary with dictionary entries is not
 # copied as expected. The inner dictionaries are stll passed by reference
@@ -16,6 +16,71 @@ def deepcopyModel(model):
         else:
             new_model[key] = model[key]
     return new_model
+
+# Returns the model's universe of elements
+def modelUniverse(value):
+    if isinstance(value, str):
+        # Names of functions. No need to return these
+        return set()
+    elif isinstance(value, bool):
+        return {value}
+    elif isinstance(value, int):
+        return {value}
+    elif isinstance(value, set):
+        return value
+    elif isinstance(value, dict):
+        universe = set()
+        for key in value.keys():
+            universe = universe | modelUniverse(key)
+            universe = universe | modelUniverse(value[key])
+        return universe
+    else:
+        print(type(value))
+        raise ValueError('Entry type not supported')
+
+# Returns the highest absolute value among the integers in the model to act as an offset for further models
+def getRelativeModelOffset(model):
+    # TODO: handle cases where the model universe has objects other than booleans or integers
+    model_values = modelUniverse(model)
+    model_integer_values = [val for val in model_values if isinstance(val, int)]
+    model_offset = max(max(model_integer_values), abs(min(model_integer_values)))
+    return model_offset
+
+# Adds offset to true models to avoid non-unique keys
+# TODO: replace this function by one that substitutes values with new ones. More general.
+def addOffset(model, f):
+    newModel = deepcopyModel(model)
+    for key in model.keys():
+        if not isinstance(model[key],dict):
+            # For entries corresponding to constants
+            value = model[key]
+            if isinstance(value, list):
+                # For 'elem' entry
+               new_out = [f(i) for i in value]
+            elif isinstance(value, bool):
+                new_out = value
+            elif isinstance(value, set):
+                # Assuming that the elements are intergers
+                new_out = {f(elem) for elem in value}
+            else:
+                new_out = f(value)
+            newModel[key] = new_out
+        else:
+            newDict = {}
+            for fctkey in model[key].keys():
+                new_in = f(fctkey)
+                if isinstance(model[key][fctkey], bool):
+                    new_out = model[key][fctkey]
+                elif isinstance(model[key][fctkey], set):
+                    # Assuming that the elements are integers
+                    old_out = model[key][fctkey]
+                    new_out = {f(value) for value in old_out}
+                else:
+                    new_out = f(model[key][fctkey])
+                newDict[new_in] = new_out
+            newModel[key] = newDict
+    return newModel
+
 
 ##################################
 # General unclassified utilities

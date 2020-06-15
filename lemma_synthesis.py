@@ -48,9 +48,9 @@ def sygusBigModelEncoding(models, fcts_z3):
     sol = Solver()
     for model in models:
         modelToSolver(model, fcts_z3, sol)
-    print(sol.check())
-    print(sol.sexpr())
-    exit(0)
+    sol.check()
+    # print(sol.check())
+    # print(sol.sexpr())
     m = sol.model()
     return m.sexpr()
 
@@ -89,7 +89,11 @@ def generateAllTrueConstraints(models, const):
 # fcts -> fcts_z3
 # vc_axioms -> axioms_python
 # fct_axioms -> axioms_z3
-
+###############################################################################
+# Setting lemma synthesis options here. DO NOT MODIFY.
+experimental_prefetching_switch = 'on'
+exclude_set_type_definitions_switch = 'on'
+###############################################################################
 def getSygusOutput(elems, num_true_models, fcts_z3, axioms_python, axioms_z3, lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const, vc, problem_instance_name):
     grammar_file = 'grammar_{0}.sy'.format(problem_instance_name)
     out_file = 'out_{0}.sy'.format(problem_instance_name)
@@ -99,15 +103,16 @@ def getSygusOutput(elems, num_true_models, fcts_z3, axioms_python, axioms_z3, le
     # Also works because the lemma for the current class of examples is not going to use any terms that have not already been explicitly computed.
     # One fix is to evalaute all terms within the false model into itself. Hopefully that can be done easily.
     (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, lemmas, unfold_recdefs_z3, deref, const, vc)
-    # Degenerate implementation of max element to get offset for true models. Must be replaced by a separate function when more complex data is processed
-    falsemodel_values = []
-    true_model_offset =
 
+    true_model_offset = getRelativeModelOffset(false_model_dict) + 1
     true_models = getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_model_offset, num_true_models)
 
     all_models = true_models + [false_model_dict]
-    fcts_z3 = {key: fcts_z3[key] for key in fcts_z3.keys() if 'set' not in key}
-    print(fcts_z3)
+    # Must go through this branch until we can transform output to CVC$ SyGuS format
+    if exclude_set_type_definitions_switch == 'on':
+        fcts_z3 = {key: fcts_z3[key] for key in fcts_z3.keys() if 'set' not in key}
+        # print(fcts_z3)
+
     sygus_model_definitions = sygusBigModelEncoding(all_models, fcts_z3)
     with open(out_file, 'w') as out, open(grammar_file, 'r') as grammar:
         out.write('(set-logic ALL)')
@@ -131,7 +136,7 @@ def getSygusOutput(elems, num_true_models, fcts_z3, axioms_python, axioms_z3, le
         out.write('\n')
         out.write('(check-synth)')
         out.close()
-    experimental_prefetching_switch = 'on'
+    # Optionally prefetching a bunch of lemmas to check each one rather than iterating through each one.
     if experimental_prefetching_switch == 'on':
         # Must include a parameter in the overall call for number of lemmas to be prefetched
         # Currently hardcoded

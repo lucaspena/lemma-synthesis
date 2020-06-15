@@ -1,4 +1,6 @@
 from z3 import *
+z3.set_param('model.compact', False)
+
 from lemsynth_utils import *
 
 def makeIP(lhs, rhs, recdefs, fcts_z3, insts):
@@ -122,6 +124,8 @@ def convertZ3ValueTypetoPython(value):
         else:
             # Cannot handle this case, if it exists
             raise ValueError('ArrayRef object is neither a constant array nor a Store expression. Something is wrong.')
+    else:
+        raise ValueError('Model entry is neither IntNumRef, BoolRef, nor ArrayRef. Type unsupported.')
 
 # Get false model in dictionary representation. Only need values of
 # dereferenced variables and constants, nothing else will be used in SyGuS file
@@ -157,6 +161,9 @@ def getFalseModelDict(fcts_z3, axioms_z3, lemmas, unfold_recdefs_z3, deref, cons
                 instantiations = const + deref
                 for inst in instantiations:
                     inst_value = false_model_z3.eval(inst, model_completion=True)
+                    # model_compress has been enabled (see at the top of this file). Should return arrays rather than lambdas
                     fct_of_inst_value = false_model_z3.eval(fct(inst), model_completion=True)
-                    false_model_dict[fct_name][inst_value] = convertZ3ValueTypetoPython(fct_of_inst_value)
+                    inst_value_python = convertZ3ValueTypetoPython(inst_value)
+                    fct_of_inst_value_python = convertZ3ValueTypetoPython(fct_of_inst_value)
+                    false_model_dict[fct_name][inst_value_python] = fct_of_inst_value_python
     return (false_model_z3, false_model_dict)
