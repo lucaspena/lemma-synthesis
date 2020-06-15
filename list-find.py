@@ -134,7 +134,7 @@ deref = [x, next(x)]
 const = [nil, y, yp]
 
 elems = [*range(3)]
-num_true_models = 'full'
+num_true_models = 100
 
 # valid and invalid lemmas
 valid_lemmas = []
