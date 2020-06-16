@@ -134,7 +134,7 @@ deref = [x, next(x)]
 const = [nil, y, yp]
 
 elems = [*range(3)]
-num_true_models = 100
+num_true_models = 10
 
 # valid and invalid lemmas
 valid_lemmas = []
@@ -148,7 +148,7 @@ while True:
     print('Lemmas: {}'.format(lemmas))
     for lemma in lemmas:
         z3py_lemma = translateLemma(lemma, fcts_z3)
-        if z3py_lemma in invalid_lemmas:
+        if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
             print('lemma has already been proposed')
             continue
         model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, z3py_lemma, True)
