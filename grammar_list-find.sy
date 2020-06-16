@@ -10,7 +10,6 @@
            (B Bool
                   ((=> B B)
                    (and B B)
-                   (or B B)
                    (not B)
                    (= I I)
                    (list I) (lsegy I) (lsegyp I)))
