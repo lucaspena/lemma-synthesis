@@ -7,6 +7,8 @@ def makeIP(lhs, rhs, recdefs, fcts_z3, insts):
     fresh = Int('fresh')
     skolem = Int('skolem')
     lhs_decl = lhs.decl()
+    if str(lhs.arg(0)) != 'fresh':
+        return True
     lhs_decl_name = str(lhs_decl)
     udef = getUnfoldRecdefFct(lhs_decl_name, recdefs)
     rec_rho = udef(skolem).arg(0).arg(1)
