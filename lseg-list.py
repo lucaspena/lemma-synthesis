@@ -265,7 +265,7 @@ for term in deref + const:
         axioms_z3['0'] = axioms_z3['0'] + [frame_rule]
 
 elems = [*range(3)]
-num_true_models = 'full'
+num_true_models = 10
 
 # valid and invalid lemmas
 valid_lemmas = []
