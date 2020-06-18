@@ -14,7 +14,7 @@ def makeIP(lhs, rhs, recdefs, fcts_z3, insts):
     rec_rho = udef(skolem).arg(0).arg(1)
     subst_pairs = []
     for key in fcts_z3.keys():
-        if 'recpreds' in key:
+        if 'recpreds' in key or 'recfunctions' in key:
             continue
         signature = getFctSignature(key)
         arity = signature[0]
