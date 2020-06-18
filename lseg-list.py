@@ -152,11 +152,11 @@ def uhlsegy_z3(x):
 
 def uhlist_p_z3(x):
     emptyset_intsort = getSortEmptySet(SetIntSort)
-    return hlist_p(x) == IteSet(x == nil, emptyset_intsort, SetAdd(hlist_p(next(x)),x) )
+    return hlist_p(x) == IteSet(x == nil, emptyset_intsort, SetAdd(hlist_p(next_p(x)),x) )
 
 def uhlsegy_p_z3(x):
     emptyset_intsort = getSortEmptySet(SetIntSort)
-    return hlsegy_p(x) == IteSet(x == y, emptyset_intsort, SetAdd(hlsegy_p(next(x)),x) )
+    return hlsegy_p(x) == IteSet(x == y, emptyset_intsort, SetAdd(hlsegy_p(next_p(x)),x) )
 
 
 # Python versions for finding valuation on true models
@@ -216,7 +216,6 @@ def uhlsegy_p_python(x, model):
     else:
         next_val = model['next_p'][x]
         return {x} | model['hlsegy_p'][next_val]
-
 
 unfold_recdefs_z3['1_int_bool'] = [ulist_z3, ulsegy_z3, ulist_p_z3, ulsegy_p_z3]
 unfold_recdefs_z3['1_int_set-int'] = [uhlist_z3, uhlsegy_z3, uhlist_p_z3, uhlsegy_p_z3]
