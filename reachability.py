@@ -45,7 +45,7 @@ unfold_recdefs_python = {}
 
 # The z3py variable for a z3 variable will be the same as its string value.
 # So we will use the string 'x' for python functions and just x for creating z3 types
-x, c, nil = Ints('x ret nil')
+x, c, nil = Ints('x c nil')
 fcts_z3['0_int'] = [x, c, nil]
 
 ######## Section 2
@@ -59,8 +59,6 @@ n = Function('n', IntSort(), IntSort())
 # TODO: change signature to have 'loc' rather than 'int'
 # TODO: what to do about -1 for key axioms?
 fcts_z3['1_int_int'] = [v1, v2, p, n]
-axioms_z3['0'] = [next_nil_z3]
-axioms_python['0'] = [next_nil_python]
 
 ######## Section 3
 # Recursive definitions
@@ -91,10 +89,10 @@ def ureach_python(x, model):
     p_val = model['p'][x]
     v1_curr = model['v1'][x]
     v1_p = model['v1'][p_val]
-    n_v1_p = model['next'][v1_p]
+    n_v1_p = model['n'][v1_p]
     v2_curr = model['v2'][x]
     v2_p = model['v2'][p_val]
-    n_v2_p = model['next'][v2_p]
+    n_v2_p = model['n'][v2_p]
     if v1_curr == v2_curr:
         return True
     else:
@@ -116,15 +114,13 @@ fcts_z3['recpreds-loc_1_int_bool'] = [reach]
 ############# Section 5
 # Program, VC, and Instantiation
 
-def pgm(x, ret):
-    return IteBool(x == nil, ret == nil, ret == next(x))
-
-def vc(x, ret):
-    return Implies( slist(x),
-                    Implies(pgm(x, ret), list(ret)))
+def vc(x):
+    lhs = And( reach(x), v1(x) == nil )
+    rhs = Or( v2(x) == nil, v2(x) == c )
+    return Implies( lhs, rhs )
 
 deref = [x]
-const = [nil]
+const = [nil, c]
 elems = [*range(3)]
 num_true_models = 10
 
@@ -136,7 +132,7 @@ invalid_lemmas = []
 while True:
     lemmas = getSygusOutput(elems, num_true_models, fcts_z3, axioms_python, axioms_z3,
                             valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
-                            vc(x,ret), 'slist-list')
+                            vc(x), 'reachability')
     for lemma in lemmas:
         z3py_lemma = translateLemma(lemma, fcts_z3)
         if z3py_lemma in invalid_lemmas:
