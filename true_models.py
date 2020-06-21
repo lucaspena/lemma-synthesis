@@ -43,7 +43,7 @@ def getTrueModels(elems, fcts_z3):
     models = [{'elems': elems}]
     for key in fcts_z3.keys():
         fct_signature = getFctSignature(key)
-        if fct_signature[-1] == True:
+        if fct_signature[3] == True:
             # Recursive function. No need to find valuation. Continue.
             continue
         else:

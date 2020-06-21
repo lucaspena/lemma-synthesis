@@ -43,7 +43,7 @@ def getRelativeModelOffset(model):
     # TODO: handle cases where the model universe has objects other than booleans or integers
     model_values = modelUniverse(model)
     model_integer_values = [val for val in model_values if isinstance(val, int)]
-    model_offset = max(max(model_integer_values), abs(min(model_integer_values)))
+    model_offset = max(max(model_integer_values), abs(min(model_integer_values))) + 1
     return model_offset
 
 # Adds offset to true models to avoid non-unique keys

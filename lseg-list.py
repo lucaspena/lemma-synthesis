@@ -235,7 +235,7 @@ def pgm(x, y, z):
     listy_star_listz = SetIntersect(hlist(y),hlist(z)) == emptyset_intsort
     #lsegxy_star_listz = SetIntersect(hlsegy(x),hlist(z)) == emptyset_intsort
     lsegxy_star_listy_star_listz = And(lsegxy_star_listy,listy_star_listz) #,lsegxy_star_listz)
-    return And( lsegy(x), next(y) == nil, list(z), lsegxy_star_listy_star_listz)
+    return And( lsegy(x), next(y) == nil, Not(y == nil), list(z), lsegxy_star_listy_star_listz)
 
 def vc(x, y, z):
     return Implies( pgm(x, y, z), list_p(x) )
@@ -259,7 +259,7 @@ for term in deref + const:
     for recdef_frame_prime_triple in recdef_frame_prime_triples:
         (recdef, hrecdef, recdef_p) = recdef_frame_prime_triple
         emptyset_intsort = getSortEmptySet(SetIntSort)
-        non_intersection = SetIntersect(hrecdef(x), modified_set_z3) == emptyset_intsort
+        non_intersection = SetIntersect(hrecdef(term), modified_set_z3) == emptyset_intsort
         frame_rule = Implies(And(recdef(term), non_intersection), recdef_p(term))
         # Add frame rule axioms_z3['0']
         axioms_z3['0'] = axioms_z3['0'] + [frame_rule]
