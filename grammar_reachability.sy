@@ -12,6 +12,7 @@
                    (and B B)
                    (or B B)
                    (not B)
+                   (= I I)
                    (reach I)))
             (I Int (x nil c
                    (v1 I)
