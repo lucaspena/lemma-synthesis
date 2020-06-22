@@ -53,6 +53,7 @@ fcts_z3['0_int'] = [x, y, yp, nil]
 ####### Section 2
 # Functions
 next = Function('next', IntSort(), IntSort())
+key = Function('key', IntSort(), IntSort())
 
 # Axioms for next and next' of nil equals nil as z3py formulas
 next_nil_z3 = next(nil) == nil
@@ -63,7 +64,7 @@ def next_nil_python(model):
 
 # Updating fcts and fct_Axioms for next and next_p
 # TODO: change signature to have 'loc' rather than 'int'
-fcts_z3['1_int_int'] = [next]
+fcts_z3['1_int_int'] = [next, key]
 axioms_z3['0'] = [next_nil_z3]
 axioms_python['0'] = [next_nil_python]
 
@@ -99,7 +100,7 @@ def ukeys_z3(x):
     is_nil = x == nil
     in_domain = list(x)
     then_case = Implies(is_nil, keys(x) == emptyset)
-    else_case = Implies(Not(is_nil), keys(x) == SetAdd(keys(next(x)), x))
+    else_case = Implies(Not(is_nil), keys(x) == SetAdd(keys(next(x)), key(x)))
     return Implies(in_domain, And(then_case, else_case))
 
 def ulsegkeys_y_z3(x):
@@ -107,7 +108,7 @@ def ulsegkeys_y_z3(x):
     is_y = x == y
     in_domain = lseg_y(x)
     then_case = Implies(is_y, lsegkeys_y(x) == emptyset)
-    else_case = Implies(Not(is_y), lsegkeys_y(x) == SetAdd(lsegkeys_y(next(x)), x))
+    else_case = Implies(Not(is_y), lsegkeys_y(x) == SetAdd(lsegkeys_y(next(x)), key(x)))
     return Implies(in_domain, And(then_case, else_case))
 
 def ulsegkeys_yp_z3(x):
@@ -115,7 +116,7 @@ def ulsegkeys_yp_z3(x):
     is_yp = x == yp
     in_domain = lseg_yp(x)
     then_case = Implies(is_yp, lsegkeys_yp(x) == emptyset)
-    else_case = Implies(Not(is_yp), lsegkeys_yp(x) == SetAdd(lsegkeys_yp(next(x)), x))
+    else_case = Implies(Not(is_yp), lsegkeys_yp(x) == SetAdd(lsegkeys_yp(next(x)), key(x)))
     return Implies(in_domain, And(then_case, else_case))
 
 # Python versions for finding valuation on true models
@@ -145,11 +146,12 @@ def ukeys_python(x, model):
         return set()
     else:
         next_val = model['next'][x]
+        curr_key = model['key'][x]
         curr_keys = model['keys'][x]
         next_keys = model['keys'][next_val]
         curr_list = model['list'][x]
         if curr_list:
-            return {x} | next_keys
+            return {curr_key} | next_keys
         else:
             return curr_keys
 
@@ -158,11 +160,12 @@ def ulsegkeys_y_python(x, model):
         return set()
     else:
         next_val = model['next'][x]
+        curr_key = model['key'][x]
         curr_lsegkeys = model['lsegkeys_y'][x]
         next_lsegkeys = model['lsegkeys_y'][next_val]
         curr_lseg = model['lseg_y'][x]
         if curr_lseg:
-            return {x} | next_lsegkeys
+            return {curr_key} | next_lsegkeys
         else:
             return curr_lsegkeys
 
@@ -171,11 +174,12 @@ def ulsegkeys_yp_python(x, model):
         return set()
     else:
         next_val = model['next'][x]
+        curr_key = model['key'][x]
         curr_lsegkeys = model['lsegkeys_yp'][x]
         next_lsegkeys = model['lsegkeys_yp'][next_val]
         curr_lseg = model['lseg_yp'][x]
         if curr_lseg:
-            return {x} | next_lsegkeys
+            return {curr_key} | next_lsegkeys
         else:
             return curr_lsegkeys
 
@@ -204,7 +208,7 @@ def vc(x, y, yp):
 deref = [x, next(x)]
 const = [nil, y, yp]
 
-elems = [*range(3)]
+elems = [*range(2)]
 num_true_models = 10
 
 # valid and invalid lemmas

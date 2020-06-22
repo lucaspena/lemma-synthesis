@@ -168,6 +168,7 @@ def translateLemma(lemma, fcts_z3):
     assertion = '(assert ' + header + ')'
     smt_string = const_decls + '\n' + lemma + '\n' + assertion
     z3_str = extractDecls(fcts_z3)
+    z3_str['insert'] = SetAdd
     z3py_lemma = parse_smt2_string(smt_string, decls=z3_str)[0]
     print('proposed lemma: ' + str(z3py_lemma))
     return z3py_lemma
