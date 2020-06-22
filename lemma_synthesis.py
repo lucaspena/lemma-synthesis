@@ -55,16 +55,28 @@ def sygusBigModelEncoding(models, fcts_z3):
     return m.sexpr()
 
 # Generate constraints corresponding to false model for SyGuS
-def generateFalseConstraints(model_z3, deref, const):
+def generateFalseConstraints(model_dict, deref, const):
     constraints = ''
-    # Must convert result of model.eval using as_string() because returned value is a Z3 type like IntNumRef
-    const_values = ' '.join([model_z3.eval(constant_symbol, model_completion=True).as_string() for constant_symbol in const])
+    const_values = ' '.join([ str(model_dict[getZ3FctName(constant_symbol)]) for constant_symbol in const])
     for arg in const + deref:
         # In general, arg will range over the tuples of instantiated terms
-        arg_value = model_z3.eval(arg, model_completion=True)
+        # TODO: check if this part generalises to k-ary terms. modelDictEval takes k-ary terms
+        arg_value = modelDictEval(model_dict, arg)
         constraints = constraints + '(not (lemma {0} {1}))\n'.format(arg_value, const_values)
     out = '(constraint (or {0}))'.format(constraints)
     return out
+
+# Old implementation that uses false_model_z3 instead of false_model_dict
+# def generateFalseConstraints(model_dict, deref, const):
+#     constraints = ''
+#     # Must convert result of model.eval using as_string() because returned value is a Z3 type like IntNumRef
+#     const_values = ' '.join([model_z3.eval(constant_symbol, model_completion=True).as_string() for constant_symbol in const])
+#     for arg in const + deref:
+#         # In general, arg will range over the tuples of instantiated terms
+#         arg_value = model_z3.eval(arg, model_completion=True)
+#         constraints = constraints + '(not (lemma {0} {1}))\n'.format(arg_value, const_values)
+#     out = '(constraint (or {0}))'.format(constraints)
+#     return out
 
 # Generate constraints corresponding to one true model for SyGuS
 def generateTrueConstraints(model, const):
@@ -84,16 +96,13 @@ def generateAllTrueConstraints(models, const):
         out = out + generateTrueConstraints(model, const)
     return out
 
-# write output to a file that can be parsed by CVC4 SyGuS
 
-# fcts -> fcts_z3
-# vc_axioms -> axioms_python
-# fct_axioms -> axioms_z3
 ###############################################################################
 # Setting lemma synthesis options here. DO NOT MODIFY.
 experimental_prefetching_switch = 'on'
 exclude_set_type_definitions_switch = 'on'
 ###############################################################################
+# write output to a file that can be parsed by CVC4 SyGuS
 def getSygusOutput(elems, num_true_models, fcts_z3, axioms_python, axioms_z3, lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const, vc, problem_instance_name):
     grammar_file = 'grammar_{0}.sy'.format(problem_instance_name)
     out_file = 'out_{0}.sy'.format(problem_instance_name)
@@ -129,7 +138,7 @@ def getSygusOutput(elems, num_true_models, fcts_z3, axioms_python, axioms_z3, le
         out.write(grammar_string)
         out.write('\n')
         out.write(';; constraints from false model\n')
-        false_constraints = generateFalseConstraints(false_model_z3, deref, const)
+        false_constraints = generateFalseConstraints(false_model_dict, deref, const)
         out.write(false_constraints)
         out.write('\n')
         out.write('\n')

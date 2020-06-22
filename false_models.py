@@ -1,6 +1,5 @@
 from z3 import *
 z3.set_param('model.compact', False)
-
 from lemsynth_utils import *
 
 def makeIP(lhs, rhs, recdefs, fcts_z3, insts):
@@ -94,40 +93,6 @@ def getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, v
         print("No model available. Lemma was proved.")
         return None
 
-def convertZ3ValueTypetoPython(value):
-    if type(value) == BoolRef:
-        return bool(value)
-    elif type(value) == IntNumRef:
-        # NOTE: returns a bignum
-        return value.as_long()
-    elif type(value) == ArrayRef:
-        # Only sets of integers supported
-        # Convert to a python set recursively
-        declaration = value.decl()
-        if str(declaration) == 'K':
-            if bool(value.children()[0]) == True:
-                # K(Int, True) is the set of all natural numbers
-                raise ValueError('Infinite set obtained. Something is wrong.')
-            else:
-                # K(Int, False) is the empty set
-                return set()
-        elif str(declaration) == 'Store':
-            # Recursively construct the set
-            expr_children = value.children()
-            sub_set = convertZ3ValueTypetoPython(expr_children[0])
-            element = convertZ3ValueTypetoPython(expr_children[1])
-            membership = convertZ3ValueTypetoPython(expr_children[2])
-            if membership == True:
-                return sub_set | {element}
-            elif membership == False:
-                return sub_set
-            else:
-                raise ValueError('Store expression asssigns element to neither True nor False')
-        else:
-            # Cannot handle this case, if it exists
-            raise ValueError('ArrayRef object is neither a constant array nor a Store expression. Something is wrong.')
-    else:
-        raise ValueError('Model entry is neither IntNumRef, BoolRef, nor ArrayRef. Type unsupported.')
 
 # Get false model in dictionary representation. Only need values of
 # dereferenced variables and constants, nothing else will be used in SyGuS file

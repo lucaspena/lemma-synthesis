@@ -35,8 +35,7 @@ def modelUniverse(value):
             universe = universe | modelUniverse(value[key])
         return universe
     else:
-        print(type(value))
-        raise ValueError('Entry type not supported')
+        raise ValueError('Entry type {} not supported'.format(str(type(value))))
 
 # Returns the highest absolute value among the integers in the model to act as an offset for further models
 def getRelativeModelOffset(model):
@@ -80,6 +79,30 @@ def addOffset(model, f):
                 newDict[new_in] = new_out
             newModel[key] = newDict
     return newModel
+
+
+def modelDictEval(model_dict, z3_term_or_python_string):
+    if isinstance(z3_term_or_python_string, str):
+        raise ValueError('Cannot give strings to lookup. Must be a z3py term.')
+    else:
+        z3_term = z3_term_or_python_string
+        # Given argument is a z3 term
+        # Assuming that z3_term does not have anything other than integer or boolean constants in it outside of z3 terms
+        if isinstance(z3_term, IntNumRef) or isinstance(z3_term, BoolRef):
+            return convertZ3ValueTypetoPython(z3_term)
+
+        declaration = z3_term.decl()
+        children = z3_term.children()
+        if children == []:
+            return model_dict[getZ3FctName(z3_term)]
+        else:
+            arity = len(children)
+            if arity == 1:
+                return model_dict[getZ3FctName(decl)][modelDictEval(model, children[0])]
+            else:
+                # In a model dictionary arguments are represented as tuples
+                arg = tuple([modelDictEval(model, child) for child in children])
+                return model_dict[getZ3FctName(decl)][arg]
 
 
 ##################################
@@ -194,3 +217,38 @@ def getBottomElement(key):
         return set()
     else:
         raise ValueError('Sort name is not supported')
+
+def convertZ3ValueTypetoPython(value):
+    if isinstance(value, BoolRef):
+        return bool(value)
+    elif isinstance(value, IntNumRef):
+        # NOTE: returns a bignum
+        return value.as_long()
+    elif isinstance(value, ArrayRef):
+        # Only sets of integers supported
+        # Convert to a python set recursively
+        declaration = value.decl()
+        if str(declaration) == 'K':
+            if bool(value.children()[0]) == True:
+                # K(Int, True) is the set of all natural numbers
+                raise ValueError('Infinite set obtained. Something is wrong.')
+            else:
+                # K(Int, False) is the empty set
+                return set()
+        elif str(declaration) == 'Store':
+            # Recursively construct the set
+            expr_children = value.children()
+            sub_set = convertZ3ValueTypetoPython(expr_children[0])
+            element = convertZ3ValueTypetoPython(expr_children[1])
+            membership = convertZ3ValueTypetoPython(expr_children[2])
+            if membership == True:
+                return sub_set | {element}
+            elif membership == False:
+                return sub_set
+            else:
+                raise ValueError('Store expression asssigns element to neither True nor False')
+        else:
+            # Cannot handle this case, if it exists
+            raise ValueError('ArrayRef object is neither a constant array nor a Store expression. Something is wrong.')
+    else:
+        raise ValueError('Model entry is neither IntNumRef, BoolRef, nor ArrayRef. Type unsupported.')
