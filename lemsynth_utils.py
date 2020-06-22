@@ -98,11 +98,11 @@ def modelDictEval(model_dict, z3_term_or_python_string):
         else:
             arity = len(children)
             if arity == 1:
-                return model_dict[getZ3FctName(decl)][modelDictEval(model, children[0])]
+                return model_dict[getZ3FctName(declaration)][modelDictEval(model_dict, children[0])]
             else:
                 # In a model dictionary arguments are represented as tuples
-                arg = tuple([modelDictEval(model, child) for child in children])
-                return model_dict[getZ3FctName(decl)][arg]
+                arg = tuple([modelDictEval(model_dict, child) for child in children])
+                return model_dict[getZ3FctName(declaration)][arg]
 
 
 ##################################
