@@ -222,7 +222,10 @@ while True:
                             vc(x,y,yp), 'lseg-keys')
     print('Lemmas: {}'.format(lemmas))
     for lemma in lemmas:
-        z3py_lemma = translateLemma(lemma, fcts_z3)
+        insert_tmp = Function('insert_tmp', IntSort(), SetIntSort, SetIntSort)
+        addl_decls = { 'insert': insert_tmp }
+        swaps = { insert_tmp: SetAdd }
+        z3py_lemma = translateLemma(lemma, fcts_z3, addl_decls, swaps)
         if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
             print('lemma has already been proposed')
             continue

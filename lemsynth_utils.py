@@ -160,18 +160,32 @@ def getLemmaHeader(lemma):
         header += p + ' '
     return '(lemma ' + header[:-1] + ')'
 
+# swap arguments of all instances of any function in swaps
+def swapArgs(lemma, swaps):
+    if lemma.children() == []:
+        return lemma
+    elif lemma.decl() in swaps:
+        return swaps[lemma.decl()](swapArgs(lemma.arg(1), swaps), swapArgs(lemma.arg(0), swaps))
+    else:
+        new_args = []
+        for i in range(len(lemma.children())):
+            new_arg = swapArgs(lemma.arg(i), swaps)
+            new_args += [ new_arg ]
+        return lemma.decl()(new_args)
+
 # translate output of cvc4 into z3py form
 # TODO: abstract this out as general function, not specific to each input
-def translateLemma(lemma, fcts_z3):
+def translateLemma(lemma, fcts_z3, addl_decls = {}, swaps = {}):
     const_decls = '(declare-const fresh Int)' # exactly one free variable assumed
     header = getLemmaHeader(lemma).replace('x', 'fresh')
     assertion = '(assert ' + header + ')'
     smt_string = const_decls + '\n' + lemma + '\n' + assertion
     z3_str = extractDecls(fcts_z3)
-    z3_str['insert'] = SetAdd
+    z3_str.update(addl_decls)
     z3py_lemma = parse_smt2_string(smt_string, decls=z3_str)[0]
-    print('proposed lemma: ' + str(z3py_lemma))
-    return z3py_lemma
+    z3py_lemma_fixed = swapArgs(z3py_lemma, swaps)
+    print('proposed lemma: ' + str(z3py_lemma_fixed))
+    return z3py_lemma_fixed
 
 # Given the name of a recursive predicate/function name and a list of unfolded recdefs
 # Returns the function object corresponding to the name
