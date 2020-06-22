@@ -1,0 +1,48 @@
+;; lemma: lsegy(x) /\ next(y) = yp => lsegkeys_yp(x) = lsegkeys_y(x) U {key(y)}
+;; TODO: this should be generated from the problem parameters
+;; lemma to synthesize
+;; (synth-fun lemma ((x Int) (nil Int) (y Int) (yp Int)) Bool
+;;            ((Start Bool) (RecB Bool) (S (Set Int)) (B Bool) (I Int))
+
+;;            ((Start Bool
+;;                   ((=> RecB B)))
+;;            (RecB Bool
+;;                   ((lseg_y I)))
+;;            (S (Set Int)
+;;                   ((union S S)
+;;                    (insert I S)
+;;                    (keys I)
+;;                    (lsegkeys_y I)
+;;                    (lsegkeys_yp I)))
+;;            (B Bool
+;;                   ((=> B B)
+;;                    (and B B)
+;;                    (= S S)
+;;                    (list I) (lseg_y I) (lseg_yp I)))
+;;            (I Int (x nil y yp
+;;                   (key I)
+;;                   (next I))))
+
+;; )
+
+(synth-fun lemma ((x Int) (nil Int) (y Int) (yp Int)) Bool
+           ((Start Bool) (RecB Bool) (S (Set Int)) (B Bool) (I Int))
+
+           ((Start Bool
+                  ((=> RecB B)))
+           (RecB Bool
+                  ((lseg_y I)))
+           (S (Set Int)
+                  ((insert I S)
+                   (keys I)
+                   (lsegkeys_y I)
+                   (lsegkeys_yp I)))
+           (B Bool
+                  ((=> B B)
+                   (= S S)
+                   (lseg_y I)))
+           (I Int (x y yp
+                  (key I)
+                  (next I))))
+
+)

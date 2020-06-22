@@ -38,13 +38,42 @@ def modelToSolver(model, fcts_z3, sol):
                     else:
                         sol.add(fct(input_arg) == output_value_converted)
 
+def translateSet(s):
+    out = ''
+    for i in s:
+        out += '(insert ' + str(i) + ' '
+    out += '(as emptyset (Set Int))'
+    for i in s:
+        out += ')'
+    return out
+
+def translateModelsSets(models, set_defs):
+    out = ''
+    for key in set_defs:
+        for fct in set_defs[key]:
+            curr_fct = '(define-fun ' + str(fct) + ' ((x!0 Int)) (Set Int)\n'
+            body = ''
+            for model in models:
+                fct_name = getZ3FctName(fct)
+                curr_model_body = ''
+                for elt in model[fct_name]:
+                    curr_model_body += '  (ite (= x!0 ' + str(elt) + ') ' + translateSet(model[fct_name][elt]) + '\n'
+                body += curr_model_body
+            body += '  (as emptyset (Set Int))'
+            for model in models:
+                for elt in model[fct_name]:
+                    body += ')'
+            curr_fct += body + ')\n\n'
+            out += curr_fct
+    return out
+
 # Generate single model from a given list of models
 # Returns the definitions for functions and recdefs.
 # TODO: consider not using z3 for this and just generating the definitions using python code
 # TODO - VERY IMPORTANT: subtle issue here. The true models' entries are
 #  actually integers, whereas the false model's entries are Z3 types like
 #  IntNumRef, etc. Must fix this during false model dict generation.
-def sygusBigModelEncoding(models, fcts_z3):
+def sygusBigModelEncoding(models, fcts_z3, set_defs):
     sol = Solver()
     for model in models:
         modelToSolver(model, fcts_z3, sol)
@@ -52,7 +81,8 @@ def sygusBigModelEncoding(models, fcts_z3):
     # print(sol.check())
     # print(sol.sexpr())
     m = sol.model()
-    return m.sexpr()
+    set_encodings = translateModelsSets(models, set_defs)
+    return set_encodings + m.sexpr()
 
 # Generate constraints corresponding to false model for SyGuS
 def generateFalseConstraints(model_dict, deref, const):
@@ -114,18 +144,18 @@ def getSygusOutput(elems, num_true_models, fcts_z3, axioms_python, axioms_z3, le
     (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, lemmas, unfold_recdefs_z3, deref, const, vc)
 
     # Adding offsets to make sure: (i) all elements in all models are positive (ii) true and false models do not overlap
-    false_model_offset = getRelativeModelOffset(false_model_dict)
-    false_model_dict = addOffset(false_model_dict, lambda x: x + false_model_offset)
+    # false_model_offset = getRelativeModelOffset(false_model_dict)
+    # false_model_dict = addOffset(false_model_dict, lambda x: x + false_model_offset)
     true_model_offset = getRelativeModelOffset(false_model_dict)
     true_models = getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_model_offset, num_true_models)
 
     all_models = true_models + [false_model_dict]
     # Must go through this branch until we can transform output to CVC$ SyGuS format
     if exclude_set_type_definitions_switch == 'on':
+        set_defs = {key: fcts_z3[key] for key in fcts_z3.keys() if 'set' in key}
         fcts_z3 = {key: fcts_z3[key] for key in fcts_z3.keys() if 'set' not in key}
-        # print(fcts_z3)
 
-    sygus_model_definitions = sygusBigModelEncoding(all_models, fcts_z3)
+    sygus_model_definitions = sygusBigModelEncoding(all_models, fcts_z3, set_defs)
     with open(out_file, 'w') as out, open(grammar_file, 'r') as grammar:
         out.write('(set-logic ALL)')
         out.write('\n')
