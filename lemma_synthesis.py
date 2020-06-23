@@ -144,8 +144,8 @@ def getSygusOutput(elems, num_true_models, fcts_z3, axioms_python, axioms_z3, le
     (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, lemmas, unfold_recdefs_z3, deref, const, vc)
 
     # Adding offsets to make sure: (i) all elements in all models are positive (ii) true and false models do not overlap
-    # false_model_offset = getRelativeModelOffset(false_model_dict)
-    # false_model_dict = addOffset(false_model_dict, lambda x: x + false_model_offset)
+    # Making the universe of the false model positive
+    false_model_dict = makeModelUniverseNonNegative(false_model_dict)
     true_model_offset = getRelativeModelOffset(false_model_dict)
     true_models = getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_model_offset, num_true_models)
 

@@ -31,8 +31,12 @@ def modelUniverse(value):
     elif isinstance(value, dict):
         universe = set()
         for key in value.keys():
-            universe = universe | modelUniverse(key)
-            universe = universe | modelUniverse(value[key])
+            if key == 'elems':
+                # The value is going to be a list. Simply add the elements to the universe set
+                universe = universe | set(value[key])
+            else:
+                universe = universe | modelUniverse(key)
+                universe = universe | modelUniverse(value[key])
         return universe
     else:
         raise ValueError('Entry type {} not supported'.format(str(type(value))))
@@ -42,8 +46,21 @@ def getRelativeModelOffset(model):
     # TODO: handle cases where the model universe has objects other than booleans or integers
     model_values = modelUniverse(model)
     model_integer_values = [val for val in model_values if isinstance(val, int)]
-    model_offset = max(max(model_integer_values), abs(min(model_integer_values))) + 1
+    model_offset = max(abs(max(model_integer_values)), abs(min(model_integer_values))) + 1
     return model_offset
+
+def makeModelUniverseNonNegative(model):
+    # TODO: handle cases where the model universe has objects other than booleans or integers
+    model_values = modelUniverse(model)
+    model_integer_values = [val for val in model_values if isinstance(val, int)]
+    min_val = min(model_integer_values)
+    max_val = max(model_integer_values)
+    if min_val >= 0:
+        return model
+    else:
+        model_offset = getRelativeModelOffset(model)
+        new_model = addOffset(model, lambda x : x + model_offset)
+    return new_model
 
 # Adds offset to true models to avoid non-unique keys
 # TODO: replace this function by one that substitutes values with new ones. More general.
@@ -133,7 +150,10 @@ def getFctSignature(fct_class):
 # str() operator.
 # TODO: Might need to distinguish them by their Z3 types for a more reliable way
 def getZ3FctName(z3_fct_variable):
-    return str(z3_fct_variable)
+    if isinstance(z3_fct_variable, FuncDeclRef):
+        return z3_fct_variable.name()
+    else:
+        return str(z3_fct_variable)
 
 # Extract name of recdef from the python function name.
 def getRecdefName(recdef_python_function):
@@ -199,6 +219,29 @@ def getUnfoldRecdefFct(recdef_name, unfold_recdefs_dict):
     # Default case. Recdef not found. Return none.
     return None
 
+def substituteSubformula(expression, substitution_pairs):
+    # Recursively substitute subformulae bottom up
+    # The first substitution matching the operator's name is applied
+    declaration = expression.decl()
+    args = expression.children()
+    arity = len(args)
+    if arity == 1:
+        arg = args[0]
+        substituted_args = substituteSubformula(arg, substitution_pairs)
+    else:
+        substituted_args = tuple([substituteSubformula(arg, substitution_pairs) for arg in args])
+
+    for substitution_pair in substitution_pairs:
+        (decl_name, substitution_lambda) = substitution_pair
+        declaration_name = getZ3FctName(declaration)
+        if decl_name == declaration_name:
+            new_expression = substitution_lambda(declaration,substituted_args)
+            return new_expression
+    # Default case. None of the substitutions apply. Return the original declaration with substituted args
+    if arity == 1:
+        return declaration(substituted_args)
+    else:
+        return declaration(*substituted_args)
 
 ####################
 # Support for sorts. Particularly used for background sorts
@@ -221,7 +264,7 @@ def createSortVar(name, sort):
 # Returns the bottom element of the corresponding lattice in order to enable fixpoint computation
 # The returned value is a native python value that will be used to populate elements in the true models, which are themseleves python dictionaries
 def getBottomElement(key):
-    ret_type = key.split('_')[-1]
+    ret_type = getFctSignature(key)[2]
     if ret_type == 'bool':
         return False
     elif ret_type == 'int':
@@ -231,7 +274,7 @@ def getBottomElement(key):
     elif ret_type == 'set-int':
         return set()
     else:
-        raise ValueError('Sort name is not supported')
+        raise ValueError('Sort name' + ret_type + 'is not supported')
 
 def convertZ3ValueTypetoPython(value):
     if isinstance(value, BoolRef):

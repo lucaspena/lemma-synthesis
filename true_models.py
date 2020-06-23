@@ -132,8 +132,16 @@ def getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_mo
             filtered_models = filtered_models + [model]
 
     final_models = []
-    for i in range(len(filtered_models)):
-        final_models = final_models + [addOffset(filtered_models[i], lambda x: true_model_offset + 50*(i+1) + x)]
+    accumulated_offset = true_model_offset
+    for filtered_model in filtered_models:
+        # Make the universe of the true model positive
+        filtered_model_positive_universe = makeModelUniverseNonNegative(filtered_model)
+        # Shift the model by accumulated offset
+        final_model = addOffset(filtered_model_positive_universe, lambda x: accumulated_offset + 10 + x)
+        # Compute new accumulated offset and accumulate
+        accumulated_offset = getRelativeModelOffset(final_model)
+        # Add model to final_models
+        final_models = final_models + [final_model]
 
     if num_true_models == 'full' or (isinstance(num_true_models,int) and num_true_models > len(final_models)):
         return final_models
