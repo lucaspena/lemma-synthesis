@@ -96,13 +96,13 @@ def uslist_z3(x):
                                             And(key(x) <= key(next(x)), slist(next(x)))) ))
 
 def uslist_find_k_z3(x):
-    return Iff( slist_find_k(x), And(list(x), IteBool( x == nil,
-                                                       False,
-                                                       IteBool( key(x) == k,
-                                                                True,
-                                                                IteBool( key(x) > k,
-                                                                         False,
-                                                                         slist_find_k(next(x)) )))))
+    return Iff( slist_find_k(x), IteBool( x == nil,
+                                          False,
+                                          IteBool( key(x) == k,
+                                                   True,
+                                                   IteBool( key(x) > k,
+                                                            False,
+                                                            slist_find_k(next(x)) ))))
 
 def ukeys_z3(x):
     emptyset = getSortEmptySet(SetIntSort)
@@ -131,16 +131,15 @@ def uslist_python(x, model):
         return sorted_cond and model['slist'][next_val]
 
 def uslist_find_k_python(x, model):
-    curr_list = model['list'][x]
     if x == model['nil']:
         return False
     elif model['key'][x] == model['k']:
-        return curr_list
+        return True
     elif model['key'][x] > model['k']:
         return False
     else:
         next_val = model['next'][x]
-        return curr_list and model['slist_find_k'][next_val]
+        return model['slist_find_k'][next_val]
 
 def ukeys_python(x, model):
     if x == model['nil']:

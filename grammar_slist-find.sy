@@ -21,6 +21,7 @@
                    ;; (= S S)
                    ;; (= I I)
                    ;; (slist Loc)
+                   (list Loc)
                    ;; (slist_find_k Loc)
                    ))
             (I Int (k

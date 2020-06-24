@@ -21,14 +21,15 @@ def makeIP(lhs, rhs, recdefs, fcts_z3, insts):
             # constant symbols
             for fct in fcts_z3[key]:
                 subst_rhs = substitute(rhs, (fresh, fct))
-                subst_pairs = subst_pairs + [ (lhs_decl(fct), subst_rhs) ]
+                subst_pairs = subst_pairs + [ (lhs_decl(fct), And(lhs_decl(fct), subst_rhs)) ]
         else:
         # only supporting unary functions
             for fct in fcts_z3[key]:
                 # TODO: add support for n-ary symbols
                 for inst in insts + [skolem]:
                     subst_rhs = substitute(rhs, (fresh, fct(inst)))
-                    subst_pairs = subst_pairs + [ (lhs_decl(fct(inst)), subst_rhs) ]
+                    new_pair = (lhs_decl(fct(inst)), And(lhs_decl(fct(inst)), subst_rhs))
+                    subst_pairs = subst_pairs + [ new_pair ]
     subst_rho = substitute(rec_rho, subst_pairs)
     pfp = Implies(subst_rho, substitute(rhs, (fresh, skolem)))
     induction_principle = Implies(pfp, ForAll(fresh, Implies(lhs, rhs)))
