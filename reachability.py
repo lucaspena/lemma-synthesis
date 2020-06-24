@@ -55,16 +55,12 @@ v2 = Function('v2', IntSort(), IntSort())
 p = Function('p', IntSort(), IntSort())
 n = Function('n', IntSort(), IntSort())
 
-# Updating fcts and fct_Axioms for next and next_p
-# TODO: change signature to have 'loc' rather than 'int'
-# TODO: what to do about -1 for key axioms?
 fcts_z3['1_int_int'] = [v1, v2, p, n]
 
 ######## Section 3
 # Recursive definitions
 
 # Recdefs can only be unary (on the foreground sort?)
-# TODO: add support for recursive functions
 reach = Function('reach', IntSort(), BoolSort())
 
 ############ Section 4
@@ -85,7 +81,6 @@ def ureach_z3(x):
 
 # Python versions for finding valuation on true models
 def ureach_python(x, model):
-    n_val = model['n'][x]
     p_val = model['p'][x]
     v1_curr = model['v1'][x]
     v1_p = model['v1'][p_val]
@@ -119,10 +114,10 @@ def vc(x):
     rhs = Or( v2(x) == nil, v2(x) == c )
     return Implies( lhs, rhs )
 
-deref = [x]
+deref = [x, p(x), v1(p(x)), v2(p(x))]
 const = [nil, c]
-elems = [*range(2)]
-num_true_models = 10
+elems = [*range(5)]
+config_params = {'mode': 'random', 'num_true_models': 20}
 
 # valid and invalid lemmas
 valid_lemmas = []
@@ -130,9 +125,11 @@ invalid_lemmas = []
 
 # continuously get valid lemmas until VC has been proven
 while True:
-    lemmas = getSygusOutput(elems, num_true_models, fcts_z3, axioms_python, axioms_z3,
-                            valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
-                            vc(x), 'reachability')
+    lemmas = getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3,
+                             valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
+                             vc(x), 'reachability')
+    # lemmas = lemmas + ['(define-fun lemma ((x Int) (nil Int) (c Int)) Bool (=> (reach x) (or (= c  (v2 x)) (= (v1 x) (v2 x)))))']
+    print("lemmas: {}".format(lemmas))
     for lemma in lemmas:
         z3py_lemma = translateLemma(lemma, fcts_z3)
         if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:

@@ -133,7 +133,7 @@ experimental_prefetching_switch = 'on'
 exclude_set_type_definitions_switch = 'on'
 ###############################################################################
 # write output to a file that can be parsed by CVC4 SyGuS
-def getSygusOutput(elems, num_true_models, fcts_z3, axioms_python, axioms_z3, lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const, vc, problem_instance_name):
+def getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3, lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const, vc, problem_instance_name):
     grammar_file = 'grammar_{0}.sy'.format(problem_instance_name)
     out_file = 'out_{0}.sy'.format(problem_instance_name)
 
@@ -147,7 +147,7 @@ def getSygusOutput(elems, num_true_models, fcts_z3, axioms_python, axioms_z3, le
     # Making the universe of the false model positive
     false_model_dict = makeModelUniverseNonNegative(false_model_dict)
     true_model_offset = getRelativeModelOffset(false_model_dict)
-    true_models = getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_model_offset, num_true_models)
+    true_models = getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_model_offset, config_params)
 
     all_models = true_models + [false_model_dict]
     # Must go through this branch until we can transform output to CVC$ SyGuS format

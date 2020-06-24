@@ -1,23 +1,51 @@
 ;; lemma to synthesize
+;; Sort-distinguished stratified grammar
 (synth-fun lemma ((x Int) (nil Int) (c Int)) Bool
 
-           ((Start Bool) (Rec Bool) (B Bool) (I Int))
+           ((Start Bool) (Rec Bool) (B Bool) (Progvar Int) (State Int))
 
            ((Start Bool
                   ((=> Rec B)))
            (Rec Bool
-                  ((reach I)))
+                  ((reach x)))
            (B Bool
-                  ((=> B B)
+                  (
+                   ;(=> B B)
                    (and B B)
                    (or B B)
-                   (not B)
-                   (= I I)
-                   (reach I)))
-            (I Int (x nil c
-                   (v1 I)
-                   (v2 I)
-                   (n I)
-                   (p I))))
+                   ;(not B)
+                   (= Progvar Progvar)))
+            (Progvar Int (c nil
+                   (v1 State)
+                   (v2 State)
+                   (n Progvar)))
+            (State Int (x
+                   (p x))))
 
 )
+
+;Full non-stratified grammar
+;(synth-fun lemma ((x Int) (nil Int) (c Int)) Bool
+;
+;           ((Start Bool) (Rec Bool) (B Bool) (I Int))
+;
+;           ((Start Bool
+;                  ((=> Rec B)))
+;           (Rec Bool
+;                  ((reach I)))
+;           (B Bool
+;                  ((=> B B)
+;                   (and B B)
+;                   (or B B)
+;                   (not B)
+;                   (= I I)
+;                   (reach I)))
+;            (I Int (x nil c
+;                   (v1 I)
+;                   (v2 I)
+;                   (n I)
+;                   (p I))))
+;
+;)
+
+

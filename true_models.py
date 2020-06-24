@@ -53,6 +53,48 @@ def getTrueModels(elems, fcts_z3):
                 models = listProduct(models, submodel_fct, lambda x,y: {**x, **y})
     return models
 
+
+def getRandTrueModelFctValuations(elems, fct_signature, num_valuations):
+    fct_valuations = []
+    arity = fct_signature[0]
+    if arity == 0:
+        # Possible values for a constant. Return num_valuations many choices.
+        return random.choices(elems,k= num_valuations)
+    else:
+        # Only supporting integer type, with many arguments and one output
+        if arity == 1:
+            input_values = elems
+        else:
+            input_values = [tuple(x) for x in itertools.product(elems,repeat=arity)]
+        domain_size = len(input_values)
+        for i in range(num_valuations):
+            output_valuation = random.choices(elems, k = domain_size)
+            fct_valuation = {input_values[j] : output_valuation[j] for j in range(domain_size)}
+            fct_valuations = fct_valuations + [fct_valuation]
+        return fct_valuations
+
+def getRandTrueModels(elems, fcts_z3, num_true_models):
+    models = []
+    # Loop over number of true models. Might be useful to add some kind of equality check here to get distinct models, but that could be expensive.
+    for i in range(num_true_models):
+        model = {'elems': elems}
+        for key in fcts_z3.keys():
+            fct_signature = getFctSignature(key)
+            if fct_signature[3] == True:
+                # Recursive function. No need to find valuation. Continue.
+                continue
+            elif fct_signature[2] != None and fct_signature[2] != 'int':
+                # Return type not an integer. Continue.
+                # TODO: VERY IMPORTANT: this could affect distinguishing by sorts.
+                continue
+            else:
+                for fct in fcts_z3[key]:
+                    fct_name = getZ3FctName(fct)
+                    fct_valuations = getRandTrueModelFctValuations(elems, fct_signature, 1)
+                    model[fct_name] = fct_valuations[0]
+        models = models + [model]
+    return models
+
 # Initialize dictionary where given recdef's name is evaluated to a dictionary
 ## where all elements have the initial value (lattice bottom)
 def initializeRecdef(model, recdef, key):
@@ -120,32 +162,63 @@ def getRecdefsEval(model, unfold_recdefs_python):
 
 # Get true models (with offsets added) with recdef evaluations such that they
 # satisfy axioms.
-def getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_model_offset, num_true_models = 'full'):
-    true_models_base = getTrueModels(elems, fcts_z3)
-    evaluated_models = []
-    for model_base in true_models_base:
-        evaluated_models += [getRecdefsEval(model_base, unfold_recdefs_python)]
-    filtered_models = []
-    for model in evaluated_models:
-        pass_or_fail = filterByAxiomsFct(model, axioms_python)
-        if pass_or_fail:
-            filtered_models = filtered_models + [model]
+def getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_model_offset, config_params = 'full'):
+    # Base model either gotten through complete enumeration or at random
+    if isinstance(config_params, dict):
+        mode = config_params['mode']
+        if mode != 'random':
+            raise ValueError('Cannot understand config params for true model generation.')
+        num_true_models = 1 if 'num_true_models' not in config_params.keys() else config_params['num_true_models']
+        if num_true_models == 'full':
+            raise ValueError('Must specify a number of desired models for random true model generation.')
+        search_fuel = 3 if 'fuel' not in config_params.keys() else abs(config_params['fuel'])
+    else:
+        mode = 'enumeration'
+        num_true_models = config_params
+        search_fuel = 1
 
+    evaluated_models = []
+    filtered_models = []
+    while (not isinstance(num_true_models, int) or len(filtered_models) < num_true_models) and search_fuel > 0:
+        if mode == 'enumeration':
+            true_models_base = getTrueModels(elems, fcts_z3)
+        elif mode == 'random':
+            true_models_base = getRandTrueModels(elems, fcts_z3, num_true_models)
+        else:
+            raise ValueError('Cannot understand mode for true model generation.')
+        # Evaluate recdefs
+        for model_base in true_models_base:
+            evaluated_models += [getRecdefsEval(model_base, unfold_recdefs_python)]
+        # Filter by axioms
+        for model in evaluated_models:
+            pass_or_fail = filterByAxiomsFct(model, axioms_python)
+            if pass_or_fail:
+                filtered_models = filtered_models + [model]
+        # Decrease fuel and search again if enough models not obtained. In enumeration mode this exits the loop after one pass.
+        search_fuel = search_fuel - 1
+
+    # Post-processing
+    # First, extract the desired number of models.
+    # For random mode this could be expensive to do again. Must add code to skip in random case.
+    if num_true_models == 'full' or (isinstance(num_true_models,int) and num_true_models > len(filtered_models)):
+        choice_models = filtered_models
+    elif isinstance(num_true_models,int) and num_true_models <= len(filtered_models):
+        choice_models = random.choices(filtered_models,k = num_true_models)
+    else:
+        raise ValueError('Must specify either a number of models or \'full\'')
+
+    # Second, make all the elements of all the models positive and add offsets so that they have distinct universes.
     final_models = []
     accumulated_offset = true_model_offset
-    for filtered_model in filtered_models:
+    for choice_model in choice_models:
         # Make the universe of the true model positive
-        filtered_model_positive_universe = makeModelUniverseNonNegative(filtered_model)
+        choice_model_positive_universe = makeModelUniverseNonNegative(choice_model)
         # Shift the model by accumulated offset
-        final_model = addOffset(filtered_model_positive_universe, lambda x: accumulated_offset + 10 + x)
+        final_model = addOffset(choice_model_positive_universe, lambda x: accumulated_offset + 10 + x)
         # Compute new accumulated offset and accumulate
         accumulated_offset = getRelativeModelOffset(final_model)
         # Add model to final_models
         final_models = final_models + [final_model]
+    return final_models
 
-    if num_true_models == 'full' or (isinstance(num_true_models,int) and num_true_models > len(final_models)):
-        return final_models
-    elif isinstance(num_true_models,int) and num_true_models < len(final_models):
-        return random.choices(final_models,k = num_true_models)
-    else:
-        raise ValueError('Must specify either a number of models or \'full\'')
+

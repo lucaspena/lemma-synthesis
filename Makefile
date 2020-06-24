@@ -1,7 +1,7 @@
 all:
-	python3 dlist-list.py
-	python3 slist-list.py
-	python3 sdlist-dlist.py
-	python3 sdlist-dlist-and-slist.py
-	python3 listlen-list.py
-	# python3 lseg-list.py
+	time python3 dlist-list.py
+	time python3 slist-list.py
+	time python3 sdlist-dlist.py
+	time python3 sdlist-dlist-and-slist.py
+	time python3 listlen-list.py
+	# time python3 lseg-list.py
