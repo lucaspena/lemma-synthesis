@@ -180,22 +180,39 @@ def getLemmaHeader(lemma):
         header += p + ' '
     return '(lemma ' + header[:-1] + ')'
 
-# swap arguments of all instances of any function in swaps
-def swapArgs(lemma, swaps):
-    if lemma.children() == []:
+# replace arguments of all instances of any function in replace_fcts
+def replaceArgs(lemma, replace_fcts):
+    if lemma.children() == [] or replace_fcts == {}:
         return lemma
-    elif lemma.decl() in swaps:
-        return swaps[lemma.decl()](swapArgs(lemma.arg(1), swaps), swapArgs(lemma.arg(0), swaps))
+    elif lemma.decl() in replace_fcts:
+        arg0 = replaceArgs(lemma.arg(0), replace_fcts)
+        arg1 = replaceArgs(lemma.arg(1), replace_fcts)
+        return replace_fcts[lemma.decl()](arg0, arg1)
     else:
         new_args = []
         for i in range(len(lemma.children())):
-            new_arg = swapArgs(lemma.arg(i), swaps)
+            new_arg = replaceArgs(lemma.arg(i), replace_fcts)
+            new_args += [ new_arg ]
+        return lemma.decl()(new_args)
+
+# swap arguments of all instances of any function in swap_fcts
+def swapArgs(lemma, swap_fcts):
+    if lemma.children() == [] or swap_fcts == {}:
+        return lemma
+    elif lemma.decl() in swap_fcts:
+        arg0 = swapArgs(lemma.arg(0), swap_fcts)
+        arg1 = swapArgs(lemma.arg(1), swap_fcts)
+        return swap_fcts[lemma.decl()](arg1, arg0)
+    else:
+        new_args = []
+        for i in range(len(lemma.children())):
+            new_arg = swapArgs(lemma.arg(i), swap_fcts)
             new_args += [ new_arg ]
         return lemma.decl()(new_args)
 
 # translate output of cvc4 into z3py form
 # TODO: abstract this out as general function, not specific to each input
-def translateLemma(lemma, fcts_z3, addl_decls = {}, swaps = {}):
+def translateLemma(lemma, fcts_z3, addl_decls = {}, swap_fcts = {}, replace_fcts = {}):
     const_decls = '(declare-const fresh Int)' # exactly one free variable assumed
     header = getLemmaHeader(lemma).replace('x', 'fresh')
     assertion = '(assert ' + header + ')'
@@ -203,7 +220,8 @@ def translateLemma(lemma, fcts_z3, addl_decls = {}, swaps = {}):
     z3_str = extractDecls(fcts_z3)
     z3_str.update(addl_decls)
     z3py_lemma = parse_smt2_string(smt_string, decls=z3_str)[0]
-    z3py_lemma_fixed = swapArgs(z3py_lemma, swaps)
+    z3py_lemma_replaced = replaceArgs(z3py_lemma, replace_fcts)
+    z3py_lemma_fixed = swapArgs(z3py_lemma_replaced, swap_fcts)
     print('proposed lemma: ' + str(z3py_lemma_fixed))
     return z3py_lemma_fixed
 
