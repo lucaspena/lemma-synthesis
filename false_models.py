@@ -32,7 +32,6 @@ def makeIP(lhs, rhs, recdefs, fcts_z3, insts):
     subst_rho = substitute(rec_rho, subst_pairs)
     pfp = Implies(subst_rho, substitute(rhs, (fresh, skolem)))
     induction_principle = Implies(pfp, ForAll(fresh, Implies(lhs, rhs)))
-    print(induction_principle)
     return induction_principle
 
 # Get false model - model where VC is false deref is a list of terms that are
@@ -79,20 +78,10 @@ def getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, v
             for inst in instantiations:
                 sol.add(recdef(inst))
                 # unfold on skolemized variable from generated induction principle
-                if ip:
-                    skolem = Int('skolem')
-                    next = Function('next', IntSort(), IntSort())
-                    sol.add(recdef(skolem))
-                    sol.add(recdef(next(skolem)))
-                    # sol.add(recdef(fresh))
-                    # sol.add(recdef(next(fresh)))
-
-                    # for f in fcts_z3['1_int_int']:
-                    #     print(recdef)
-                    #     sol.add(recdef(f(skolem)))
-                    # sol.add(recdef(fresh))
-                    # sol.add(recdef(next(fresh)))
-                    # print(recdef(skolem))
+                # if ip:
+                #     next = Function('next', IntSort(), IntSort())
+                #     skolem = Int('skolem')
+                #     sol.add(recdef(skolem))
 
     # negate VC
     sol.add(Not(vc))
@@ -100,9 +89,6 @@ def getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, v
     # check satisfiability and print model in format CVC4 can handle
     if (sol.check() == sat):
         m = sol.model()
-        if ip:
-            print(m.sexpr())
-            exit(0)
         return m
 
     else:

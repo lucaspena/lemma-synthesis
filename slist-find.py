@@ -47,7 +47,8 @@ unfold_recdefs_python = {}
 # The z3py variable for a z3 variable will be the same as its string value.
 # So we will use the string 'x' for python functions and just x for creating z3 types
 x, k, nil = Ints('x k nil')
-fcts_z3['0_int'] = [x, k, nil]
+skolem = Int('skolem')
+fcts_z3['0_int'] = [x, k, nil, skolem]
 
 ######## Section 2
 # Functions
@@ -95,13 +96,13 @@ def uslist_z3(x):
                                             And(key(x) <= key(next(x)), slist(next(x)))) ))
 
 def uslist_find_k_z3(x):
-    return Iff( slist_find_k(x), IteBool( x == nil,
-                                          False,
-                                          IteBool( key(x) == k,
-                                                   True,
-                                                   IteBool( key(x) > k,
-                                                            False,
-                                                            slist_find_k(next(x)) ))))
+    return Iff( slist_find_k(x), And(list(x), IteBool( x == nil,
+                                                       False,
+                                                       IteBool( key(x) == k,
+                                                                True,
+                                                                IteBool( key(x) > k,
+                                                                         False,
+                                                                         slist_find_k(next(x)) )))))
 
 def ukeys_z3(x):
     emptyset = getSortEmptySet(SetIntSort)
@@ -130,15 +131,16 @@ def uslist_python(x, model):
         return sorted_cond and model['slist'][next_val]
 
 def uslist_find_k_python(x, model):
+    curr_list = model['list'][x]
     if x == model['nil']:
         return False
     elif model['key'][x] == model['k']:
-        return True
+        return curr_list
     elif model['key'][x] > model['k']:
         return False
     else:
         next_val = model['next'][x]
-        return model['slist_find_k'][next_val]
+        return curr_list and model['slist_find_k'][next_val]
 
 def ukeys_python(x, model):
     if x == model['nil']:
@@ -148,7 +150,7 @@ def ukeys_python(x, model):
         curr_key = model['key'][x]
         curr_keys = model['keys'][x]
         next_keys = model['keys'][next_val]
-        curr_list = model['list'][x]
+        curr_list = model['slist'][x]
         if curr_list:
             return {curr_key} | next_keys
         else:
@@ -170,14 +172,14 @@ def vc(x, k):
     return Implies( slist(x),
                     Implies( slist_find_k(x), IsMember(k, keys(x)) ))
 
-deref = [x, next(x)]
+deref = [x, next(x), skolem]
 const = [nil, k]
 elems = [*range(2)]
 num_true_models = 10
 
 # valid and invalid lemmas
 fresh = Int('fresh')
-valid_lemmas = [Implies(slist(fresh), list(fresh))]
+valid_lemmas = []
 invalid_lemmas = []
 
 # continuously get valid lemmas until VC has been proven
