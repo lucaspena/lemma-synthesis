@@ -134,7 +134,7 @@ def uslist_find_k_python(x, model):
         return False
     elif model['key'][x] == model['k']:
         return True
-    elif model['key'][x] >= model['k']:
+    elif model['key'][x] > model['k']:
         return False
     else:
         next_val = model['next'][x]
@@ -176,7 +176,8 @@ elems = [*range(2)]
 num_true_models = 10
 
 # valid and invalid lemmas
-valid_lemmas = []
+fresh = Int('fresh')
+valid_lemmas = [Implies(slist(fresh), list(fresh))]
 invalid_lemmas = []
 
 # continuously get valid lemmas until VC has been proven
