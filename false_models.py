@@ -21,14 +21,15 @@ def makeIP(lhs, rhs, recdefs, fcts_z3, insts):
             # constant symbols
             for fct in fcts_z3[key]:
                 subst_rhs = substitute(rhs, (fresh, fct))
-                subst_pairs = subst_pairs + [ (lhs_decl(fct), subst_rhs) ]
+                subst_pairs = subst_pairs + [ (lhs_decl(fct), And(lhs_decl(fct), subst_rhs)) ]
         else:
         # only supporting unary functions
             for fct in fcts_z3[key]:
                 # TODO: add support for n-ary symbols
                 for inst in insts + [skolem]:
                     subst_rhs = substitute(rhs, (fresh, fct(inst)))
-                    subst_pairs = subst_pairs + [ (lhs_decl(fct(inst)), subst_rhs) ]
+                    new_pair = (lhs_decl(fct(inst)), And(lhs_decl(fct(inst)), subst_rhs))
+                    subst_pairs = subst_pairs + [ new_pair ]
     subst_rho = substitute(rec_rho, subst_pairs)
     pfp = Implies(subst_rho, substitute(rhs, (fresh, skolem)))
     induction_principle = Implies(pfp, ForAll(fresh, Implies(lhs, rhs)))
@@ -58,9 +59,10 @@ def getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, v
     # instantiate lemmas
     fresh = Int('fresh')
     for lemma in lemmas:
+        sol.add(lemma)
         for inst in instantiations:
-            inst = substitute(lemma, (fresh, inst))
-            sol.add(inst)
+            new_inst = substitute(lemma, (fresh, inst))
+            sol.add(new_inst)
 
     # generate induction principle
     if ip:
@@ -77,9 +79,10 @@ def getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, v
             for inst in instantiations:
                 sol.add(recdef(inst))
                 # unfold on skolemized variable from generated induction principle
-                if ip:
-                    skolem = Int('skolem')
-                    sol.add(recdef(skolem))
+                # if ip:
+                #     next = Function('next', IntSort(), IntSort())
+                #     skolem = Int('skolem')
+                #     sol.add(recdef(skolem))
 
     # negate VC
     sol.add(Not(vc))

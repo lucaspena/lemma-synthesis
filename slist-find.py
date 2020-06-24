@@ -47,7 +47,8 @@ unfold_recdefs_python = {}
 # The z3py variable for a z3 variable will be the same as its string value.
 # So we will use the string 'x' for python functions and just x for creating z3 types
 x, k, nil = Ints('x k nil')
-fcts_z3['0_int'] = [x, k, nil]
+skolem = Int('skolem')
+fcts_z3['0_int'] = [x, k, nil, skolem]
 
 ######## Section 2
 # Functions
@@ -134,7 +135,7 @@ def uslist_find_k_python(x, model):
         return False
     elif model['key'][x] == model['k']:
         return True
-    elif model['key'][x] >= model['k']:
+    elif model['key'][x] > model['k']:
         return False
     else:
         next_val = model['next'][x]
@@ -148,7 +149,7 @@ def ukeys_python(x, model):
         curr_key = model['key'][x]
         curr_keys = model['keys'][x]
         next_keys = model['keys'][next_val]
-        curr_list = model['list'][x]
+        curr_list = model['slist'][x]
         if curr_list:
             return {curr_key} | next_keys
         else:
@@ -170,12 +171,13 @@ def vc(x, k):
     return Implies( slist(x),
                     Implies( slist_find_k(x), IsMember(k, keys(x)) ))
 
-deref = [x, next(x)]
+deref = [x, next(x), skolem]
 const = [nil, k]
 elems = [*range(2)]
 num_true_models = 10
 
 # valid and invalid lemmas
+fresh = Int('fresh')
 valid_lemmas = []
 invalid_lemmas = []
 

@@ -1,27 +1,28 @@
 ;; lemma to synthesize
 (synth-fun lemma ((x Int) (nil Int) (k Int)) Bool
 
-           ((Start Bool) (RecS Bool) (RecF Bool) (S (Set Int)) (B Bool) (I Int) (Loc Int))
+           ((Start Bool) (RecS Bool) (S (Set Int)) (B Bool) (I Int) (Loc Int))
 
            ((Start Bool
                   ((=> RecS B)))
            (RecS Bool
-                  ((slist Loc)))
-           (RecF Bool
-                  ((slist_find_k Loc)))
+                  ((slist Loc)
+                   (list Loc)
+                   (slist_find_k Loc)))
            (S (Set Int)
                   ((insert I S)
                    (keys Loc)
                    (union S S)))
            (B Bool
-                  ((=> RecF B)
-                   ;; (and B B)
-                   ;; (or B B)
+                  ((=> B B)
+                   (and B B)
+                   (or B B)
                    (member I S)
-                   ;; (= S S)
-                   ;; (= I I)
-                   ;; (slist Loc)
-                   ;; (slist_find_k Loc)
+                   (= S S)
+                   (= I I)
+                   (slist Loc)
+                   (list Loc)
+                   (slist_find_k Loc)
                    ))
             (I Int (k
                    (key Loc)))
