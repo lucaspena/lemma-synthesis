@@ -169,9 +169,9 @@ fcts_z3['recfunctions-loc_1_int_set-int'] = [keys]
 
 def vc(x, k):
     return Implies( slist(x),
-                    Implies( slist_find_k(x), IsMember(k, keys(x)) ))
+                    Iff( slist_find_k(x), IsMember(k, keys(x)) ))
 
-deref = [x, next(x), skolem]
+deref = [x, next(x), skolem, next(skolem)]
 const = [nil, k]
 elems = [*range(2)]
 num_true_models = 10
