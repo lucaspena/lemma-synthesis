@@ -15,7 +15,7 @@
 ;;                    (lsegkeys_y I)
 ;;                    (lsegkeys_yp I)))
 ;;            (B Bool
-;;                   ((=> B B)
+;;                   ((=> I I)
 ;;                    (and B B)
 ;;                    (= S S)
 ;;                    (list I) (lseg_y I) (lseg_yp I)))
@@ -26,23 +26,24 @@
 ;; )
 
 (synth-fun lemma ((x Int) (nil Int) (y Int) (yp Int)) Bool
-           ((Start Bool) (RecB Bool) (S (Set Int)) (B Bool) (I Int))
+           ((Start Bool) (RecB Bool) (S (Set Int)) (B Bool) (I Int) (Loc Int))
 
            ((Start Bool
                   ((=> RecB B)))
            (RecB Bool
-                  ((lseg_y I)))
+                  ((lseg_y Loc)))
            (S (Set Int)
                   ((insert I S)
-                   (keys I)
-                   (lsegkeys_y I)
-                   (lsegkeys_yp I)))
+                   (keys Loc)
+                   (lsegkeys_y Loc)
+                   (lsegkeys_yp Loc)))
            (B Bool
                   ((=> B B)
                    (= S S)
-                   (lseg_y I)))
-           (I Int (x y yp
-                  (key I)
-                  (next I))))
+                   (lseg_y Loc)))
+           (I Int
+                  ((key Loc)))
+           (Loc Int (x y yp
+                  (next Loc))))
 
 )
