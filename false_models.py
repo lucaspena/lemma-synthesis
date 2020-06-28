@@ -79,10 +79,10 @@ def getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, v
             for inst in instantiations:
                 sol.add(recdef(inst))
                 # unfold on skolemized variable from generated induction principle
-                # if ip:
-                #     next = Function('next', IntSort(), IntSort())
-                #     skolem = Int('skolem')
-                #     sol.add(recdef(skolem))
+                if ip:
+                    next = Function('next', IntSort(), IntSort())
+                    skolem = Int('skolem')
+                    sol.add(recdef(skolem))
 
     # negate VC
     sol.add(Not(vc))
