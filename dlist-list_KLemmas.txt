@@ -1,7 +1,1 @@
 (define-fun lemma ((x Int) (nil Int)) Bool (=> (dlist x) (list x)))
-(define-fun lemma ((x Int) (nil Int)) Bool (=> (list (next x)) (list x)))
-(define-fun lemma ((x Int) (nil Int)) Bool (=> (dlist x) (and (list x) (list nil))))
-(define-fun lemma ((x Int) (nil Int)) Bool (=> (dlist x) (and (list x) (dlist nil))))
-(define-fun lemma ((x Int) (nil Int)) Bool (=> (dlist x) (=> (list nil) (list x))))
-(define-fun lemma ((x Int) (nil Int)) Bool (=> (dlist x) (=> (dlist nil) (list x))))
-(define-fun lemma ((x Int) (nil Int)) Bool (=> (list (next (next x))) (list x)))

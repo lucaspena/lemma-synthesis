@@ -42,7 +42,8 @@ def getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, v
     sol = Solver()
 
     # only useful for current implementation. must be distinguished by signature in general
-    instantiations = const + deref
+    fresh = Int('fresh')
+    instantiations = const + deref + [ fresh ]
     for key in axioms_z3.keys():
         signature = getFctSignature(key)
         arity = signature[0]

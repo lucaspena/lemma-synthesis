@@ -176,12 +176,19 @@ fresh = Int('fresh')
 valid_lemmas = []
 invalid_lemmas = []
 
+# check if VC is provable
+fresh = Int('fresh')
+orig_model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, vc(fresh, k), True)
+if orig_model == None:
+    print('original VC is provable using induction.')
+    exit(0)
+
 # continuously get valid lemmas until VC has been proven
 while True:
     lemmas = getSygusOutput(elems, num_true_models, fcts_z3, axioms_python, axioms_z3,
                             valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
                             vc(x,k), 'slist-find')
-    print('Lemmas: {}'.format(lemmas))
+    # print('Lemmas: {}'.format(lemmas))
     for lemma in lemmas:
         insert_tmp = Function('insert_tmp', IntSort(), SetIntSort, SetIntSort)
         member_tmp = Function('member_tmp', IntSort(), SetIntSort, BoolSort())
