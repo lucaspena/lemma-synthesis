@@ -75,7 +75,6 @@ axioms_python['0'] = [next_nil_python]
 # Recdefs can only be unary (on the foreground sort?)
 # TODO: add support for recursive functions
 SetIntSort = createSetSort('int')
-list = Function('list', IntSort(), BoolSort())
 slist = Function('slist', IntSort(), BoolSort())
 slist_find_k = Function('slist_find_k', IntSort(), BoolSort())
 keys = Function('keys', IntSort(), SetIntSort)
@@ -107,10 +106,9 @@ def uslist_find_k_z3(x):
 def ukeys_z3(x):
     emptyset = getSortEmptySet(SetIntSort)
     is_nil = x == nil
-    in_domain = list(x)
     then_case = Implies(is_nil, keys(x) == emptyset)
     else_case = Implies(Not(is_nil), keys(x) == SetAdd(keys(next(x)), key(x)))
-    return Implies(in_domain, And(then_case, else_case))
+    return And(then_case, else_case)
 
 # Python versions for finding valuation on true models
 def ulist_python(x, model):
@@ -149,27 +147,24 @@ def ukeys_python(x, model):
         curr_key = model['key'][x]
         curr_keys = model['keys'][x]
         next_keys = model['keys'][next_val]
-        curr_list = model['slist'][x]
-        if curr_list:
-            return {curr_key} | next_keys
-        else:
-            return curr_keys
+        return {curr_key} | next_keys
 
-unfold_recdefs_z3['1_int_bool'] = [ulist_z3, uslist_z3, uslist_find_k_z3]
+unfold_recdefs_z3['1_int_bool'] = [uslist_z3, uslist_find_k_z3]
 unfold_recdefs_z3['1_int_set-int'] = [ukeys_z3]
-unfold_recdefs_python['1_int_bool'] = [ulist_python, uslist_python, uslist_find_k_python]
+unfold_recdefs_python['1_int_bool'] = [uslist_python, uslist_find_k_python]
 unfold_recdefs_python['1_int_set-int'] = [ukeys_python]
 
 # Recall recursive predicates are always unary
-fcts_z3['recpreds-loc_1_int_bool'] = [list, slist, slist_find_k]
+fcts_z3['recpreds-loc_1_int_bool'] = [slist, slist_find_k]
 fcts_z3['recfunctions-loc_1_int_set-int'] = [keys]
 
 ############# Section 5
 # Program, VC, and Instantiation
 
 def vc(x, k):
+    precondition = And(key(x) == 0, k != 0)
     return Implies( slist(x),
-                    Iff( slist_find_k(x), IsMember(k, keys(x)) ))
+                    Implies(precondition, Iff( slist_find_k(x), IsMember(k, keys(x)) ) ) )
 
 deref = [x, next(x), skolem, next(skolem)]
 const = [nil, k]
