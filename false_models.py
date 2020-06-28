@@ -32,7 +32,9 @@ def makeIP(lhs, rhs, recdefs, fcts_z3, insts):
                     subst_pairs = subst_pairs + [ new_pair ]
     subst_rho = substitute(rec_rho, subst_pairs)
     pfp = Implies(subst_rho, substitute(rhs, (fresh, skolem)))
-    induction_principle = Implies(pfp, ForAll(fresh, Implies(lhs, rhs)))
+    quantified_var = Int('quantvar')
+    theorem = substitute(Implies(lhs,rhs),[(fresh, quantified_var)])
+    induction_principle = Implies(pfp, ForAll(quantified_var, theorem))
     return induction_principle
 
 # Get false model - model where VC is false deref is a list of terms that are
@@ -93,26 +95,33 @@ def getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, v
         return m
 
     else:
-        print("No model available. Lemma was proved.")
+        print("No model available. Given theorem was proved.")
         return None
 
 
 # Get false model in dictionary representation. Only need values of
 # dereferenced variables and constants, nothing else will be used in SyGuS file
 # generation.
-# TODO - VERY IMPORTANT: the dictionaries' entries are not integers, but Z3 types
-#  like IntNumRef and such. Must fix to avoid subtle issues
 def getFalseModelDict(fcts_z3, axioms_z3, lemmas, unfold_recdefs_z3, deref, const, vc, ip = False):
-    false_model_z3 = getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, vc)
+    false_model_z3 = getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, vc, ip)
 
     if false_model_z3 == None:
-        # Lemmas generated up to this point are useful. Exit.
-        print('Lemmas used to prove original vc:')
-        for lemma in lemmas:
-            print(lemma)
-        exit(0)
+        return (None, None)
 
     false_model_dict = {}
+
+    # Add as elements to the model the instantiated terms (and constants).
+    # These act the same way as the 'elems' field in the true models (modulo the proving power of natural proofs).
+    # NOTE: Add the skolem variable(s) as well for proofs using the induction principle.
+    # Currently this is just the variable named 'skolem'. Must make the implementation more principled.
+    skolem = Int('skolem')
+    instantiations = const + deref + ([skolem] if ip and skolem not in deref else [])
+    elems = []
+    for inst in instantiations:
+        inst_value = false_model_z3.eval(inst, model_completion=True)
+        elems = elems + [convertZ3ValueTypetoPython(inst_value)]
+    false_model_dict['elems'] = elems
+
     for key in fcts_z3.keys():
         signature = getFctSignature(key)
         arity = signature[0]
@@ -128,7 +137,6 @@ def getFalseModelDict(fcts_z3, axioms_z3, lemmas, unfold_recdefs_z3, deref, cons
                 fct_name = getZ3FctName(fct)
                 false_model_dict[fct_name] = {}
                 # TODO: add support for n-ary symbols
-                instantiations = const + deref
                 for inst in instantiations:
                     inst_value = false_model_z3.eval(inst, model_completion=True)
                     # model_compress has been enabled (see at the top of this file). Should return arrays rather than lambdas

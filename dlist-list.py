@@ -127,7 +127,7 @@ def vc(x, ret):
     return Implies(dlist(x),
                     Implies(pgm(x, ret), list(ret)))
 
-deref = [x, fresh]
+deref = [x]
 const = [nil]
 elems = [*range(3)]
 num_true_models = 20
@@ -137,8 +137,7 @@ valid_lemmas = []
 invalid_lemmas = []
 
 # check if VC is provable
-fresh = Int('fresh')
-orig_model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, vc(fresh, ret), True)
+orig_model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, vc(x, ret), True)
 if orig_model == None:
     print('original VC is provable using induction.')
     exit(0)

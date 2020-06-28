@@ -71,7 +71,7 @@ def addOffset(model, f):
             # For entries corresponding to constants
             value = model[key]
             if isinstance(value, list):
-                # For 'elem' entry
+                # For 'elems' entry
                new_out = [f(i) for i in value]
             elif isinstance(value, bool):
                 new_out = value

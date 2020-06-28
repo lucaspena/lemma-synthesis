@@ -130,7 +130,7 @@ def generateAllTrueConstraints(models, const):
 ###############################################################################
 # Setting lemma synthesis options here. DO NOT MODIFY.
 experimental_prefetching_switch = 'on'
-exclude_set_type_definitions_switch = 'on'
+exclude_set_type_definitions_switch = 'off'
 ###############################################################################
 # write output to a file that can be parsed by CVC4 SyGuS
 def getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3, lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const, vc, problem_instance_name):
@@ -142,7 +142,13 @@ def getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3, lemm
     # Also works because the lemma for the current class of examples is not going to use any terms that have not already been explicitly computed.
     # One fix is to evalaute all terms within the false model into itself. Hopefully that can be done easily.
     (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, lemmas, unfold_recdefs_z3, deref, const, vc)
-
+    if false_model_z3 == None:
+        # Lemmas generated up to this point are useful. Exit.
+        print('Lemmas used to prove original vc:')
+        for lemma in lemmas:
+            print(lemma)
+        exit(0)
+    
     # Adding offsets to make sure: (i) all elements in all models are positive (ii) true and false models do not overlap
     # Making the universe of the false model positive
     false_model_dict = makeModelUniverseNonNegative(false_model_dict)
@@ -150,10 +156,12 @@ def getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3, lemm
     true_models = getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_model_offset, config_params)
 
     all_models = true_models + [false_model_dict]
-    # Must go through this branch until we can transform output to CVC$ SyGuS format
     if exclude_set_type_definitions_switch == 'on':
+        # To assess whether removing set type definitions will help in cases where the lemma does not feature set reasoning.
+        set_defs = {}
+    else:
         set_defs = {key: fcts_z3[key] for key in fcts_z3.keys() if 'set' in key}
-        fcts_z3 = {key: fcts_z3[key] for key in fcts_z3.keys() if 'set' not in key}
+    fcts_z3 = {key: fcts_z3[key] for key in fcts_z3.keys() if 'set' not in key}
 
     sygus_model_definitions = sygusBigModelEncoding(all_models, fcts_z3, set_defs)
     with open(out_file, 'w') as out, open(grammar_file, 'r') as grammar:

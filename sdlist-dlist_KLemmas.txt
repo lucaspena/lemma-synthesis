@@ -1,1 +1,0 @@
-(define-fun lemma ((x Int) (nil Int)) Bool (=> (sdlist x) (dlist x)))

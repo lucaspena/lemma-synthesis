@@ -168,10 +168,10 @@ def getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_mo
         mode = config_params['mode']
         if mode != 'random':
             raise ValueError('Cannot understand config params for true model generation.')
-        num_true_models = 1 if 'num_true_models' not in config_params.keys() else config_params['num_true_models']
+        num_true_models = config_params.get('num_true_models',1)
         if num_true_models == 'full':
             raise ValueError('Must specify a number of desired models for random true model generation.')
-        search_fuel = 3 if 'fuel' not in config_params.keys() else abs(config_params['fuel'])
+        search_fuel = abs(config_params.get('fuel',3))
     else:
         mode = 'enumeration'
         num_true_models = config_params
