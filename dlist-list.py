@@ -136,6 +136,12 @@ num_true_models = 20
 valid_lemmas = []
 invalid_lemmas = []
 
+fresh = Int('fresh')
+orig_model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, vc(fresh, ret), True)
+if orig_model == None:
+    print('original VC is provable using induction.')
+    exit(0)
+
 # continuously get valid lemmas until VC has been proven
 while True:
     lemmas = getSygusOutput(elems, num_true_models, fcts_z3, axioms_python, axioms_z3,
