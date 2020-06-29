@@ -133,7 +133,7 @@ def vc(x, y, yp):
 deref = [x]
 const = [nil, y, yp]
 
-elems = [*range(3)]
+elems = [*range(2)]
 num_true_models = 10
 
 # valid and invalid lemmas

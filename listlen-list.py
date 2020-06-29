@@ -144,7 +144,7 @@ def vc(x, ret):
 
 deref = [x]
 const = [nil]
-elems = [*range(3)]
+elems = [*range(2)]
 num_true_models = 'full'
 
 # valid and invalid lemmas
