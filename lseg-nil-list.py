@@ -117,8 +117,9 @@ def pgm(x, ret):
     return IteBool(x == nil, ret == nil, ret == next(x))
 
 def vc(x, ret):
-    return Implies( And(lsegy(x), y == nil),
-                    Implies(pgm(x, ret), list(ret)))
+    return Implies( lsegy(x),
+                    Implies(y == nil,
+                            Implies(pgm(x, ret), list(ret))) )
 
 deref = [x]
 const = [nil, y]
@@ -128,6 +129,13 @@ num_true_models = 10
 # valid and invalid lemmas
 valid_lemmas = []
 invalid_lemmas = []
+
+# check if VC is provable
+fresh = Int('fresh')
+orig_model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, vc(fresh, ret), True)
+if orig_model == None:
+    print('original VC is provable using induction.')
+    exit(0)
 
 # continuously get valid lemmas until VC has been proven
 while True:
