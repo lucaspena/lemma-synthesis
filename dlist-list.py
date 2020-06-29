@@ -137,7 +137,8 @@ valid_lemmas = []
 invalid_lemmas = []
 
 # check if VC is provable
-orig_model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, vc(x, ret), True)
+fresh = Int('fresh')
+orig_model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, vc(fresh, ret), True)
 if orig_model == None:
     print('original VC is provable using induction.')
     exit(0)
