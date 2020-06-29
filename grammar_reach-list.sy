@@ -1,0 +1,26 @@
+;; Full non-stratified grammar
+(synth-fun lemma ((x Int) (s Int) (nil Int)) Bool
+
+          ((Start Bool) (Rec Bool) (B Bool) (I Int))
+
+          ((Start Bool
+                 ((=> Rec B)))
+          (Rec Bool
+                 ((reach I)
+                  (list I)))
+          (B Bool
+                 ((=> B B)
+                  (and B B)
+                  (or B B)
+                  (not B)
+                  (= I I)
+                  (reach I)
+                  (list I)))
+           (I Int (x s nil
+                  (v I)
+                  (v1 I)
+                  (v2 I)
+                  (n I)
+                  (p I))))
+
+)
