@@ -11,6 +11,7 @@ all:
 	time python3 slist-find.py
 	time python3 lseg-nil-list.py
 	time python3 lseg-list-keys.py
+	time python3 slseg-nil-list.py
 
 clean:
 	rm -f *_KLemmas.txt
