@@ -1,4 +1,5 @@
 from z3 import *
+set_param('model.compact', False)
 import re
 
 ############################

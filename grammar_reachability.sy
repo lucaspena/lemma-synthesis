@@ -15,10 +15,14 @@
                    (or B B)
                    ;(not B)
                    (= Progvar Progvar)))
-            (Progvar Int (c nil
+            (Progvar Int 
+                  (
+                    c 
+                   nil
                    (v1 State)
                    (v2 State)
-                   (n Progvar)))
+                   ;(n Progvar)
+                   ))
             (State Int (x
                    (p x))))
 

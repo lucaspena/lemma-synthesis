@@ -1,7 +1,7 @@
 import subprocess
 
 from z3 import *
-# set_param('model.compact', False)
+set_param('model.compact', False)
 from true_models import *
 from false_models import *
 from lemsynth_utils import *
@@ -152,8 +152,28 @@ def getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3, lemm
     # Adding offsets to make sure: (i) all elements in all models are positive (ii) true and false models do not overlap
     # Making the universe of the false model positive
     false_model_dict = makeModelUniverseNonNegative(false_model_dict)
-    true_model_offset = getRelativeModelOffset(false_model_dict)
+    false_model_relative_offset = getRelativeModelOffset(false_model_dict)
+
+    # Add counterexample models to true models if use_cex_models is True
+    use_cex_models = config_params.get('use_cex_models', False)
+    cex_models = config_params.get('cex_models', [])
+    accumulated_offset = false_model_relative_offset
+    if use_cex_models:
+        cex_models_with_offset = []
+        for cex_model in cex_models:
+            # Make the universe of the model positive
+            cex_model_positive_universe = makeModelUniverseNonNegative(cex_model)
+            # Shift the model by accumulated offset
+            cex_model_with_offset = addOffset(cex_model_positive_universe, lambda x: accumulated_offset + x)
+            # Compute new accumulated offset
+            accumulated_offset = getRelativeModelOffset(cex_model_with_offset)
+            # Add model to cex_models_with_offset
+            cex_models_with_offset = cex_models_with_offset + [cex_model_with_offset]
+        cex_models = cex_models_with_offset
+    true_model_offset = accumulated_offset
+
     true_models = getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_model_offset, config_params)
+    true_models = cex_models + true_models
 
     all_models = true_models + [false_model_dict]
     if exclude_set_type_definitions_switch == 'on':
@@ -190,7 +210,7 @@ def getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3, lemm
     if experimental_prefetching_switch == 'on':
         # Must include a parameter in the overall call for number of lemmas to be prefetched
         # Currently hardcoded
-        prefetch_count = 100
+        prefetch_count = config_params.get('prefetch_count',1)
         klemmas_filename = problem_instance_name + '_KLemmas.txt'
         sygus_proc = subprocess.Popen(['cvc4', '--lang=sygus2', '--sygus-stream', out_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         prefetch_proc = subprocess.Popen(['python3', 'prefetch_lemmas.py', klemmas_filename, str(prefetch_count)], stdin=sygus_proc.stdout, stdout=subprocess.PIPE, universal_newlines=True)
@@ -216,4 +236,4 @@ def getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3, lemm
             return None
         else:
             lemma = str(cvc4_out).split('\n')[1]
-            return lemma
+            return [lemma]

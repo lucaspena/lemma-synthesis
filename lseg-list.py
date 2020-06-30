@@ -267,25 +267,52 @@ for term in deref + const:
 elems = [*range(2)]
 num_true_models = 10
 
+# End of input
+###########################################################################################################################
+# Lemma synthesis stub to follow: must be replaced with a uniform function call between all examples.
+##########################################################################################################################
 # valid and invalid lemmas
 valid_lemmas = []
 invalid_lemmas = []
 
+cex_models = []
+config_params = {'mode': 'random', 'num_true_models': 0}
+config_params['use_cex_models'] = True
+config_params['cex_models'] = cex_models
+
+# check if VC is provable
+orig_model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, vc(x,y,z), True)
+if orig_model == None:
+    print('original VC is provable using induction.')
+    exit(0)
+
 # continuously get valid lemmas until VC has been proven
 while True:
-    lemmas = getSygusOutput(elems, num_true_models, fcts_z3, axioms_python, axioms_z3,
-                            valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
-                            vc(x,y,z), 'lseg-list')
-    # print('Lemmas: {}'.format(lemmas))
+    lemmas = getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3,
+                             valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
+                             vc(x,y,z), 'lseg-list')
+    print("lemmas: {}".format(lemmas))
     for lemma in lemmas:
         z3py_lemma = translateLemma(lemma, fcts_z3)
-        if z3py_lemma in invalid_lemmas:
+        if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
             print('lemma has already been proposed')
             continue
-        model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, z3py_lemma, True)
-        if model != None:
+        fresh = Int('fresh')
+        lemma_deref = [fresh, next(fresh), next_p(fresh)]
+        (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, z3py_lemma, True)
+        if false_model_z3 != None:
             print('proposed lemma cannot be proved.')
             invalid_lemmas = invalid_lemmas + [ z3py_lemma ]
+            use_cex_models = config_params.get('use_cex_models', False)
+            if use_cex_models:
+                cex_models = cex_models + [false_model_dict]
+                config_params['cex_models'] = cex_models
+                # correct_lemma = Implies(dlist(fresh), list(fresh))
+                # cexmodeleval = false_model_z3.eval(correct_lemma)
+                # print('cexmodeleval: {}'.format(cexmodeleval))
+                # if not cexmodeleval:
+                #     print(false_model_z3.sexpr())
+                #     exit(0)
             # TODO: add to bag of unwanted lemmas (or add induction principle of lemma to axioms)
             # and continue
         else:
