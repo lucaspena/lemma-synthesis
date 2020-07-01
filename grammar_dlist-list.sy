@@ -3,17 +3,13 @@
 
 (synth-fun lemma ((x Int) (nil Int)) Bool
 
-           ((Start Bool) (Rec Bool) (B Bool) (I Int))
+           ((Start Bool) (I Int))
 
            ((Start Bool
-                  ((=> Rec B)))
-           (Rec Bool
-                  ((list I) (dlist I)))
-           (B Bool
-                  ((=> B B)
-                   (and B B)
-                   (or B B)
-                   (not B)
+                  ((=> Start Start)
+                   (and Start Start)
+                   (or Start Start)
+                   (not Start)
                    (list I) (dlist I)))
             (I Int (x nil
                    (next I)
@@ -21,24 +17,10 @@
 
 )
 
+(synth-fun rswitch () Int
 
-;; Grammar for old version of code. Must be removed
-;(synth-fun lemma ((x Int)) Bool
-;
-;           ((Start Bool) (Rec Bool) (B Bool) (I Int))
-;
-;           ((Start Bool
-;                  ((=> Rec B)))
-;           (Rec Bool
-;                  ((list I) (dlist I)))
-;           (B Bool
-;                  ((=> B B)
-;                   (and B B)
-;                   (or B B)
-;                   (not B)
-;                   (list I) (dlist I)))
-;            (I Int (x (- 1)
-;                   (next I)
-;                   (prev I))))
-;
-;)
+           ((Start Int))
+
+           ((Start Int (0 1)))
+
+)

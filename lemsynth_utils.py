@@ -223,7 +223,6 @@ def translateLemma(lemma, fcts_z3, addl_decls = {}, swap_fcts = {}, replace_fcts
     z3py_lemma = parse_smt2_string(smt_string, decls=z3_str)[0]
     z3py_lemma_replaced = replaceArgs(z3py_lemma, replace_fcts)
     z3py_lemma_fixed = swapArgs(z3py_lemma_replaced, swap_fcts)
-    print('proposed lemma: ' + str(z3py_lemma_fixed))
     return z3py_lemma_fixed
 
 # Given the name of a recursive predicate/function name and a list of unfolded recdefs
