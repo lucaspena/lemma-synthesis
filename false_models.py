@@ -43,8 +43,9 @@ def makeIP(lhs, rhs, recdefs, fcts_z3, insts):
 def getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, vc, ip = False):
     sol = Solver()
 
-    # only useful for current implementation. must be distinguished by signature in general
-    instantiations = const + deref
+    # add skolem variable to instantiations
+    skolem = Int('skolem')
+    instantiations = const + deref + ([skolem] if ip and skolem not in deref else [])
     for key in axioms_z3.keys():
         signature = getFctSignature(key)
         arity = signature[0]
@@ -80,11 +81,6 @@ def getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, v
         for recdef in recdefs:
             for inst in instantiations:
                 sol.add(recdef(inst))
-                # unfold on skolemized variable from generated induction principle
-                if ip:
-                    next = Function('next', IntSort(), IntSort())
-                    skolem = Int('skolem')
-                    sol.add(recdef(skolem))
 
     # negate VC
     sol.add(Not(vc))
