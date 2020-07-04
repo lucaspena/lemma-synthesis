@@ -13,6 +13,7 @@ all:
 	time python3 lseg-list-keys.py
 	time python3 slseg-nil-list.py
 	time python3 lseg-nil-length.py
+	time python3 lseg-list-length.py
 
 clean:
 	rm -f *_KLemmas.txt
