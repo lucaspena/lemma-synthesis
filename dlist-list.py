@@ -153,17 +153,12 @@ config_params['cex_models'] = cex_models
 
 # check if VC is provable
 fresh = Int('fresh')
-orig_model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, vc(x, ret), True)
-if orig_model == None:
-    print('original VC is provable using induction.')
-    exit(0)
 
 # continuously get valid lemmas until VC has been proven
 while True:
     lemma = getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3,
                            valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
                            vc(x,ret), 'dlist-list')
-    print(lemma)
     rhs_lemma = translateLemma(lemma[0], fcts_z3)
     index = int(lemma[1][-2])
     lhs_lemma = fcts_z3['recpreds-loc_1_int_bool'][index](fresh)
@@ -180,15 +175,8 @@ while True:
         use_cex_models = config_params.get('use_cex_models', False)
         if use_cex_models:
             cex_models = cex_models + [false_model_dict]
-            config_params['cex_models'] = cex_models
-            # correct_lemma = Implies(dlist(fresh), list(fresh))
-            # cexmodeleval = false_model_z3.eval(correct_lemma)
-            # print('cexmodeleval: {}'.format(cexmodeleval))
-            # if not cexmodeleval:
-            #     print(false_model_z3.sexpr())
-            #     exit(0)
-        # TODO: add to bag of unwanted lemmas (or add induction principle of lemma to axioms)
-        # and continue
     else:
         valid_lemmas = valid_lemmas + [ z3py_lemma ]
-        break
+        cex_models = []
+        invalid_lemmas = []
+    config_params['cex_models'] = cex_models

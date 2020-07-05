@@ -200,7 +200,6 @@ while True:
     lemma = getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3,
                            valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
                            vc(x,ret), 'sdlist-dlist-and-slist')
-    print(lemma)
     rhs_lemma = translateLemma(lemma[0], fcts_z3)
     index = int(lemma[1][-2])
     lhs_lemma = fcts_z3['recpreds-loc_1_int_bool'][index](fresh)
