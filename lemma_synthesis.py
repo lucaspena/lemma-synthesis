@@ -151,6 +151,7 @@ def generateCexConstraints(model, const, pfp_dict, fcts_z3):
     return out
 
 def generateAllCexConstraints(models, const, pfp_dict, fcts_z3):
+    print(len(models))
     out = ''
     for model in models:
         out = out + generateCexConstraints(model, const, pfp_dict, fcts_z3)

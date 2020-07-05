@@ -220,3 +220,6 @@ while True:
     else:
         valid_lemmas = valid_lemmas + [ z3py_lemma ]
         cex_models = []
+        invalid_lemmas = []
+    config_params['cex_models'] = cex_models
+
