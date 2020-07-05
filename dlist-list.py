@@ -1,5 +1,7 @@
 from z3 import *
+from false_models import *
 from lemma_synthesis import *
+from lemsynth_utils import *
 
 ####### Section 0
 # some general FOL macros
@@ -113,6 +115,9 @@ def udlist_python(x, model):
 
 unfold_recdefs_z3['1_int_bool'] = [ulist_z3, udlist_z3]
 unfold_recdefs_python['1_int_bool'] = [ulist_python, udlist_python]
+pfp_dict = {}
+pfp_dict['list'] = '(=> (ite (= {primary_arg} {nil}) true (lemma (next {primary_arg}) {rest_args})) (lemma {primary_arg} {rest_args}))'
+pfp_dict['dlist'] = '(=> (ite (= {primary_arg} {nil}) true (ite (= (next {primary_arg}) {nil}) true (and (= (prev (next {primary_arg})) {primary_arg}) (lemma (next {primary_arg}) {rest_args})))) (lemma {primary_arg} {rest_args}))'
 
 # Recall recursive predicates are always unary
 fcts_z3['recpreds-loc_1_int_bool'] = [list,dlist]
@@ -131,6 +136,7 @@ deref = [x]
 const = [nil]
 elems = [*range(3)]
 
+
 # End of input
 ###########################################################################################################################
 # Lemma synthesis stub to follow: must be replaced with a uniform function call between all examples.
@@ -140,13 +146,14 @@ valid_lemmas = []
 invalid_lemmas = []
 
 cex_models = []
-config_params = {'mode': 'random', 'num_true_models': 20}
+config_params = {'mode': 'random', 'num_true_models':0}
+config_params['pfp_dict'] = pfp_dict
 config_params['use_cex_models'] = True
 config_params['cex_models'] = cex_models
 
 # check if VC is provable
 fresh = Int('fresh')
-orig_model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, vc(fresh, ret), True)
+orig_model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, vc(x, ret), True)
 if orig_model == None:
     print('original VC is provable using induction.')
     exit(0)
@@ -165,8 +172,7 @@ while True:
     if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
         print('lemma has already been proposed')
         continue
-    fresh = Int('fresh')
-    lemma_deref = [fresh, next(fresh)]
+    lemma_deref = [fresh, next(fresh), prev(fresh)]
     (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, z3py_lemma, True)
     if false_model_z3 != None:
         print('proposed lemma cannot be proved.')

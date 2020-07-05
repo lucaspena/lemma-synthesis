@@ -40,6 +40,7 @@ def modelUniverse(value):
                 universe = universe | modelUniverse(value[key])
         return universe
     else:
+        print(value)
         raise ValueError('Entry type {} not supported'.format(str(type(value))))
 
 # Returns the highest absolute value among the integers in the model to act as an offset for further models
@@ -98,7 +99,7 @@ def addOffset(model, f):
             newModel[key] = newDict
     return newModel
 
-
+# Function to lookup term in model dictionary. Returns None if not found.
 def modelDictEval(model_dict, z3_term_or_python_string):
     if isinstance(z3_term_or_python_string, str):
         raise ValueError('Cannot give strings to lookup. Must be a z3py term.')
@@ -112,16 +113,76 @@ def modelDictEval(model_dict, z3_term_or_python_string):
         declaration = z3_term.decl()
         children = z3_term.children()
         if children == []:
-            return model_dict[getZ3FctName(z3_term)]
+            return model_dict.get(getZ3FctName(z3_term),None)
         else:
             arity = len(children)
             if arity == 1:
-                return model_dict[getZ3FctName(declaration)][modelDictEval(model_dict, children[0])]
+                declaration_dict = model_dict.get(getZ3FctName(declaration), None)
+                if declaration_dict == None:
+                    raise ValueError('Declaration {} not present in model'.format(getZ3FctName(declaration)))
+                subterm_value = modelDictEval(model_dict, children[0])
+                if subterm_value == None:
+                    return None
+                else:
+                    return declaration_dict.get(subterm_value, None)
             else:
                 # In a model dictionary arguments are represented as tuples
                 arg = tuple([modelDictEval(model_dict, child) for child in children])
-                return model_dict[getZ3FctName(declaration)][arg]
+                if None in arg:
+                    return None
+                else:
+                    declaration_dict = model_dict.get(getZ3FctName(declaration), None)
+                    if declaration_dict == None:
+                        raise ValueError('Declaration {} not present in model'.format(getZ3FctName(declaration)))
+                    return declaration_dict.get(arg, None)
 
+# Updates given model dictionary at the given position with the given value.
+# TODO: edge cases not handled. Possible to include extraneous keys and values.
+def modelDictUpdate(model_dict, index_z3_term_or_python_string, value_z3_type_or_python_string):
+    if isinstance(index_z3_term_or_python_string, str) or isinstance(value_z3_type_or_python_string, str):
+        raise ValueError('Cannot give strings to lookup. Must be a z3py term.')
+    else:
+        index_z3_term = index_z3_term_or_python_string
+        value_z3_term = value_z3_type_or_python_string
+        # Given argument is a z3 term
+        # Assuming that z3_term does not have anything other than integer or boolean constants in it outside of z3 terms
+        if isinstance(index_z3_term, IntNumRef) or isinstance(index_z3_term, BoolRef):
+            index_python = convertZ3ValueTypetoPython(index_z3_term)
+            value_python = convertZ3ValueTypetoPython(value_z3_term)
+            model_dict[index_python] = value_python
+            return model_dict
+
+        # Term is not an IntNumRef or BoolRef. Declaration must be a function or constant.
+        declaration = index_z3_term.decl()
+        children = index_z3_term.children()
+        arity = len(children)
+        if arity == 0:
+            # Constant symbol
+            value_python = convertZ3ValueTypetoPython(value_z3_term)
+            model_dict[getZ3FctName(declaration)] = value_python
+            return model_dict
+        else:
+            # Not a constant symbol. Complex expression.
+            index_element = modelDictEval(model_dict, index_z3_term)
+            if index_element != None:
+                # Index term present in dictionary. Simply update value.
+                value_python = convertZ3ValueTypetoPython(value_z3_term)
+                arg_element = tuple([modelDictEval(model_dict, child) for child in children])
+                arg = arg_element[0] if arity == 1 else arg_element
+                model_dict[getZ3FctName(declaration)][arg] = value_python
+                return model_dict
+            else:
+                # Index term not present in dictionary.
+                # Create both key and value
+                arg_element = tuple([modelDictEval(model_dict, child) for child in children])
+                if None in arg_element:
+                    raise ValueError('Model does not have enough information to update with the correct values')
+                else:
+                    arg = arg_element[0] if arity == 1 else arg_element
+                    declaration_name = getZ3FctName(declaration)
+                    value_python = convertZ3ValueTypetoPython(value_z3_term)
+                    model_dict[declaration_name][arg] = value_python 
+                    return model_dict
 
 ##################################
 # General unclassified utilities

@@ -136,8 +136,14 @@ def getFalseModelDict(fcts_z3, axioms_z3, lemmas, unfold_recdefs_z3, deref, cons
                 for inst in instantiations:
                     inst_value = false_model_z3.eval(inst, model_completion=True)
                     # model_compress has been enabled (see at the top of this file). Should return arrays rather than lambdas
+                    # Store values of functions under instantiated terms in the model
                     fct_of_inst_value = false_model_z3.eval(fct(inst), model_completion=True)
                     inst_value_python = convertZ3ValueTypetoPython(inst_value)
                     fct_of_inst_value_python = convertZ3ValueTypetoPython(fct_of_inst_value)
                     false_model_dict[fct_name][inst_value_python] = fct_of_inst_value_python
+    # Update false_model_dict with instantiated terms
+    for inst in instantiations:
+        inst_value = false_model_z3.eval(inst, model_completion=True)
+        false_model_dict = modelDictUpdate(false_model_dict,inst,inst_value)
+    # Return false model: both the z3 model and the dictionary.
     return (false_model_z3, false_model_dict)

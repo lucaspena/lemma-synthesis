@@ -87,7 +87,7 @@ def sygusBigModelEncoding(models, fcts_z3, set_defs):
 # Generate constraints corresponding to false model for SyGuS
 def generateFalseConstraints(model_dict, deref, const, fcts_z3):
     constraints = ''
-    const_values = ' '.join([ str(model_dict[getZ3FctName(constant_symbol)]) for constant_symbol in const])
+    const_values = ' '.join([str(modelDictEval(model_dict, constant_symbol)) for constant_symbol in const])
     for arg in const + deref:
         # In general, arg will range over the tuples of instantiated terms
         # TODO: check if this part generalises to k-ary terms. modelDictEval takes k-ary terms
@@ -116,7 +116,7 @@ def generateFalseConstraints(model_dict, deref, const, fcts_z3):
 # Generate constraints corresponding to one true model for SyGuS
 def generateTrueConstraints(model, const, fcts_z3):
     constraints = ''
-    const_values = ' '.join([str(model[getZ3FctName(constant_symbol)]) for constant_symbol in const])
+    const_values = ' '.join([str(modelDictEval(model, constant_symbol)) for constant_symbol in const])
     elems = model['elems']
     for elem in elems:
         # TODO: only one universally quantified variable in desired lemma for now
@@ -134,8 +134,31 @@ def generateAllTrueConstraints(models, const, fcts_z3):
         out = out + generateTrueConstraints(model, const, fcts_z3)
     return out
 
+def generateCexConstraints(model, const, pfp_dict, fcts_z3):
+    constraints = ''
+    const_values = ' '.join([str(modelDictEval(model, constant_symbol)) for constant_symbol in const])
+    recs = fcts_z3['recpreds-loc_1_int_bool']
+    # TODO: only one universally quantified variable in desired lemma for now
+    for i in range(len(recs)):
+        fresh = Int('fresh')
+        quantified_var_value = modelDictEval(model, fresh)
+        pfp_formula_stub = pfp_dict[getZ3FctName(recs[i])]
+        constval_dict = {getZ3FctName(constant_symbol):modelDictEval(model,constant_symbol) for constant_symbol in const}
+        pfp_formula = pfp_formula_stub.format(primary_arg=quantified_var_value, rest_args=const_values, **constval_dict)
+        curr_constraint = '(=> (= rswitch {0}) {1})'.format(i, pfp_formula)
+        constraints = constraints + curr_constraint
+    out = '(constraint (and {0}))\n'.format(constraints)
+    return out
+
+def generateAllCexConstraints(models, const, pfp_dict, fcts_z3):
+    out = ''
+    for model in models:
+        out = out + generateCexConstraints(model, const, pfp_dict, fcts_z3)
+    return out
+
 ###############################################################################
 # Setting lemma synthesis options here. DO NOT MODIFY.
+# DO NOT switch on prefetching. Code is not updated to handle current sygus output.
 experimental_prefetching_switch = 'off'
 exclude_set_type_definitions_switch = 'off'
 ###############################################################################
@@ -181,6 +204,7 @@ def getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3, lemm
 
     true_models = getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_model_offset, config_params)
     true_models = cex_models + true_models
+    # print(len(true_models))
 
     all_models = true_models + [false_model_dict]
     if exclude_set_type_definitions_switch == 'on':
@@ -202,6 +226,15 @@ def getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3, lemm
         # Or generate the grammar file based on problem parameters.
         out.write(grammar_string)
         out.write('\n')
+        out.write(';; pfp constraints from counterexample models\n')
+        if use_cex_models:
+            pfp_dict = config_params.get('pfp_dict',None)
+            if pfp_dict == None or pfp_dict == {}:
+                raise ValueError('Must specify pre-fixpoint formula for recdefs')
+            cex_pfp_constraints = generateAllCexConstraints(cex_models, const, pfp_dict, fcts_z3)
+            out.write(cex_pfp_constraints)
+            out.write('\n')
+        out.write('\n')
         out.write(';; constraints from false model\n')
         false_constraints = generateFalseConstraints(false_model_dict, deref, const, fcts_z3)
         out.write(false_constraints)
@@ -214,6 +247,7 @@ def getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3, lemm
         out.write('(check-synth)')
         out.close()
     # Optionally prefetching a bunch of lemmas to check each one rather than iterating through each one.
+    # DO NOT use prefetching. Code is not updated to handle current sygus output.
     if experimental_prefetching_switch == 'on':
         # Must include a parameter in the overall call for number of lemmas to be prefetched
         # Currently hardcoded
