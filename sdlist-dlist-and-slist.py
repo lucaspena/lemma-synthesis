@@ -149,7 +149,15 @@ def usdlist_python(x, model):
 unfold_recdefs_z3['1_int_bool'] = [udlist_z3, uslist_z3, usdlist_z3]
 unfold_recdefs_python['1_int_bool'] = [udlist_python, uslist_python, usdlist_python]
 pfp_dict = {}
-pfp_dict['dlist'] = '(=> (ite (= {primary_arg} {nil}) true (ite (= (next {primary_arg}) {nil}) true (and (= (prev (next {primary_arg})) {primary_arg}) (lemma (next {primary_arg}) {rest_args})))) (lemma {primary_arg} {rest_args}))'
+pfp_dict['dlist'] = """
+(=> (ite (= {primary_arg} {nil}) 
+         true 
+         (ite (= (next {primary_arg}) {nil}) 
+              true 
+              (and (= (prev (next {primary_arg})) {primary_arg}) 
+                   (lemma (next {primary_arg}) {rest_args}))))
+    (lemma {primary_arg} {rest_args}))
+"""
 pfp_dict['slist'] = '(=> (ite (= {primary_arg} {nil}) true (ite (= (next {primary_arg}) {nil}) true (and (<= (key {primary_arg}) (key (next {primary_arg}))) (lemma (next {primary_arg}) {rest_args})))) (lemma {primary_arg} {rest_args}))'
 pfp_dict['sdlist'] = '(=> (ite (= {primary_arg} {nil}) true (ite (= (next {primary_arg}) {nil}) true (and (and (<= (key {primary_arg}) (key (next {primary_arg}))) (lemma (next {primary_arg}) {rest_args})) (= (prev (next {primary_arg})) {primary_arg})))) (lemma {primary_arg} {rest_args}))'
 
@@ -169,7 +177,6 @@ def vc(x, ret):
 deref = [x]
 const = [nil]
 elems = [*range(3)]
-num_true_models = 20
 
 # End of input
 ###########################################################################################################################
@@ -187,10 +194,6 @@ config_params['cex_models'] = cex_models
 
 # check if VC is provable
 fresh = Int('fresh')
-# orig_model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, vc(x, ret), True)
-# if orig_model == None:
-#     print('original VC is provable using induction.')
-#     exit(0)
 
 # continuously get valid lemmas until VC has been proven
 while True:
@@ -208,26 +211,12 @@ while True:
         continue
     lemma_deref = [fresh, next(fresh), prev(fresh)]
     (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, z3py_lemma, True)
-    # print(false_model_z3.eval(fresh))
-    # print('false_model_dict', false_model_dict)
-    # print(modelDictEval(false_model_dict, fresh))
-    # exit(0)
     if false_model_z3 != None:
         print('proposed lemma cannot be proved.')
         invalid_lemmas = invalid_lemmas + [ z3py_lemma ]
         use_cex_models = config_params.get('use_cex_models', False)
         if use_cex_models:
             cex_models = cex_models + [false_model_dict]
-            config_params['cex_models'] = cex_models
-            # correct_lemma = Implies(dlist(fresh), list(fresh))
-            # cexmodeleval = false_model_z3.eval(correct_lemma)
-            # print('cexmodeleval: {}'.format(cexmodeleval))
-            # if not cexmodeleval:
-            #     print(false_model_z3.sexpr())
-            #     exit(0)
-        # TODO: add to bag of unwanted lemmas (or add induction principle of lemma to axioms)
-        # and continue
-        # print(len(cex_models))
     else:
         valid_lemmas = valid_lemmas + [ z3py_lemma ]
-        break
+        cex_models = []
