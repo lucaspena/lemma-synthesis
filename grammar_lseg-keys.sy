@@ -1,55 +1,58 @@
 ;; lemma: lsegy(x) /\ next(y) = yp => lsegkeys_yp(x) = lsegkeys_y(x) U {key(y)}
 ;; TODO: this should be generated from the problem parameters
 ;; lemma to synthesize
+(synth-fun lemma ((x Int) (nil Int) (y Int) (yp Int)) Bool
+           ((Start Bool) (S (Set Int)) (I Int))
+
+           ((Start Bool
+                  ((=> Start Start)
+                   (and Start Start)
+                   (= S S)
+                   (lseg_y I)))
+           (S (Set Int)
+                  ((union S S)
+                   (insert I S)
+                   (keys I)
+                   (lsegkeys_y I)
+                   (lsegkeys_yp I)))
+           (I Int (x nil y yp
+                  (key I)
+                  (next I))))
+
+)
+
 ;; (synth-fun lemma ((x Int) (nil Int) (y Int) (yp Int)) Bool
-;;            ((Start Bool) (RecB Bool) (S (Set Int)) (B Bool) (I Int))
+;;            ((Start Bool) (RecB Bool) (S (Set Int)) (S1 (Set Int)) (B Bool) (B1 Bool) (I Int) (Loc Int) (Loc1 Int))
 
 ;;            ((Start Bool
 ;;                   ((=> RecB B)))
 ;;            (RecB Bool
-;;                   ((lseg_y I)))
+;;                   ((lseg_y Loc)))
 ;;            (S (Set Int)
-;;                   ((union S S)
-;;                    (insert I S)
-;;                    (keys I)
-;;                    (lsegkeys_y I)
-;;                    (lsegkeys_yp I)))
+;;                   ((insert I S1)
+;;                   S1))
+;;            (S1 (Set Int)
+;;                   ((keys Loc)
+;;                    (lsegkeys_y Loc)
+;;                    (lsegkeys_yp Loc)))                  
 ;;            (B Bool
-;;                   ((=> I I)
-;;                    (and B B)
-;;                    (= S S)
-;;                    (list I) (lseg_y I) (lseg_yp I)))
-;;            (I Int (x nil y yp
-;;                   (key I)
-;;                   (next I))))
-
+;;                   ((=> B1 B1)
+;;                    B1))
+;;            (B1 Bool
+;;                   ((= S S)
+;;                    (lseg_y Loc)))
+;;            (I Int
+;;                   ((key Loc)))
+;;            (Loc Int
+;;                   ((next Loc1)
+;;                   Loc1))
+;;            (Loc1 Int (x y yp)))
 ;; )
 
-(synth-fun lemma ((x Int) (nil Int) (y Int) (yp Int)) Bool
-           ((Start Bool) (RecB Bool) (S (Set Int)) (S1 (Set Int)) (B Bool) (B1 Bool) (I Int) (Loc Int) (Loc1 Int))
+(synth-fun rswitch () Int
 
-           ((Start Bool
-                  ((=> RecB B)))
-           (RecB Bool
-                  ((lseg_y Loc)))
-           (S (Set Int)
-                  ((insert I S1)
-                  S1))
-           (S1 (Set Int)
-                  ((keys Loc)
-                   (lsegkeys_y Loc)
-                   (lsegkeys_yp Loc)))                  
-           (B Bool
-                  ((=> B1 B1)
-                   B1))
-           (B1 Bool
-                  ((= S S)
-                   (lseg_y Loc)))
-           (I Int
-                  ((key Loc)))
-           (Loc Int
-                  ((next Loc1)
-                  Loc1))
-           (Loc1 Int (x y yp)))
+           ((Start Int))
+
+           ((Start Int (0)))
+
 )
-
