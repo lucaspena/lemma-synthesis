@@ -138,10 +138,10 @@ def generateCexConstraints(model, const, pfp_dict, fcts_z3):
     constraints = ''
     const_values = ' '.join([str(modelDictEval(model, constant_symbol)) for constant_symbol in const])
     recs = fcts_z3['recpreds-loc_1_int_bool']
-    # TODO: only one universally quantified variable in desired lemma for now
+    # TODO: NOTE: only one universally quantified variable in desired lemma for now
     for i in range(len(recs)):
-        fresh = Int('fresh')
-        quantified_var_value = modelDictEval(model, fresh)
+        skolem = Int('skolem')
+        quantified_var_value = modelDictEval(model, skolem)
         pfp_formula_stub = pfp_dict[getZ3FctName(recs[i])]
         constval_dict = {getZ3FctName(constant_symbol):modelDictEval(model,constant_symbol) for constant_symbol in const}
         pfp_formula = pfp_formula_stub.format(primary_arg=quantified_var_value, rest_args=const_values, **constval_dict)
@@ -203,10 +203,8 @@ def getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3, lemm
     true_model_offset = accumulated_offset
 
     true_models = getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_model_offset, config_params)
-    true_models = cex_models + true_models
-    # print(len(true_models))
 
-    all_models = true_models + [false_model_dict]
+    all_models = cex_models + true_models + [false_model_dict]
     if exclude_set_type_definitions_switch == 'on':
         # To assess whether removing set type definitions will help in cases where the lemma does not feature set reasoning.
         set_defs = {}

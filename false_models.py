@@ -2,7 +2,7 @@ from z3 import *
 z3.set_param('model.compact', False)
 from lemsynth_utils import *
 
-def makeIP(lhs, rhs, recdefs, fcts_z3, insts):
+def makePFP(lhs, rhs, recdefs, fcts_z3, insts):
     fresh = Int('fresh')
     skolem = Int('skolem')
     lhs_decl = lhs.decl()
@@ -32,10 +32,7 @@ def makeIP(lhs, rhs, recdefs, fcts_z3, insts):
                     subst_pairs = subst_pairs + [ new_pair ]
     subst_rho = substitute(rec_rho, subst_pairs)
     pfp = Implies(subst_rho, substitute(rhs, (fresh, skolem)))
-    quantified_var = Int('quantvar')
-    theorem = substitute(Implies(lhs,rhs),[(fresh, quantified_var)])
-    induction_principle = Implies(pfp, ForAll(quantified_var, theorem))
-    return induction_principle
+    return pfp
 
 # Get false model - model where VC is false deref is a list of terms that are
 # derefenced. This must be computed prior depending on the depth of instantiation.
@@ -67,25 +64,25 @@ def getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, v
             new_inst = substitute(lemma, (fresh, inst))
             sol.add(new_inst)
 
-    # generate induction principle
-    if ip:
-        lhs = vc.arg(0)
-        rhs = vc.arg(1)
-        def_name = lhs.decl()
-        induction_principle = makeIP(lhs, rhs, unfold_recdefs_z3, fcts_z3, const + deref)
-        sol.add(induction_principle)
-
     # unfold recursive definitions on instantiations
     for key in unfold_recdefs_z3:
         recdefs = unfold_recdefs_z3[key]
         for recdef in recdefs:
             for inst in instantiations:
                 sol.add(recdef(inst))
+    
+    if ip:
+        # Doing a proof by induction is the same as proving the corresponding PFP formula.
+        # NOTE: if sat, the model produced negates the PFP, not the given theorem.
+        lhs = vc.arg(0)
+        rhs = vc.arg(1)
+        pfp = makePFP(lhs, rhs, unfold_recdefs_z3, fcts_z3, const + deref)
+        sol.add(Not(pfp))
+    else:
+        # Not proof by induction. Simply negate the given vc. 
+        sol.add(Not(vc))
 
-    # negate VC
-    sol.add(Not(vc))
-
-    # check satisfiability and print model in format CVC4 can handle
+    # check satisfiability
     if (sol.check() == sat):
         m = sol.model()
         return m

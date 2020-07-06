@@ -221,6 +221,30 @@ unfold_recdefs_z3['1_int_bool'] = [ulist_z3, ulsegy_z3, ulist_p_z3, ulsegy_p_z3]
 unfold_recdefs_z3['1_int_set-int'] = [uhlist_z3, uhlsegy_z3, uhlist_p_z3, uhlsegy_p_z3]
 unfold_recdefs_python['1_int_bool'] = [ulist_python, ulsegy_python, ulist_p_python, ulsegy_p_python]
 unfold_recdefs_python['1_int_set-int'] = [uhlist_python, uhlsegy_python, uhlist_p_python, uhlsegy_p_python]
+pfp_dict = {}
+pfp_dict['list'] = '''
+(=> (ite (= {primary_arg} {nil})
+         true
+         (and (list {primary_arg}) (lemma (next {primary_arg}) {rest_args})))
+    (lemma {primary_arg} {rest_args}))'''
+
+pfp_dict['lsegy'] = '''
+(=> (ite (= {primary_arg} {y})
+         true
+         (and (lsegy {primary_arg}) (lemma (next {primary_arg}) {rest_args})))
+    (lemma {primary_arg} {rest_args}))'''
+
+pfp_dict['list_p'] = '''
+(=> (ite (= {primary_arg} {nil})
+         true
+         (and (list_p {primary_arg}) (lemma (next_p {primary_arg}) {rest_args})))
+    (lemma {primary_arg} {rest_args}))'''
+
+pfp_dict['lsegy_p'] = '''
+(=> (ite (= {primary_arg} {y})
+         true
+         (and (lsegy_p {primary_arg}) (lemma (next_p {primary_arg}) {rest_args})))
+    (lemma {primary_arg} {rest_args}))'''
 
 # Recall recursive predicates are always unary
 fcts_z3['recpreds-loc_1_int_bool'] = [list, lsegy, list_p, lsegy_p]
@@ -240,7 +264,7 @@ def pgm(x, y, z):
 def vc(x, y, z):
     return Implies( pgm(x, y, z), list_p(x) )
 
-deref = [x, next(x), z]
+deref = [x, z]
 const = [nil, y]
 modified_set = {y} # Note that this is a python set with the elements themselves
 # being z3 terms. This is weird and needs to cleaned up.
@@ -264,8 +288,6 @@ for term in deref + const:
         # Add frame rule axioms_z3['0']
         axioms_z3['0'] = axioms_z3['0'] + [frame_rule]
 
-elems = [*range(2)]
-num_true_models = 10
 
 # End of input
 ###########################################################################################################################
@@ -276,45 +298,39 @@ valid_lemmas = []
 invalid_lemmas = []
 
 cex_models = []
-config_params = {'mode': 'random', 'num_true_models': 0}
+config_params = {'mode': 'random', 'num_true_models':0}
+config_params['pfp_dict'] = pfp_dict
 config_params['use_cex_models'] = True
 config_params['cex_models'] = cex_models
 
-# check if VC is provable
-orig_model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, vc(x,y,z), True)
-if orig_model == None:
-    print('original VC is provable using induction.')
-    exit(0)
+fresh = Int('fresh')
+skolem = Int('skolem')
 
 # continuously get valid lemmas until VC has been proven
 while True:
-    lemmas = getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3,
-                             valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
-                             vc(x,y,z), 'lseg-list')
-    print("lemmas: {}".format(lemmas))
-    for lemma in lemmas:
-        z3py_lemma = translateLemma(lemma, fcts_z3)
-        if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
-            print('lemma has already been proposed')
-            continue
-        fresh = Int('fresh')
-        lemma_deref = [fresh, next(fresh), next_p(fresh)]
-        (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, z3py_lemma, True)
-        if false_model_z3 != None:
-            print('proposed lemma cannot be proved.')
-            invalid_lemmas = invalid_lemmas + [ z3py_lemma ]
-            use_cex_models = config_params.get('use_cex_models', False)
-            if use_cex_models:
-                cex_models = cex_models + [false_model_dict]
-                config_params['cex_models'] = cex_models
-                # correct_lemma = Implies(dlist(fresh), list(fresh))
-                # cexmodeleval = false_model_z3.eval(correct_lemma)
-                # print('cexmodeleval: {}'.format(cexmodeleval))
-                # if not cexmodeleval:
-                #     print(false_model_z3.sexpr())
-                #     exit(0)
-            # TODO: add to bag of unwanted lemmas (or add induction principle of lemma to axioms)
-            # and continue
-        else:
-            valid_lemmas = valid_lemmas + [ z3py_lemma ]
-            break
+    lemma = getSygusOutput([], config_params, fcts_z3, axioms_python, axioms_z3,
+                           valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
+                           vc(x,y,z), 'lseg-list')
+    rhs_lemma = translateLemma(lemma[0], fcts_z3)
+    index = int(lemma[1][-2])
+    lhs_lemma = fcts_z3['recpreds-loc_1_int_bool'][index](fresh)
+    z3py_lemma = Implies(lhs_lemma, rhs_lemma)
+    print('proposed lemma: ' + str(z3py_lemma))
+    if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
+        print('lemma has already been proposed')
+        continue
+    lemma_deref = [skolem, next(skolem), next_p(skolem)]
+    (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, z3py_lemma, True)
+    if false_model_z3 != None:
+        print('proposed lemma cannot be proved.')
+        invalid_lemmas = invalid_lemmas + [ z3py_lemma ]
+        use_cex_models = config_params.get('use_cex_models', False)
+        if use_cex_models:
+            cex_models = cex_models + [false_model_dict]
+    else:
+        valid_lemmas = valid_lemmas + [ z3py_lemma ]
+        # Reset countermodels and invalid lemmas to empty because we have additional information to retry those proofs.
+        cex_models = []
+        invalid_lemmas = []
+    # Update countermodels before next round of synthesis
+    config_params['cex_models'] = cex_models

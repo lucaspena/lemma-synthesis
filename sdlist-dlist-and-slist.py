@@ -149,17 +149,33 @@ def usdlist_python(x, model):
 unfold_recdefs_z3['1_int_bool'] = [udlist_z3, uslist_z3, usdlist_z3]
 unfold_recdefs_python['1_int_bool'] = [udlist_python, uslist_python, usdlist_python]
 pfp_dict = {}
-pfp_dict['dlist'] = """
-(=> (ite (= {primary_arg} {nil}) 
-         true 
-         (ite (= (next {primary_arg}) {nil}) 
-              true 
-              (and (= (prev (next {primary_arg})) {primary_arg}) 
-                   (lemma (next {primary_arg}) {rest_args}))))
-    (lemma {primary_arg} {rest_args}))
-"""
-pfp_dict['slist'] = '(=> (ite (= {primary_arg} {nil}) true (ite (= (next {primary_arg}) {nil}) true (and (<= (key {primary_arg}) (key (next {primary_arg}))) (lemma (next {primary_arg}) {rest_args})))) (lemma {primary_arg} {rest_args}))'
-pfp_dict['sdlist'] = '(=> (ite (= {primary_arg} {nil}) true (ite (= (next {primary_arg}) {nil}) true (and (and (<= (key {primary_arg}) (key (next {primary_arg}))) (lemma (next {primary_arg}) {rest_args})) (= (prev (next {primary_arg})) {primary_arg})))) (lemma {primary_arg} {rest_args}))'
+pfp_dict['dlist'] = '''
+(=> (ite (= {primary_arg} {nil})
+         true
+         (ite (= (next {primary_arg}) {nil})
+              true
+              (and (= (prev (next {primary_arg})) {primary_arg})
+                   (and (dlist {primary_arg}) (lemma (next {primary_arg}) {rest_args})) )))
+    (lemma {primary_arg} {rest_args}))'''
+    
+pfp_dict['slist'] = '''
+(=> (ite (= {primary_arg} {nil})
+         true
+         (ite (= (next {primary_arg}) {nil})
+              true
+              (and (<= (key {primary_arg}) (key (next {primary_arg})))
+                   (and (slist {primary_arg}) (lemma (next {primary_arg}) {rest_args})))))
+    (lemma {primary_arg} {rest_args}))'''
+
+pfp_dict['sdlist'] = '''
+(=> (ite (= {primary_arg} {nil})
+         true
+         (ite (= (next {primary_arg}) {nil})
+              true
+              (and (and (<= (key {primary_arg}) (key (next {primary_arg})))
+                        (and (sdlist {primary_arg}) (lemma (next {primary_arg}) {rest_args})))
+                    (= (prev (next {primary_arg})) {primary_arg}))))
+    (lemma {primary_arg} {rest_args}))'''
 
 # Recall recursive predicates are always unary
 fcts_z3['recpreds-loc_1_int_bool'] = [dlist, slist, sdlist]
@@ -176,7 +192,6 @@ def vc(x, ret):
 
 deref = [x]
 const = [nil]
-elems = [*range(3)]
 
 # End of input
 ###########################################################################################################################
@@ -192,12 +207,12 @@ config_params['pfp_dict'] = pfp_dict
 config_params['use_cex_models'] = True
 config_params['cex_models'] = cex_models
 
-# check if VC is provable
 fresh = Int('fresh')
+skolem = Int('skolem')
 
 # continuously get valid lemmas until VC has been proven
 while True:
-    lemma = getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3,
+    lemma = getSygusOutput([], config_params, fcts_z3, axioms_python, axioms_z3,
                            valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
                            vc(x,ret), 'sdlist-dlist-and-slist')
     rhs_lemma = translateLemma(lemma[0], fcts_z3)
@@ -208,7 +223,7 @@ while True:
     if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
         print('lemma has already been proposed')
         continue
-    lemma_deref = [fresh, next(fresh), prev(fresh)]
+    lemma_deref = [skolem, next(skolem), prev(skolem)]
     (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, z3py_lemma, True)
     if false_model_z3 != None:
         print('proposed lemma cannot be proved.')
@@ -218,7 +233,9 @@ while True:
             cex_models = cex_models + [false_model_dict]
     else:
         valid_lemmas = valid_lemmas + [ z3py_lemma ]
+        # Reset countermodels and invalid lemmas to empty because we have additional information to retry those proofs.
         cex_models = []
         invalid_lemmas = []
+    # Update countermodels before next round of synthesis
     config_params['cex_models'] = cex_models
 
