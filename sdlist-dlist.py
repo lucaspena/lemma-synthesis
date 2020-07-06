@@ -135,7 +135,7 @@ pfp_dict['dlist'] = '''
          (ite (= (next {primary_arg}) {nil})
               true
               (and (= (prev (next {primary_arg})) {primary_arg})
-                   (and (dlist {primary_arg}) (lemma (next {primary_arg}) {rest_args})) )))
+                   (and (dlist (next {primary_arg})) (lemma (next {primary_arg}) {rest_args})) )))
     (lemma {primary_arg} {rest_args}))'''
 
 pfp_dict['sdlist'] = '''
@@ -144,7 +144,7 @@ pfp_dict['sdlist'] = '''
          (ite (= (next {primary_arg}) {nil})
               true
               (and (and (<= (key {primary_arg}) (key (next {primary_arg})))
-                        (and (sdlist {primary_arg}) (lemma (next {primary_arg}) {rest_args})))
+                        (and (sdlist (next {primary_arg})) (lemma (next {primary_arg}) {rest_args})))
                     (= (prev (next {primary_arg})) {primary_arg}))))
     (lemma {primary_arg} {rest_args}))'''
 

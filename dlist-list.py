@@ -119,7 +119,7 @@ pfp_dict = {}
 pfp_dict['list'] = '''
 (=> (ite (= {primary_arg} {nil})
          true
-         (and (list {primary_arg}) (lemma (next {primary_arg}) {rest_args})))
+         (and (list (next {primary_arg})) (lemma (next {primary_arg}) {rest_args})))
     (lemma {primary_arg} {rest_args}))'''
 
 pfp_dict['dlist'] = '''
@@ -128,7 +128,7 @@ pfp_dict['dlist'] = '''
          (ite (= (next {primary_arg}) {nil})
               true
               (and (= (prev (next {primary_arg})) {primary_arg})
-                   (and (dlist {primary_arg}) (lemma (next {primary_arg}) {rest_args})) )))
+                   (and (dlist (next {primary_arg})) (lemma (next {primary_arg}) {rest_args})) )))
     (lemma {primary_arg} {rest_args}))'''
 
 # Recall recursive predicates are always unary

@@ -9,7 +9,8 @@ all:
 	echo "Done"
 	time python3 listlen-list.py
 	echo "Done"
-	#time python3 lseg-list.py
+	time python3 lseg-list.py
+	echo "Done"
 	#time python3 slseg-lseg.py
 	#time python3 list-find.py
 	#time python3 slist-find.py

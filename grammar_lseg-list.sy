@@ -10,12 +10,12 @@
                    (and Start Start)
                    (or Start Start)
                    (not Start)
-                   ;(list I) (lsegy I)
+                   (list I) (lsegy I)
                    (list_p I) (lsegy_p I)
                    ))
             (I Int (x nil y
-                   (next I)
-                   (next_p I) 
+                   ;(next I)
+                   ;(next_p I) 
                    )))
 
 )
@@ -24,6 +24,6 @@
 
            ((Start Int))
 
-           ((Start Int (2 3)))
+           ((Start Int (0 1 2 3)))
 
 )

@@ -225,25 +225,25 @@ pfp_dict = {}
 pfp_dict['list'] = '''
 (=> (ite (= {primary_arg} {nil})
          true
-         (and (list {primary_arg}) (lemma (next {primary_arg}) {rest_args})))
+         (and (list (next {primary_arg})) (lemma (next {primary_arg}) {rest_args})))
     (lemma {primary_arg} {rest_args}))'''
 
 pfp_dict['lsegy'] = '''
 (=> (ite (= {primary_arg} {y})
          true
-         (and (lsegy {primary_arg}) (lemma (next {primary_arg}) {rest_args})))
+         (and (lsegy (next {primary_arg})) (lemma (next {primary_arg}) {rest_args})))
     (lemma {primary_arg} {rest_args}))'''
 
 pfp_dict['list_p'] = '''
 (=> (ite (= {primary_arg} {nil})
          true
-         (and (list_p {primary_arg}) (lemma (next_p {primary_arg}) {rest_args})))
+         (and (list_p (next_p {primary_arg})) (lemma (next_p {primary_arg}) {rest_args})))
     (lemma {primary_arg} {rest_args}))'''
 
 pfp_dict['lsegy_p'] = '''
 (=> (ite (= {primary_arg} {y})
          true
-         (and (lsegy_p {primary_arg}) (lemma (next_p {primary_arg}) {rest_args})))
+         (and (lsegy_p (next_p {primary_arg})) (lemma (next_p {primary_arg}) {rest_args})))
     (lemma {primary_arg} {rest_args}))'''
 
 # Recall recursive predicates are always unary
@@ -264,7 +264,7 @@ def pgm(x, y, z):
 def vc(x, y, z):
     return Implies( pgm(x, y, z), list_p(x) )
 
-deref = [x, z]
+deref = [x, next(x), z]
 const = [nil, y]
 modified_set = {y} # Note that this is a python set with the elements themselves
 # being z3 terms. This is weird and needs to cleaned up.
@@ -318,6 +318,7 @@ while True:
     print('proposed lemma: ' + str(z3py_lemma))
     if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
         print('lemma has already been proposed')
+        exit(0)
         continue
     lemma_deref = [skolem, next(skolem), next_p(skolem)]
     (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, z3py_lemma, True)
