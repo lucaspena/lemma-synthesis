@@ -101,7 +101,7 @@ def ukeys_z3(x):
     in_domain = list(x)
     then_case = Implies(is_nil, keys(x) == emptyset)
     else_case = Implies(Not(is_nil), keys(x) == SetAdd(keys(next(x)), key(x)))
-    return Implies(in_domain, And(then_case, else_case))
+    return And(then_case, else_case)
 
 def ulsegkeys_y_z3(x):
     emptyset = getSortEmptySet(SetIntSort)
@@ -109,15 +109,15 @@ def ulsegkeys_y_z3(x):
     in_domain = lseg_y(x)
     then_case = Implies(is_y, lsegkeys_y(x) == emptyset)
     else_case = Implies(Not(is_y), lsegkeys_y(x) == SetAdd(lsegkeys_y(next(x)), key(x)))
-    return Implies(in_domain, And(then_case, else_case))
+    return And(then_case, else_case)
 
 def ulsegkeys_yp_z3(x):
     emptyset = getSortEmptySet(SetIntSort)
     is_yp = x == yp
-    in_domain = lseg_yp(x)
+    # in_domain = lseg_yp(x)
     then_case = Implies(is_yp, lsegkeys_yp(x) == emptyset)
     else_case = Implies(Not(is_yp), lsegkeys_yp(x) == SetAdd(lsegkeys_yp(next(x)), key(x)))
-    return Implies(in_domain, And(then_case, else_case))
+    return And(then_case, else_case)
 
 # Python versions for finding valuation on true models
 def ulist_python(x, model):
@@ -220,7 +220,7 @@ fcts_z3['recfunctions-loc_1_int_set-int'] = [keys, lsegkeys_y, lsegkeys_yp]
 # Implies(lseg_y(x), Implies(next(y) == yp, lsegkeys_yp(x) == SetAdd(lsegkeys_y(x), key(y))))
 
 def pgm(x, y, yp):
-    precondition = And(lseg_y(x), keys(x) == SetUnion(lsegkeys_y(x), keys(y)))
+    precondition = And(list(x), lseg_y(x), keys(x) == SetUnion(lsegkeys_y(x), keys(y)))
     program_body = next(y) == yp
     return And(precondition, program_body)
 
@@ -241,7 +241,7 @@ elems = [*range(2)]
 fresh = Int('fresh')
 
 # valid and invalid lemmas
-valid_lemmas = []
+valid_lemmas = [Implies(list(fresh), Implies(lseg_y(fresh), Implies(lseg_yp(y), Not(lseg_y(yp)))))]
 invalid_lemmas = []
 
 cex_models = []
@@ -253,9 +253,10 @@ config_params['cex_models'] = cex_models
 fresh = Int('fresh')
 skolem = Int('skolem')
 
-# lemma = Implies(lseg_y(fresh), Implies(next(y) == yp, lsegkeys_yp(fresh) == SetAdd(lsegkeys_y(fresh), key(y))))
-# (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, [], const, lemma, True)
-# print(false_model_z3)
+lemma = Implies(lseg_y(fresh), Implies(list(fresh), Implies(next(y) == yp, lsegkeys_yp(fresh) == SetAdd(lsegkeys_y(fresh), key(y)))))
+lemma_deref = [ skolem, next(skolem), fresh, next(fresh), y, next(y), yp ]
+(false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, lemma, True)
+print(m)
 
 # continuously get valid lemmas until VC has been proven
 while True:

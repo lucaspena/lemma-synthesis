@@ -78,6 +78,7 @@ def getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, v
         rhs = vc.arg(1)
         pfp = makePFP(lhs, rhs, unfold_recdefs_z3, fcts_z3, const + deref)
         sol.add(Not(pfp))
+        sol.add(Not(vc))
     else:
         # Not proof by induction. Simply negate the given vc. 
         sol.add(Not(vc))
