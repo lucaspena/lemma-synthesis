@@ -189,10 +189,23 @@ unfold_recdefs_python['1_int_bool'] = [ulist_python, ulseg_y_python, ulseg_yp_py
 unfold_recdefs_python['1_int_set-int'] = [ukeys_python, ulsegkeys_y_python, ulsegkeys_yp_python]
 
 pfp_dict = {}
+pfp_dict['list'] = """
+(=> (ite (= {primary_arg} {nil})
+         true
+         (and (list (next {primary_arg})) (lemma (next {primary_arg}) {rest_args})))
+    (lemma {primary_arg} {rest_args}))
+"""
 pfp_dict['lseg_y'] = """
 (=> (ite (= {primary_arg} {y})
          true
-         (lemma ({next primary_arg}) {rest_args}))
+         (and (lseg_y (next {primary_arg})) (lemma (next {primary_arg}) {rest_args})))
+    (lemma {primary_arg} {rest_args}))
+"""
+
+pfp_dict['lseg_yp'] = """
+(=> (ite (= {primary_arg} {yp})
+         true
+         (and (lseg_yp (next {primary_arg})) (lemma (next {primary_arg}) {rest_args})))
     (lemma {primary_arg} {rest_args}))
 """
 
@@ -204,6 +217,7 @@ fcts_z3['recfunctions-loc_1_int_set-int'] = [keys, lsegkeys_y, lsegkeys_yp]
 # Program, VC, and Instantiation
 
 # lemma: lsegy(x) /\ next(y) = yp => lsegkeys_yp(x) = lsegkeys_y(x) U {key(y)}
+# Implies(lseg_y(x), Implies(next(y) == yp, lsegkeys_yp(x) == SetAdd(lsegkeys_y(x), key(y))))
 
 def pgm(x, y, yp):
     precondition = And(lseg_y(x), keys(x) == SetUnion(lsegkeys_y(x), keys(y)))
@@ -213,11 +227,10 @@ def pgm(x, y, yp):
 def vc(x, y, yp):
     return Implies( pgm(x, y, yp), keys(x) == SetUnion(lsegkeys_yp(x), keys(yp)) )
 
-deref = [x]
+deref = [x, next(y)]
 const = [nil, y, yp]
 
 elems = [*range(2)]
-num_true_models = 10
 
 # End of input
 ################################################################################
@@ -232,10 +245,17 @@ valid_lemmas = []
 invalid_lemmas = []
 
 cex_models = []
-config_params = {'mode': 'random', 'num_true_models':0}
+config_params = {'mode': 'random', 'num_true_models': 0}
 config_params['pfp_dict'] = pfp_dict
 config_params['use_cex_models'] = True
 config_params['cex_models'] = cex_models
+
+fresh = Int('fresh')
+skolem = Int('skolem')
+
+# lemma = Implies(lseg_y(fresh), Implies(next(y) == yp, lsegkeys_yp(fresh) == SetAdd(lsegkeys_y(fresh), key(y))))
+# (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, [], const, lemma, True)
+# print(false_model_z3)
 
 # continuously get valid lemmas until VC has been proven
 while True:
@@ -249,11 +269,11 @@ while True:
     index = int(lemma[1][-2])
     lhs_lemma = fcts_z3['recpreds-loc_1_int_bool'][index](fresh)
     z3py_lemma = Implies(lhs_lemma, rhs_lemma)
-    print(z3py_lemma)
+    print('proposed lemma: ' + str(z3py_lemma))
     if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
             print('lemma has already been proposed')
             continue
-    lemma_deref = [fresh]
+    lemma_deref = []
     (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, z3py_lemma, True)
     if false_model_z3 != None:
         print('proposed lemma cannot be proved.')
@@ -263,3 +283,9 @@ while True:
             cex_models = cex_models + [false_model_dict]
     else:
         valid_lemmas = valid_lemmas + [ z3py_lemma ]
+        # Reset countermodels and invalid lemmas to empty because we have
+        # additional information to retry those proofs.
+        cex_models = []
+        invalid_lemmas = []
+    # Update countermodels before next round of synthesis
+    config_params['cex_models'] = cex_models

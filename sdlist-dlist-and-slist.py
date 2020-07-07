@@ -148,6 +148,7 @@ def usdlist_python(x, model):
 
 unfold_recdefs_z3['1_int_bool'] = [udlist_z3, uslist_z3, usdlist_z3]
 unfold_recdefs_python['1_int_bool'] = [udlist_python, uslist_python, usdlist_python]
+
 pfp_dict = {}
 pfp_dict['dlist'] = '''
 (=> (ite (= {primary_arg} {nil})
@@ -233,7 +234,8 @@ while True:
             cex_models = cex_models + [false_model_dict]
     else:
         valid_lemmas = valid_lemmas + [ z3py_lemma ]
-        # Reset countermodels and invalid lemmas to empty because we have additional information to retry those proofs.
+        # Reset countermodels and invalid lemmas to empty because we have
+        # additional information to retry those proofs.
         cex_models = []
         invalid_lemmas = []
     # Update countermodels before next round of synthesis
