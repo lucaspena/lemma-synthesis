@@ -1,55 +1,61 @@
 ;; lemma to synthesize
-;; Sort-distinguished stratified grammar
+;; Loop invariant will be a disjunction of conjunctions
+;; The meaning is a bag of states where each state is a conjunction of equality/disequality atoms
 (synth-fun lemma ((x Int) (nil Int) (c Int)) Bool
 
-           ((Start Bool) (Rec Bool) (B Bool) (Progvar Int) (State Int))
+           ((Start Bool) (Progvar Int) (Progstate Int))
 
            ((Start Bool
-                  ((=> Rec B)))
-           (Rec Bool
-                  ((reach x)))
-           (B Bool
                   (
-                   ;(=> B B)
-                   (and B B)
-                   (or B B)
-                   ;(not B)
+                   (and Start Start)
+                   (or Start Start)
+                   ;(not Start)
                    (= Progvar Progvar)))
             (Progvar Int 
                   (
                     c 
                    nil
-                   (v1 State)
-                   (v2 State)
-                   ;(n Progvar)
+                   (v1 Progstate)
+                   (v2 Progstate)
+                   (n Progvar)
                    ))
-            (State Int (x
-                   (p x))))
+            (Progstate Int (x
+                   )))
 
 )
 
-;Full non-stratified grammar
+;;Further stratified grammar expressing bag of states
 ;(synth-fun lemma ((x Int) (nil Int) (c Int)) Bool
 ;
-;           ((Start Bool) (Rec Bool) (B Bool) (I Int))
+;           ((Start Bool) (State Bool) (Atom Bool) (Progvar Int) (Progstate Int))
 ;
 ;           ((Start Bool
-;                  ((=> Rec B)))
-;           (Rec Bool
-;                  ((reach I)))
-;           (B Bool
-;                  ((=> B B)
-;                   (and B B)
-;                   (or B B)
-;                   (not B)
-;                   (= I I)
-;                   (reach I)))
-;            (I Int (x nil c
-;                   (v1 I)
-;                   (v2 I)
-;                   (n I)
-;                   (p I))))
+;                  ( State
+;                   (or State Start)))
+;            (State Bool
+;                  ( Atom
+;                   (and Atom State)))
+;            (Atom Bool
+;                  ((= Progvar Progvar)
+;                   (not Atom)))
+;            (Progvar Int 
+;                  (
+;                    c 
+;                   nil
+;                   (v1 Progstate)
+;                   (v2 Progstate)
+;                   (n Progvar)
+;                   ))
+;            (Progstate Int (x
+;                   )))
 ;
 ;)
 
+(synth-fun rswitch () Int
+
+           ((Start Int))
+
+           ((Start Int (0)))
+
+)
 

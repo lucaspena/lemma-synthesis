@@ -318,7 +318,6 @@ while True:
     print('proposed lemma: ' + str(z3py_lemma))
     if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
         print('lemma has already been proposed')
-        exit(0)
         continue
     lemma_deref = [skolem, next(skolem), next_p(skolem)]
     (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, z3py_lemma, True)
