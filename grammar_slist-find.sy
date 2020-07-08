@@ -1,43 +1,43 @@
-;; (define iff ((B1 Bool) (B2 Bool)) Bool
-;;   (and (=> B1 B2) (=> B2 B1))
-;; )
-
 ;; lemma to synthesize - simplified grammar
+;; Try this with (= B1 B1) commented out. The result is displayed as two lemmas.
 (synth-fun lemma ((x Int) (nil Int) (k Int)) Bool
 
-           ((Start Bool) (RecS Bool) (S (Set Int)) (S1 (Set Int)) (B Bool) (B1 Bool) (I Int) (Loc Int) (Loc1 Int))
+           ((Start Bool) (B1 Bool) (S (Set Int)) (S1 (Set Int)) (Key Int) (Loc Int))
 
            ((Start Bool
-                  ((=> RecS B)))
-           (RecS Bool
-                  ((slist Loc)
-                   (slist_find_k Loc)))
-           (S (Set Int)
-                  ((insert I S1)
-                   (keys Loc)
-                   (union S1 S1)))
-           (S1 (Set Int)
-                  ((keys Loc)))
-           (B Bool
-                  ((= B1 B1)
-                   (and B1 B1)
-                   (or B1 B1)
-                   (member I S)
-                   (= S S)
-                   (= I I)
-                   (slist Loc)
-                   (slist_find_k Loc)
+                  (
+                  (= B1 B1)
+                  (=> B1 B1)
+                  (and B1 B1)
+                  (or B1 B1)
                    ))
            (B1 Bool
-                  ((member I S)
-                   (= S S)
-                   (= I I)
+                  ((member Key S)
                    (slist Loc)
                    (slist_find_k Loc)
                    ))
-            (I Int (k
-                   (key Loc)))
-            (Loc Int (x
-                     (next Loc1)))
-            (Loc1 Int (x)))
+            (S (Set Int)
+                  (
+                   (insert Key S1)
+                   (keys Loc)
+                   ))
+            (S1 (Set Int)
+                  (
+                   (keys Loc)
+                   ))
+            (Key Int 
+            	   (
+            	    k
+                   (key Loc)
+                   ))
+            (Loc Int (x nil
+                     )))
+)
+
+(synth-fun rswitch () Int
+
+           ((Start Int))
+
+           ((Start Int (0 1)))
+
 )

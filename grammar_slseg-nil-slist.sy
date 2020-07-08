@@ -1,0 +1,28 @@
+;; lemma to synthesize
+;; TODO: must be generated from problem parameters
+;; Add (next x) and (next y) to see that it terminates, but takes longer to find the right lemmas.
+(synth-fun lemma ((x Int) (nil Int) (y Int)) Bool
+
+           ((Start Bool) (I Int))
+
+           ((Start Bool
+                  ((=> Start Start)
+                   (= I I)
+                   (and Start Start)
+                   (or Start Start)
+                   (not Start)
+                   (slist I) (slseg_y I)))
+            (I Int (x nil y
+                   ;(next x)
+                   ;(next y)
+                   )))
+
+)
+
+(synth-fun rswitch () Int
+
+           ((Start Int))
+
+           ((Start Int (0 1)))
+
+)

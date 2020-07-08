@@ -1,6 +1,6 @@
 from z3 import *
-from lemma_synthesis import *
-from set_sort import *
+from src.set_sort import *
+from src.lemsynth_engine import *
 
 ####### Section 0
 # some general FOL macros
@@ -145,7 +145,6 @@ def ukeys_python(x, model):
     else:
         next_val = model['next'][x]
         curr_key = model['key'][x]
-        curr_keys = model['keys'][x]
         next_keys = model['keys'][next_val]
         return {curr_key} | next_keys
 
@@ -153,6 +152,25 @@ unfold_recdefs_z3['1_int_bool'] = [uslist_z3, uslist_find_k_z3]
 unfold_recdefs_z3['1_int_set-int'] = [ukeys_z3]
 unfold_recdefs_python['1_int_bool'] = [uslist_python, uslist_find_k_python]
 unfold_recdefs_python['1_int_set-int'] = [ukeys_python]
+pfp_dict = {}
+pfp_dict['slist'] = '''
+(=> (ite (= {primary_arg} {nil})
+         true
+         (ite (= (next {primary_arg}) {nil})
+              true
+              (and (<= (key {primary_arg}) (key (next {primary_arg})))
+                   (and (slist (next {primary_arg})) (lemma (next {primary_arg}) {rest_args})))))
+    (lemma {primary_arg} {rest_args}))'''
+
+pfp_dict['slist_find_k'] = '''
+(=> (ite (= {primary_arg} {nil})
+         false
+         (ite (= (key {primary_arg}) {k})
+              true
+              (ite (> (key {primary_arg}) {k}) 
+              false 
+              (and (slist_find_k (next {primary_arg})) (lemma (next {primary_arg}) {rest_args})))))
+    (lemma {primary_arg} {rest_args}))'''
 
 # Recall recursive predicates are always unary
 fcts_z3['recpreds-loc_1_int_bool'] = [slist, slist_find_k]
@@ -168,57 +186,40 @@ def vc(x, k):
 
 deref = [x, next(x), skolem, next(skolem)]
 const = [nil, k]
-elems = [*range(2)]
-num_true_models = 10
+verification_condition = vc(x,k)
 
 # End of input
+
 ###########################################################################################################################
-# Lemma synthesis stub to follow: must be replaced with a uniform function call between all examples.
+# Lemma synthesis stub 
 ##########################################################################################################################
-# valid and invalid lemmas
-valid_lemmas = []
-invalid_lemmas = []
 
-cex_models = []
-config_params = {'mode': 'random', 'num_true_models': 0}
+config_params = {'mode': 'random', 'num_true_models':0}
+config_params['pfp_dict'] = pfp_dict
 config_params['use_cex_models'] = True
-config_params['cex_models'] = cex_models
 
-# check if VC is provable
-orig_model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, vc(x,k), True)
-if orig_model == None:
-    print('original VC is provable using induction.')
-    exit(0)
+name = 'slist-find'
 
-# continuously get valid lemmas until VC has been proven
-while True:
-    lemmas = getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3,
-                             valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
-                             vc(x,k), 'slist-find')
-    print("lemmas: {}".format(lemmas))
-    for lemma in lemmas:
-        z3py_lemma = translateLemma(lemma, fcts_z3)
-        if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
-            print('lemma has already been proposed')
-            continue
-        fresh = Int('fresh')
-        lemma_deref = [fresh, next(fresh)]
-        (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, z3py_lemma, True)
-        if false_model_z3 != None:
-            print('proposed lemma cannot be proved.')
-            invalid_lemmas = invalid_lemmas + [ z3py_lemma ]
-            use_cex_models = config_params.get('use_cex_models', False)
-            if use_cex_models:
-                cex_models = cex_models + [false_model_dict]
-                config_params['cex_models'] = cex_models
-                # correct_lemma = Implies(dlist(fresh), list(fresh))
-                # cexmodeleval = false_model_z3.eval(correct_lemma)
-                # print('cexmodeleval: {}'.format(cexmodeleval))
-                # if not cexmodeleval:
-                #     print(false_model_z3.sexpr())
-                #     exit(0)
-            # TODO: add to bag of unwanted lemmas (or add induction principle of lemma to axioms)
-            # and continue
-        else:
-            valid_lemmas = valid_lemmas + [ z3py_lemma ]
-            break
+synth_dict = {}
+skolem = Int('skolem')
+# Must be added as this particular example requires one more level of instantiation than is apparent.
+synth_dict['lemma_deref'] = [next(skolem)]
+
+synth_dict['translate_lemma_addl_decls'] = {}
+synth_dict['translate_lemma_replace_fcts'] = {}
+synth_dict['translate_lemma_swap_fcts'] = {}
+# TODO: replace all the swap and replace declarations below by having translateLemma use substituteSubformula instead of swap_fcts and replace_fcts
+# Must add the declarations below in order to translate 'member' in cvc4 to 'ismember' in z3
+# This is an uninterpreted function with the same signature as that of set membership
+membership = Function('membership', IntSort(), SetIntSort, BoolSort())
+# This is say that 'member' in cvc4 should be replaced by the uninterpreted function 'membership'
+synth_dict['translate_lemma_addl_decls']['member'] = membership
+# This is to say that the uninterpreted function 'membership' should be substituted away to 'IsMember' in z3
+synth_dict['translate_lemma_replace_fcts'][membership] = IsMember
+# Similarly for converting 'insert' in cvc4 to 'SetAdd' in z3
+# The corresponding function must be placed in swap_fcts rather than replace_fcts because the order of arguments is different in cvc4 and z3 
+insertion = Function('insertion', IntSort(), SetIntSort, SetIntSort)
+synth_dict['translate_lemma_addl_decls']['insert'] = insertion
+synth_dict['translate_lemma_swap_fcts'][insertion] = SetAdd
+
+solveProblem(fcts_z3, axioms_python, axioms_z3, unfold_recdefs_z3, unfold_recdefs_python, deref, const, verification_condition, name, config_params, synth_dict)

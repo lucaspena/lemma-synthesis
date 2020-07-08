@@ -21,10 +21,12 @@ all:
 	time python3 list-find.py
 	echo "\nRunning lseg-list-keys"
 	time python3 lseg-list-keys.py
+	echo "\nRunning slist-find"
+	time python3 slist-find.py
+	echo "\nRunning slseg-nil_slist"
+	time python3 slseg-nil-slist.py
 	echo "\nExperiments Done\n"
-	# Problematic example -- valid lemma proposed again and again
-	#time python3 slist-find.py
-	#time python3 slseg-nil-list.py
+	#time python3 slseg-nil-slist.py
 	#time python3 lseg-nil-length.py
 	#time python3 lseg-list-length.py
 

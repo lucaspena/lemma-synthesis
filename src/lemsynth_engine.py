@@ -16,6 +16,10 @@ def solveProblem(fcts_z3, axioms_python, axioms_z3, unfold_recdefs_z3, unfold_re
         lemma = getSygusOutput(fcts_z3, axioms_python, axioms_z3,
                            valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
                            vc, name, config_params)
+        if lemma is None:
+            print('CVC4 SyGuS returns unknown. Exiting.')
+            exit('Instance failed.')
+
         addl_decls = synth_dict.get('translate_lemma_addl_decls',{})
         swap_fcts = synth_dict.get('translate_lemma_swap_fcts',{})
         replace_fcts = synth_dict.get('translate_lemma_replace_fcts',{})

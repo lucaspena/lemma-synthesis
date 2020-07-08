@@ -1,5 +1,5 @@
 from z3 import *
-from lemma_synthesis import *
+from src.lemsynth_engine import *
 
 ####### Section 0
 # some general FOL macros
@@ -121,6 +121,24 @@ def uslseg_y_python(x, model):
 
 unfold_recdefs_z3['1_int_bool'] = [uslist_z3, uslseg_y_z3]
 unfold_recdefs_python['1_int_bool'] = [uslist_python, uslseg_y_python]
+pfp_dict = {}
+pfp_dict['slist'] = '''
+(=> (ite (= {primary_arg} {nil})
+         true
+         (ite (= (next {primary_arg}) {nil})
+              true
+              (and (<= (key {primary_arg}) (key (next {primary_arg})))
+                   (and (slist (next {primary_arg})) (lemma (next {primary_arg}) {rest_args})))))
+    (lemma {primary_arg} {rest_args}))'''
+
+pfp_dict['slseg_y'] = '''
+(=> (ite (= {primary_arg} {y})
+         true
+         (ite (= (next {primary_arg}) {y})
+              true
+              (and (<= (key {primary_arg}) (key (next {primary_arg})))
+                   (and (slseg_y (next {primary_arg})) (lemma (next {primary_arg}) {rest_args})))))
+    (lemma {primary_arg} {rest_args}))'''
 
 # Recall recursive predicates are always unary
 fcts_z3['recpreds-loc_1_int_bool'] = [slist, slseg_y]
@@ -138,36 +156,20 @@ def vc(x, ret):
 
 deref = [x]
 const = [nil, y]
-elems = [*range(2)]
-num_true_models = 10
+verification_condition = vc(x,ret)
 
-# valid and invalid lemmas
-valid_lemmas = []
-invalid_lemmas = []
+# End of input
 
-# check if VC is provable
-fresh = Int('fresh')
-orig_model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, vc(fresh, ret), True)
-if orig_model == None:
-    print('original VC is provable using induction.')
-    exit(0)
+###########################################################################################################################
+# Lemma synthesis stub 
+##########################################################################################################################
 
-# continuously get valid lemmas until VC has been proven
-while True:
-    lemmas = getSygusOutput(elems, num_true_models, fcts_z3, axioms_python, axioms_z3,
-                            valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
-                            vc(x,ret), 'slseg-nil-list')
-    for lemma in lemmas:
-        z3py_lemma = translateLemma(lemma, fcts_z3)
-        if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
-            print('lemma has already been proposed')
-            continue
-        model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, z3py_lemma, True)
-        if model != None:
-            print('proposed lemma cannot be proved.')
-            invalid_lemmas = invalid_lemmas + [ z3py_lemma ]
-            # TODO: add to bag of unwanted lemmas (or add induction principle of lemma to axioms)
-            # and continue
-        else:
-            valid_lemmas = valid_lemmas + [ z3py_lemma ]
-            break
+config_params = {'mode': 'random', 'num_true_models':0}
+config_params['pfp_dict'] = pfp_dict
+config_params['use_cex_models'] = True
+
+name = 'slseg-nil-slist'
+
+synth_dict = {}
+
+solveProblem(fcts_z3, axioms_python, axioms_z3, unfold_recdefs_z3, unfold_recdefs_python, deref, const, verification_condition, name, config_params, synth_dict)
