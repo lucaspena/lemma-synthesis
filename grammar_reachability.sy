@@ -1,7 +1,7 @@
 ;; lemma to synthesize
 ;; Loop invariant will be a disjunction of conjunctions
 ;; The meaning is a bag of states where each state is a conjunction of equality/disequality atoms
-(synth-fun lemma ((x Int) (nil Int) (c Int)) Bool
+(synth-fun lemma ((x Int) (nil Int) (s Int) (c Int)) Bool
 
            ((Start Bool) (Progvar Int) (Progstate Int))
 

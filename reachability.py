@@ -45,8 +45,8 @@ unfold_recdefs_python = {}
 
 # The z3py variable for a z3 variable will be the same as its string value.
 # So we will use the string 'x' for python functions and just x for creating z3 types
-x, c, nil = Ints('x c nil')
-fcts_z3['0_int'] = [x, c, nil]
+x, c, s, nil = Ints('x c s nil')
+fcts_z3['0_int'] = [x, c, s, nil]
 
 ######## Section 2
 # Functions
@@ -56,6 +56,15 @@ p = Function('p', IntSort(), IntSort())
 n = Function('n', IntSort(), IntSort())
 
 fcts_z3['1_int_int'] = [v1, v2, p, n]
+
+# Axioms: precondition
+pre_z3 = v1(s) == v2(s)
+
+def pre_python(model):
+    return model['v1'][model['s']] == model['v2'][model['s']]
+
+axioms_z3['0'] = [pre_z3]
+axioms_python['0'] = [pre_python]
 
 ######## Section 3
 # Recursive definitions
@@ -75,7 +84,7 @@ def ureach_z3(x):
                        v2(x) == n(v2(p(x))),
                        v2(x) == v2(p(x)) )
     assign = And(assign1, assign2)
-    return Iff( reach(x), IteBool( v1(x) == v2(x),
+    return Iff( reach(x), IteBool( Or(x == s, v1(x) == v2(x)),
                                    True,
                                    And( reach(p(x)), cond, assign ) ) )
 
@@ -88,7 +97,7 @@ def ureach_python(x, model):
     v2_curr = model['v2'][x]
     v2_p = model['v2'][p_val]
     n_v2_p = model['n'][v2_p]
-    if v1_curr == v2_curr:
+    if v1_curr == v2_curr or x == model['s']:
         return True
     else:
         rec = model['reach'][p_val]
@@ -105,7 +114,7 @@ unfold_recdefs_python['1_int_bool'] = [ureach_python]
 pfp_dict = {}
 pfp_dict['reach'] = '''
                     (=>  
-                    (ite (= (v1 {primary_arg}) (v2 {primary_arg}))
+                    (ite (or (= (v1 {primary_arg}) (v2 {primary_arg})) (= {primary_arg} {s}))
                          true
                          (and (and (reach (p {primary_arg})) (lemma (p {primary_arg}) {rest_args}))
                               (and (not (= (v1 (p {primary_arg})) {nil})) 
@@ -127,7 +136,7 @@ def vc(x):
     return Implies( lhs, rhs )
 
 deref = [x, p(x), v1(p(x)), v2(p(x))]
-const = [nil, c]
+const = [nil, s, c]
 verification_condition = vc(x)
 
 # End of input
