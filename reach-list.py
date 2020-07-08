@@ -1,5 +1,5 @@
 from z3 import *
-from lemma_synthesis import *
+from src.lemsynth_engine import *
 
 ####### Section 0
 # some general FOL macros
@@ -106,7 +106,7 @@ def ureach_python(x, model):
     v_curr = model['v'][x]
     n_v = model['n'][v_curr]
     v_p = model['v'][p_val]
-    n_v_p = model['n'][v_p]
+    #n_v_p = model['n'][v_p]
     v1_curr = model['v1'][x]
     v1_p = model['v1'][p_val]
     n_v1_p = model['n'][v1_p]
@@ -129,6 +129,40 @@ def ureach_python(x, model):
 
 unfold_recdefs_z3['1_int_bool'] = [ulist_z3, ureach_z3]
 unfold_recdefs_python['1_int_bool'] = [ulist_python, ureach_python]
+pfp_dict = {}
+pfp_dict['list'] = '''
+(=> (ite (= {primary_arg} {nil})
+         true
+         (and (list (n {primary_arg})) (lemma (n {primary_arg}) {rest_args})))
+    (lemma {primary_arg} {rest_args}))'''
+
+pfp_dict['reach'] = '''
+(=> (ite (= {primary_arg} {s})
+         (and (not (= (v1 {primary_arg}) {nil}))
+              (and (= (v1 {primary_arg}) (v {primary_arg}))
+                   (= (v2 {primary_arg}) (n (v {primary_arg})))))
+         (and (and (and (reach (p {primary_arg})) (lemma (p {primary_arg}) {rest_args}))
+                   (or (= (v1 {primary_arg}) (v2 {primary_arg})) (= (v2 {primary_arg}) {nil})))
+              (and (= (v {primary_arg}) (v (p {primary_arg})))
+                   (ite (= (n (v2 (p {primary_arg}))) {nil})
+                        (= (v2 {primary_arg}) {nil})
+                        (ite (= (n (v2 (p {primary_arg}))) (v1 (p {primary_arg})))
+                             (= (v2 {primary_arg}) (v1 {primary_arg}))
+                             (and (= (v1 {primary_arg}) (n (v1 (p {primary_arg}))))
+                                  (= (v2 {primary_arg}) (n (n (v2 (p {primary_arg})))))))))))
+    (lemma {primary_arg} {rest_args}))'''
+
+def ureach_z3(x):
+    pre = And(v1(x) != nil, v1(x) == v(x), v2(x) == n(v(x)))
+    neg_while = Or(v1(x) == v2(x), v2(x) == nil)
+    inner_ite = IteBool( n(v2(p(x))) == v1(p(x)),
+                         v2(x) == v1(x),
+                         And(v1(x) == n(v1(p(x))), v2(x) == n(n(v2(p(x))))) )
+    outer_ite = IteBool( n(v2(p(x))) == nil, v2(x) == nil, inner_ite )
+    return Iff( reach(x), IteBool( x == s,
+                                   pre,
+                                   And(reach(p(x)), neg_while, v(x) == v(p(x)), outer_ite) ) )
+
 
 # Recall recursive predicates are always unary
 fcts_z3['recpreds-loc_1_int_bool'] = [list, reach]
@@ -143,31 +177,22 @@ def vc(x):
 
 deref = [x]
 const = [nil, s]
-elems = [*range(5)]
-config_params = {'mode': 'random', 'num_true_models': 20}
+verification_condition = vc(x)
 
-# valid and invalid lemmas
-valid_lemmas = []
-invalid_lemmas = []
+# End of input
 
-# continuously get valid lemmas until VC has been proven
-while True:
-    lemmas = getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3,
-                             valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
-                             vc(x), 'reach-list')
-    # lemmas = lemmas + ['(define-fun lemma ((x Int) (nil Int) (c Int)) Bool (=> (reach x) (or (= c  (v2 x)) (= (v1 x) (v2 x)))))']
-    print("lemmas: {}".format(lemmas))
-    for lemma in lemmas:
-        z3py_lemma = translateLemma(lemma, fcts_z3)
-        if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
-            print('lemma has already been proposed')
-            continue
-        model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, z3py_lemma, True)
-        if model != None:
-            print('proposed lemma cannot be proved.')
-            invalid_lemmas = invalid_lemmas + [ z3py_lemma ]
-            # TODO: add to bag of unwanted lemmas (or add induction principle of lemma to axioms)
-            # and continue
-        else:
-            valid_lemmas = valid_lemmas + [ z3py_lemma ]
-            break
+###########################################################################################################################
+# Lemma synthesis stub 
+##########################################################################################################################
+
+config_params = {'mode': 'random', 'num_true_models':0}
+config_params['pfp_dict'] = pfp_dict
+config_params['use_cex_models'] = True
+
+name = 'reach-list'
+
+synth_dict = {}
+skolem = Int('skolem')
+synth_dict['lemma_deref'] = [skolem, n(skolem), p(skolem)]
+
+solveProblem(fcts_z3, axioms_python, axioms_z3, unfold_recdefs_z3, unfold_recdefs_python, deref, const, verification_condition, name, config_params, synth_dict)

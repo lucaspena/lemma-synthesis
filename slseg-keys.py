@@ -1,7 +1,6 @@
 from z3 import *
-from set_sort import *
-from lemma_synthesis import *
-from true_models import *
+from src.set_sort import *
+from src.lemsynth_engine import *
 
 ####### Section 0
 # some general FOL macros
@@ -201,6 +200,24 @@ unfold_recdefs_z3['1_int_set-int'] = [ukeys_z3, ulsegkeys_y_z3, ulsegkeys_yp_z3]
 unfold_recdefs_python['1_int_bool'] = [uslseg_y_python, uslseg_yp_python]
 unfold_recdefs_python['1_int_set-int'] = [ukeys_python, ulsegkeys_y_python, ulsegkeys_yp_python]
 unfold_recdefs_python['1_int_int'] = [umax_lsegkeys_y_python]
+pfp_dict ={}
+pfp_dict['slseg_y'] = '''
+(=> (ite (= {primary_arg} {y})
+         true
+         (ite (= (next {primary_arg}) {y})
+              true
+              (and (<= (key {primary_arg}) (key (next {primary_arg})))
+                   (and (slseg_y (next {primary_arg})) (lemma (next {primary_arg}) {rest_args})))))
+    (lemma {primary_arg} {rest_args}))'''
+
+pfp_dict['slseg_yp'] = '''
+(=> (ite (= {primary_arg} {yp})
+         true
+         (ite (= (next {primary_arg}) {yp})
+              true
+              (and (<= (key {primary_arg}) (key (next {primary_arg})))
+                   (and (slseg_yp (next {primary_arg})) (lemma (next {primary_arg}) {rest_args})))))
+    (lemma {primary_arg} {rest_args}))'''
 
 # Recall recursive predicates are always unary
 fcts_z3['recpreds-loc_1_int_bool'] = [slseg_y, slseg_yp]
@@ -210,7 +227,7 @@ fcts_z3['recfunctions-loc_1_int_set-int'] = [keys, lsegkeys_y, lsegkeys_yp]
 ############# Section 5
 # Program, VC, and Instantiation
 
-# lemma: slsegy(x) /\ next(y) = yp => ( max(lseg-keys(x, y)) <= key(yp) => slsegyp(x)
+# lemma: slsegy(x) /\ next(y) = yp => ( max(lseg-keys(x, y)) <= key(y) => slsegyp(x)
 
 def pgm(x, y, yp):
     precondition = And(slseg_y(x), keys(x) == SetUnion(lsegkeys_y(x), keys(y)))
@@ -222,34 +239,37 @@ def vc(x, y, yp):
 
 deref = [x, next(x)]
 const = [nil, y, yp]
+verification_condition = vc(x,y,yp)
 
-elems = [*range(2)]
-num_true_models = 10
+# End of input
 
-# valid and invalid lemmas
-valid_lemmas = []
-invalid_lemmas = []
+###########################################################################################################################
+# Lemma synthesis stub 
+##########################################################################################################################
 
-# continuously get valid lemmas until VC has been proven
-while True:
-    lemmas = getSygusOutput(elems, num_true_models, fcts_z3, axioms_python, axioms_z3,
-                            valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
-                            vc(x,y,yp), 'slseg-keys')
-    print('Lemmas: {}'.format(lemmas))
-    for lemma in lemmas:
-        insert_tmp = Function('insert_tmp', IntSort(), SetIntSort, SetIntSort)
-        addl_decls = { 'insert': insert_tmp }
-        swaps = { insert_tmp: SetAdd }
-        z3py_lemma = translateLemma(lemma, fcts_z3, addl_decls, swaps)
-        if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
-            print('lemma has already been proposed')
-            continue
-        model = getFalseModel(axioms_z3, fcts_z3, valid_lemmas, unfold_recdefs_z3, deref, const, z3py_lemma, True)
-        if model != None:
-            print('proposed lemma cannot be proved.')
-            invalid_lemmas = invalid_lemmas + [ z3py_lemma ]
-            # TODO: add to bag of unwanted lemmas (or add induction principle of lemma to axioms)
-            # and continue
-        else:
-            valid_lemmas = valid_lemmas + [ z3py_lemma ]
-            break
+config_params = {'mode': 'random', 'num_true_models':0}
+config_params['pfp_dict'] = pfp_dict
+config_params['use_cex_models'] = True
+
+name = 'slseg-keys'
+
+synth_dict = {}
+
+synth_dict['translate_lemma_addl_decls'] = {}
+synth_dict['translate_lemma_replace_fcts'] = {}
+synth_dict['translate_lemma_swap_fcts'] = {}
+# TODO: replace all the swap and replace declarations below by having translateLemma use substituteSubformula instead of swap_fcts and replace_fcts
+# Must add the declarations below in order to translate 'member' in cvc4 to 'ismember' in z3
+# This is an uninterpreted function with the same signature as that of set membership
+membership = Function('membership', IntSort(), SetIntSort, BoolSort())
+# This is say that 'member' in cvc4 should be replaced by the uninterpreted function 'membership'
+synth_dict['translate_lemma_addl_decls']['member'] = membership
+# This is to say that the uninterpreted function 'membership' should be substituted away to 'IsMember' in z3
+synth_dict['translate_lemma_replace_fcts'][membership] = IsMember
+# Similarly for converting 'insert' in cvc4 to 'SetAdd' in z3
+# The corresponding function must be placed in swap_fcts rather than replace_fcts because the order of arguments is different in cvc4 and z3 
+insertion = Function('insertion', IntSort(), SetIntSort, SetIntSort)
+synth_dict['translate_lemma_addl_decls']['insert'] = insertion
+synth_dict['translate_lemma_swap_fcts'][insertion] = SetAdd
+
+solveProblem(fcts_z3, axioms_python, axioms_z3, unfold_recdefs_z3, unfold_recdefs_python, deref, const, verification_condition, name, config_params, synth_dict)

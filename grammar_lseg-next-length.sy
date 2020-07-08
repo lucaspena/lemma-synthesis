@@ -14,7 +14,10 @@
                    (lseglen_yp_int Loc)
                    (+ I 1)))
             (Loc Int (x y yp
-                     (next Loc))))
+                     (next x)
+                     (next y)
+                     (next yp)
+                     )))
 )
 
 (synth-fun rswitch () Int

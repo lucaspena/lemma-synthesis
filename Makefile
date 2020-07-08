@@ -25,10 +25,11 @@ all:
 	time python3 slist-find.py
 	echo "\nRunning slseg-nil_slist"
 	time python3 slseg-nil-slist.py
+	echo "\nRunning lseg-nil-length"
+	time python3 lseg-nil-length.py
+	echo "\nRunning lseg-nil-length"
+	time python3 lseg-list-length.py
 	echo "\nExperiments Done\n"
-	#time python3 slseg-nil-slist.py
-	#time python3 lseg-nil-length.py
-	#time python3 lseg-list-length.py
 
 clean:
 	rm -f *_KLemmas.txt

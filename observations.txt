@@ -3,4 +3,5 @@
 - lesg-keys does not terminate at all with any variation, including a minimal grammar that only has the elements necessary for the desired lemma.
 - slist-find requires extra instantiation beyond what is expected to be able to prove the desired lemma. This is done by manual intervention at the moment. The idea is that after a point we will give up and increase the depth of instantiation from 0 to 1 (not implemented in the tool at the moment), at which point the instance will go through.
 - Adding (next x) and (next y) to the grammar in slseg-nil-slist makes it take a lot more time
+- lseg-nil-length needs a severely restricted grammar to go through. Small extensions do not terminate in reasonable time or trigger errors. 
 

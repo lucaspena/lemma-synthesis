@@ -1,24 +1,31 @@
+;; lemma to synthesize
+;; TODO: must be generated from problem parameters
 (synth-fun lemma ((x Int) (nil Int) (y Int) (yp Int)) Bool
-           ((Start Bool) (RecB Bool) (S (Set Int)) (B Bool) (I Int) (Loc Int))
+           ((Start Bool) (S (Set Int)) (I Int) (Loc Int))
 
            ((Start Bool
-                  ((=> RecB B)))
-           (RecB Bool
-                  ((slseg_y Loc)))
+                  ((=> Start Start)
+                   (<= I I)
+                   (= S S)
+                   (slseg_y Loc)))
            (S (Set Int)
                   ((insert I S)
                    (keys Loc)
                    (lsegkeys_y Loc)
                    (lsegkeys_yp Loc)))
-           (B Bool
-                  ((=> B B)
-                   (<= I I)
-                   (= S S)
-                   (slseg_y Loc)))
            (I Int
                   ((key Loc)
                    (max_lsegkeys_y Loc)))
            (Loc Int (x y yp
-                  (next Loc))))
+                  ;(next Loc)
+                  )))
+
+)
+
+(synth-fun rswitch () Int
+
+           ((Start Int))
+
+           ((Start Int (0)))
 
 )
