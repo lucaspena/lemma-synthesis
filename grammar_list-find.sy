@@ -1,18 +1,28 @@
-;; TODO: this should be generated from the problem parameters
 ;; lemma to synthesize
+;; TODO: must be generated from problem parameters
+
 (synth-fun lemma ((x Int) (nil Int) (y Int) (yp Int)) Bool
-           ((Start Bool) (Rec Bool) (B Bool) (I Int))
+
+           ((Start Bool) (I Int))
 
            ((Start Bool
-                  ((=> Rec B)))
-           (Rec Bool
-                  ((list I) (lsegy I) (lsegyp I)))
-           (B Bool
-                  ((=> B B)
-                   (and B B)
-                   (not B)
+                  ((=> Start Start)
+                   (and Start Start)
+                   ;(or Start Start)
+                   (not Start)
                    (= I I)
-                   (list I) (lsegy I) (lsegyp I)))
+                   (list I) (lsegy I) (lsegyp I)
+                   ))
             (I Int (x nil y yp
-                   (next I))))
+                   (next I)
+                   )))
+
+)
+
+(synth-fun rswitch () Int
+
+           ((Start Int))
+
+           ((Start Int (0 1 2)))
+
 )

@@ -56,7 +56,6 @@ def makeModelUniverseNonNegative(model):
     model_values = modelUniverse(model)
     model_integer_values = [val for val in model_values if isinstance(val, int)]
     min_val = min(model_integer_values)
-    max_val = max(model_integer_values)
     if min_val >= 0:
         return model
     else:
@@ -321,6 +320,34 @@ def substituteSubformula(expression, substitution_pairs):
         return declaration(substituted_args)
     else:
         return declaration(*substituted_args)
+
+# Returns the list of foreground terms in the given expression
+# TODO: IMPORTANT: distinguish by sorts. Currently returning any term of type 'ArithRef'
+def getFgTerms(expression):
+    if isinstance(expression, ArithRef):
+        fg_term_list = [expression]
+    else:
+        fg_term_list = []
+    try:
+        children = expression.children()
+    except:
+        return fg_term_list
+
+    for child in children:
+        fg_term_list = fg_term_list + getFgTerms(child)
+    return fg_term_list
+
+# Returns the height of a given expression.
+# Intended usage is for the height of terms.
+# Variables/constants have 0, and function application adds 1 to the maximum height of the operands.
+def getExprHeight(expression):
+    children = expression.children()
+    if children == []:
+        return 0
+    else:
+        max_operand_height = max([getExprHeight(child) for child in children])
+        return max_operand_height + 1
+
 
 ####################
 # Support for sorts. Particularly used for background sorts

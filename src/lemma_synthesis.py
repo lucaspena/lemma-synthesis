@@ -163,7 +163,7 @@ experimental_prefetching_switch = 'off'
 exclude_set_type_definitions_switch = 'off'
 ###############################################################################
 # write output to a file that can be parsed by CVC4 SyGuS
-def getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3, lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const, vc, problem_instance_name):
+def getSygusOutput(fcts_z3, axioms_python, axioms_z3, lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const, vc, problem_instance_name, config_params):
     grammar_file = 'grammar_{0}.sy'.format(problem_instance_name)
     out_file = 'out_{0}.sy'.format(problem_instance_name)
 
@@ -202,6 +202,7 @@ def getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3, lemm
         cex_models = cex_models_with_offset
     true_model_offset = accumulated_offset
 
+    elems = config_params.get('elems',[])
     true_models = getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_model_offset, config_params)
 
     all_models = cex_models + true_models + [false_model_dict]

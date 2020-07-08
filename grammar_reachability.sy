@@ -19,37 +19,12 @@
                    (v2 Progstate)
                    (n Progvar)
                    ))
-            (Progstate Int (x
+            (Progstate Int (
+            	    x
                    )))
 
 )
 
-;;Further stratified grammar expressing bag of states
-;(synth-fun lemma ((x Int) (nil Int) (c Int)) Bool
-;
-;           ((Start Bool) (State Bool) (Atom Bool) (Progvar Int) (Progstate Int))
-;
-;           ((Start Bool
-;                  ( State
-;                   (or State Start)))
-;            (State Bool
-;                  ( Atom
-;                   (and Atom State)))
-;            (Atom Bool
-;                  ((= Progvar Progvar)
-;                   (not Atom)))
-;            (Progvar Int 
-;                  (
-;                    c 
-;                   nil
-;                   (v1 Progstate)
-;                   (v2 Progstate)
-;                   (n Progvar)
-;                   ))
-;            (Progstate Int (x
-;                   )))
-;
-;)
 
 (synth-fun rswitch () Int
 

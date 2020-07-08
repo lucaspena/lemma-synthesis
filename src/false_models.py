@@ -2,7 +2,13 @@ from z3 import *
 z3.set_param('model.compact', False)
 from lemsynth_utils import *
 
-def makePFP(lhs, rhs, recdefs, fcts_z3, insts):
+def makePFP(vc, recdefs, fcts_z3, insts):
+    op = vc.decl()
+    if getZ3FctName(op) != '=>':
+        raise ValueError('Cannot compute pfp formula if given theorem is not in implication form.')
+    lhs = vc.arg(0)
+    rhs = vc.arg(1)
+
     fresh = Int('fresh')
     skolem = Int('skolem')
     lhs_decl = lhs.decl()
@@ -74,11 +80,8 @@ def getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, v
     if ip:
         # Doing a proof by induction is the same as proving the corresponding PFP formula.
         # NOTE: if sat, the model produced negates the PFP, not the given theorem.
-        lhs = vc.arg(0)
-        rhs = vc.arg(1)
-        pfp = makePFP(lhs, rhs, unfold_recdefs_z3, fcts_z3, const + deref)
+        pfp = makePFP(vc, unfold_recdefs_z3, fcts_z3, const + deref)
         sol.add(Not(pfp))
-        sol.add(Not(vc))
     else:
         # Not proof by induction. Simply negate the given vc. 
         sol.add(Not(vc))
@@ -108,8 +111,14 @@ def getFalseModelDict(fcts_z3, axioms_z3, lemmas, unfold_recdefs_z3, deref, cons
     # These act the same way as the 'elems' field in the true models (modulo the proving power of natural proofs).
     # NOTE: Add the skolem variable(s) as well for proofs using the induction principle.
     # Currently this is just the variable named 'skolem'. Must make the implementation more principled.
-    skolem = Int('skolem')
-    instantiations = const + deref + ([skolem] if ip and skolem not in deref else [])
+    pfp = makePFP(vc, unfold_recdefs_z3, fcts_z3, const + deref)
+    # Get formula-driven instantiations to include in the finite partial model extracted from the z3 model
+    # This ensures that the queries given to the solver can be replayed on the finite model with the same results.
+    formula_driven_instantiations = getFgTerms(pfp)
+    instantiations = formula_driven_instantiations + const + deref
+    # Sort instantiated terms by height as they can then be added to the model dictionary from smaller to larger terms
+    instantiations.sort(key=getExprHeight)
+
     elems = []
     for inst in instantiations:
         inst_value = false_model_z3.eval(inst, model_completion=True)

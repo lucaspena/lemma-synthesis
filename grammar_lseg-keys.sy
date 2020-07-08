@@ -8,16 +8,20 @@
                   ((=> Start Start)
                    (and Start Start)
                    (= S S)
-                   (lseg_y I)))
+                   ;(lseg_y I)
+                   ;(lseg_yp I)
+                   ))
            (S (Set Int)
-                  ((union S S)
+                  (
+                   ;(union S S)
                    (insert I S)
-                   (keys I)
+                   ;(keys I)
                    (lsegkeys_y I)
                    (lsegkeys_yp I)))
            (I Int (x nil y yp
                   (key I)
-                  (next I))))
+                  (next I)
+                  )))
 
 )
 

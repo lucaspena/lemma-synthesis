@@ -253,10 +253,9 @@ config_params['cex_models'] = cex_models
 fresh = Int('fresh')
 skolem = Int('skolem')
 
-lemma = Implies(lseg_y(fresh), Implies(list(fresh), Implies(next(y) == yp, lsegkeys_yp(fresh) == SetAdd(lsegkeys_y(fresh), key(y)))))
-lemma_deref = [ skolem, next(skolem), fresh, next(fresh), y, next(y), yp ]
-(false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, lemma, True)
-print(m)
+#lemma = Implies(lseg_y(fresh), Implies(list(fresh), Implies(next(y) == yp, lsegkeys_yp(fresh) == SetAdd(lsegkeys_y(fresh), key(y)))))
+#lemma_deref = [ skolem, next(skolem), fresh, next(fresh), y, next(y), yp ]
+#(false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, lemma, True)
 
 # continuously get valid lemmas until VC has been proven
 while True:
@@ -273,6 +272,7 @@ while True:
     print('proposed lemma: ' + str(z3py_lemma))
     if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
             print('lemma has already been proposed')
+            exit(0)
             continue
     lemma_deref = []
     (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, z3py_lemma, True)

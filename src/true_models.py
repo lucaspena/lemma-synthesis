@@ -162,20 +162,21 @@ def getRecdefsEval(model, unfold_recdefs_python):
 
 # Get true models (with offsets added) with recdef evaluations such that they
 # satisfy axioms.
-def getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_model_offset, config_params = 'full'):
+def getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_model_offset, config_params):
     # Base model either gotten through complete enumeration or at random
-    if isinstance(config_params, dict):
-        mode = config_params['mode']
-        if mode != 'random':
-            raise ValueError('Cannot understand config params for true model generation.')
-        num_true_models = config_params.get('num_true_models',1)
-        if num_true_models == 'full':
-            raise ValueError('Must specify a number of desired models for random true model generation.')
+    mode = config_params.get('mode',None)
+    num_true_models = config_params.get('num_true_models',0)
+    if num_true_models == 0:
+        return []
+    elif mode is None:
+        raise ValueError('Must specify true models to be generated in either enumeration mode or random mode.')
+    elif mode == 'random':
+        num_true_models = 1 if not isinstance(num_true_models, int) else num_true_models
         search_fuel = abs(config_params.get('fuel',3))
-    else:
-        mode = 'enumeration'
-        num_true_models = config_params
+    elif mode == 'enumeration':
         search_fuel = 1
+    else:
+        raise ValueError('Incorrect mode: Must specify true models to be generated in either enumeration mode or random mode.')
 
     evaluated_models = []
     filtered_models = []
