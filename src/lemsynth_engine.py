@@ -28,11 +28,14 @@ def solveProblem(fcts_z3, axioms_python, axioms_z3, unfold_recdefs_z3, unfold_re
         print('proposed lemma: ' + str(z3py_lemma))
         if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
             print('lemma has already been proposed')
-            if use_cex_models and z3py_lemma in invalid_lemmas:
-                print('Something is wrong. Lemmas should not be reproposed in the presence of countermodels. Exiting.')
-                exit(0)
+            if use_cex_models:
+                if z3py_lemma in invalid_lemmas:
+                    print('Something is wrong. Lemmas should not be reproposed in the presence of countermodels. Exiting.')
+                if z3py_lemma in valid_lemmas:
+                    print('This is a currently known limitation of the tool. Consider restricting your grammar to have terms of lesser height.')
+                exit('Instance failed.')
             else:
-                # Using bag-of-lemmas + prefetching formulation, or the reproposed lemma is a valid one. Continue.
+                # Using bag-of-lemmas + prefetching formulation, or the reproposed lemma is a valid one. Continue and hope for the best.
                 continue
         lemma_deref = synth_dict.get('lemma_deref',[])
         (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, z3py_lemma, True)

@@ -1,0 +1,3 @@
+- Adding one more level of terms (i.e, next <x,y,z>) to list-find does not terminate after 18 min.
+- Similar phenomenon with lseg-list-keys. Does not temrinate. Time of observation until process was killed unknown.
+- lesg-keys does not terminate at all with any variation, including a minimal grammar that only has the elements necessary for the desired lemma.

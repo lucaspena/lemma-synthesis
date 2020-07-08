@@ -14,7 +14,6 @@
                    (list I) (lsegy I) (lsegyp I)
                    ))
             (I Int (x nil y yp
-                   (next I)
                    )))
 
 )

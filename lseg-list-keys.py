@@ -1,7 +1,6 @@
 from z3 import *
-from set_sort import *
-from lemma_synthesis import *
-from true_models import *
+from src.lemsynth_engine import *
+from src.set_sort import *
 
 ####### Section 0
 # some general FOL macros
@@ -178,59 +177,22 @@ def vc(x, y):
     precondition = And(lseg_y(x), list(y))
     return Implies( precondition, keys(x) == SetUnion(lsegkeys_y(x), keys(y)) )
 
-deref = [x]
+deref = [x, next(x), next(y)]
 const = [nil, y]
-
-elems = [*range(2)]
-num_true_models = 10
+verification_condition = vc(x,y)
 
 # End of input
-################################################################################
-# Lemma synthesis stub to follow: must be replaced with a uniform function call
-# between all examples.
-################################################################################
 
-fresh = Int('fresh')
+###########################################################################################################################
+# Lemma synthesis stub 
+##########################################################################################################################
 
-# valid and invalid lemmas
-valid_lemmas = []
-invalid_lemmas = []
-
-cex_models = []
-config_params = {'mode': 'random', 'num_true_models': 0}
+config_params = {'mode': 'random', 'num_true_models':0}
 config_params['pfp_dict'] = pfp_dict
 config_params['use_cex_models'] = True
-config_params['cex_models'] = cex_models
 
-fresh = Int('fresh')
-skolem = Int('skolem')
+name = 'lseg-list-keys'
 
-# continuously get valid lemmas until VC has been proven
-while True:
-    lemma = getSygusOutput(elems, config_params, fcts_z3, axioms_python, axioms_z3,
-                           valid_lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const,
-                           vc(x,y), 'lseg-list-keys')
-    rhs_lemma = translateLemma(lemma[0], fcts_z3)
-    index = int(lemma[1][-2])
-    lhs_lemma = fcts_z3['recpreds-loc_1_int_bool'][index](fresh)
-    z3py_lemma = Implies(lhs_lemma, rhs_lemma)
-    print('proposed lemma: ' + str(z3py_lemma))
-    if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
-            print('lemma has already been proposed')
-            continue
-    lemma_deref = [skolem, next(skolem)]
-    (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, z3py_lemma, True)
-    if false_model_z3 != None:
-        print('proposed lemma cannot be proved.')
-        invalid_lemmas = invalid_lemmas + [ z3py_lemma ]
-        use_cex_models = config_params.get('use_cex_models', False)
-        if use_cex_models:
-            cex_models = cex_models + [false_model_dict]
-    else:
-        valid_lemmas = valid_lemmas + [ z3py_lemma ]
-        # Reset countermodels and invalid lemmas to empty because we have
-        # additional information to retry those proofs.
-        cex_models = []
-        invalid_lemmas = []
-    # Update countermodels before next round of synthesis
-    config_params['cex_models'] = cex_models
+synth_dict = {}
+
+solveProblem(fcts_z3, axioms_python, axioms_z3, unfold_recdefs_z3, unfold_recdefs_python, deref, const, verification_condition, name, config_params, synth_dict)

@@ -1,6 +1,7 @@
-
+;; lemma to synthesize
+;; TODO: must be generated from problem parameters
 (synth-fun lemma ((x Int) (nil Int) (y Int)) Bool
-           ((Start Bool) (B1 Bool) (S (Set Int)) (S1 (Set Int)) (I Int) (Loc Int) (Loc1 Int))
+           ((Start Bool) (B1 Bool) (S (Set Int)) (S1 (Set Int)) (I Int) (Loc Int))
 
            ((Start Bool (B1
                   (=> B1 B1)
@@ -16,9 +17,7 @@
                    (lsegkeys_y Loc)))
            (I Int
                   ((key Loc)))
-           (Loc Int (Loc1
-                   (next Loc1)))
-           (Loc1 Int (x y)))
+           (Loc Int (x y nil)))
 )
 
 (synth-fun rswitch () Int
