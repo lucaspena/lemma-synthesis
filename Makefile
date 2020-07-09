@@ -39,6 +39,10 @@ all:
 	time python3 lseg-nil-length.py
 	echo "\nRunning lseg-nil-length"
 	time python3 lseg-list-length.py
+	echo "\nRunning bst-tree"
+	time python3 bst-tree.py
+	echo "\nRunning maxheap-tree"
+	time python3 maxheap-tree.py
 	echo "\nExperiments Done\n"
 
 clean:
