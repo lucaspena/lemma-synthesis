@@ -78,7 +78,7 @@ reach = Function('reach', IntSort(), BoolSort())
 
 # Macros for unfolding recursive definitions
 def ureach_z3(x):
-    cond = v1(p(x)) != nil
+    cond = v1(p(x)) != c
     assign1 = v1(x) == n(v1(p(x)))
     assign2 = IteBool( v2(p(x)) != c,
                        v2(x) == n(v2(p(x))),
@@ -101,7 +101,7 @@ def ureach_python(x, model):
         return True
     else:
         rec = model['reach'][p_val]
-        cond = v1_p != model['nil']
+        cond = v1_p != model['c']
         assign1 = v1_curr == n_v1_p
         ret = rec and cond and assign1
         if v2_p != model['c']:
@@ -117,7 +117,7 @@ pfp_dict['reach'] = '''
                     (ite (= {primary_arg} {s})
                          true
                          (and (and (reach (p {primary_arg})) (lemma (p {primary_arg}) {rest_args}))
-                              (and (not (= (v1 (p {primary_arg})) {nil})) 
+                              (and (not (= (v1 (p {primary_arg})) {c})) 
                                    (and (= (v1 {primary_arg}) (n (v1 (p {primary_arg})))) 
                                         (ite (not (= (v2 (p {primary_arg})) {c})) 
                                              (= (v2 {primary_arg}) (n (v2 (p {primary_arg})))) 
@@ -149,7 +149,7 @@ config_params = {'mode': 'random', 'num_true_models':0}
 config_params['pfp_dict'] = pfp_dict
 config_params['use_cex_models'] = True
 
-name = 'reachability'
+name = 'reachability3'
 
 synth_dict = {}
 

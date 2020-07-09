@@ -13,6 +13,16 @@ all:
 	time python3 lseg-list.py
 	echo "\nRunning reachability"
 	time python3 reachability.py
+	echo "\nRunning reachability2"
+	time python3 reachability2.py
+	echo "\nRunning reachability3"
+	time python3 reachability3.py
+	echo "\nRunning reachability4"
+	time python3 reachability4.py
+	echo "\nRunning reachability5"
+	time python3 reachability5.py
+	echo "\nRunning reachability6"
+	time python3 reachability6.py
 	echo "\nRunning slseg-lseg"
 	time python3 slseg-lseg.py
 	echo "\nRunning lseg-nil-list"

@@ -58,10 +58,10 @@ n = Function('n', IntSort(), IntSort())
 fcts_z3['1_int_int'] = [v1, v2, p, n]
 
 # Axioms: precondition
-pre_z3 = v1(s) == v2(s)
+pre_z3 = v1(s) == n(v2(s))
 
 def pre_python(model):
-    return model['v1'][model['s']] == model['v2'][model['s']]
+    return model['v1'][model['s']] == model['n'][model['v2'][model['s']]]
 
 axioms_z3['0'] = [pre_z3]
 axioms_python['0'] = [pre_python]
@@ -129,10 +129,9 @@ fcts_z3['recpreds-loc_1_int_bool'] = [reach]
 
 ############# Section 5
 # Program, VC, and Instantiation
-
 def vc(x):
     lhs = And( reach(x), v1(x) == nil )
-    rhs = Or( v2(x) == nil, v2(x) == c )
+    rhs = Or( n(v2(x)) == nil, v2(x) == c )
     return Implies( lhs, rhs )
 
 deref = [x, p(x), v1(p(x)), v2(p(x))]
@@ -149,7 +148,7 @@ config_params = {'mode': 'random', 'num_true_models':0}
 config_params['pfp_dict'] = pfp_dict
 config_params['use_cex_models'] = True
 
-name = 'reachability'
+name = 'reachability5'
 
 synth_dict = {}
 
