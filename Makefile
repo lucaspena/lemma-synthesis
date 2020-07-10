@@ -37,7 +37,7 @@ all:
 	time python3 slseg-nil-slist.py
 	echo "\nRunning lseg-nil-length"
 	time python3 lseg-nil-length.py
-	echo "\nRunning lseg-nil-length"
+	echo "\nRunning lseg-list-length"
 	time python3 lseg-list-length.py
 	echo "\nRunning bst-tree"
 	time python3 bst-tree.py

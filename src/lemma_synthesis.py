@@ -78,8 +78,6 @@ def sygusBigModelEncoding(models, fcts_z3, set_defs):
     for model in models:
         modelToSolver(model, fcts_z3, sol)
     sol.check()
-    # print(sol.check())
-    # print(sol.sexpr())
     m = sol.model()
     set_encodings = translateModelsSets(models, set_defs)
     return set_encodings + m.sexpr()
