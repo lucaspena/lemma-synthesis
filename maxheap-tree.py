@@ -84,7 +84,31 @@ def utree_z3(x):
                                  And( 0 < key(x), key(x) < 100,
                                       tree(left(x)), tree(right(x)) ) ) )
 
+def umaxheap_python(x, model):
+    if x == model['nil']:
+        return True
+    else:
+        key = model['key'][x]
+        left = model['left'][x]
+        right = model['right'][x]
+        key_bound_cond = 0 < key and key < 100
+        rec_cond = model['maxheap'][left] and model['maxheap'][right]
+        maxheap_cond = model['key'][left] <= key and model['key'][right] <= key
+        return key_bound_cond and rec_cond and maxheap_cond
+
+def utree_python(x, model):
+    if x == model['nil']:
+        return True
+    else:
+        key = model['key'][x]
+        left = model['left'][x]
+        right = model['right'][x]
+        key_bound_cond = 0 < key and key < 100
+        rec_cond = model['tree'][left] and model['tree'][right]
+        return key_bound_cond and rec_cond
+
 unfold_recdefs_z3['1_int_bool'] = [umaxheap_z3, utree_z3]
+unfold_recdefs_python['1_int_bool'] = [umaxheap_python, utree_python]
 fcts_z3['recpreds-loc_1_int_bool'] = [maxheap, tree]
 
 pfp_dict = {}

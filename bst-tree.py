@@ -104,8 +104,51 @@ def umaxr_z3(x):
     else_case = Implies(Not(is_nil), maxr(x) == max3(key(x), minr(left(x)), minr(right(x))))
     return And(then_case, else_case)
 
+def ubst_python(x, model):
+    if x == model['nil']:
+        return True
+    else:
+        key = model['key'][x]
+        left = model['left'][x]
+        right = model['right'][x]
+        key_bound_cond = 0 < key and key < 100
+        rec_cond = model['bst'][left] and model['bst'][right]
+        bst_cond = model['maxr'][left] <= key and key <= model['minr'][right]
+        return key_bound_cond and rec_cond and bst_cond
+
+def utree_python(x, model):
+    if x == model['nil']:
+        return True
+    else:
+        key = model['key'][x]
+        left = model['left'][x]
+        right = model['right'][x]
+        key_bound_cond = 0 < key and key < 100
+        rec_cond = model['tree'][left] and model['tree'][right]
+        return key_bound_cond and rec_cond
+
+def uminr_python(x, model):
+    if x == model['nil']:
+        return -1
+    else:
+        key = model['key'][x]
+        left = model['left'][x]
+        right = model['right'][x]
+        return min(key, model['minr'][left], model['minr'][right])
+
+def umaxr_python(x, model):
+    if x == model['nil']:
+        return 101
+    else:
+        key = model['key'][x]
+        left = model['left'][x]
+        right = model['right'][x]
+        return max(key, model['minr'][left], model['minr'][right])
+
 unfold_recdefs_z3['1_int_bool'] = [ubst_z3, utree_z3]
+unfold_recdefs_python['1_int_bool'] = [ubst_python, utree_python]
 unfold_recdefs_z3['1_int_int'] = [uminr_z3, umaxr_z3]
+unfold_recdefs_python['1_int_int'] = [uminr_python, umaxr_python]
 
 fcts_z3['recpreds-loc_1_int_bool'] = [bst, tree]
 fcts_z3['recfunctions-loc_1_int_int'] = [minr, maxr]
