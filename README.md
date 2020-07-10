@@ -3,12 +3,14 @@
 ## Requirements
 
 - [Python 3](https://www.python.org/downloads/)
-- [CVC4 1.4](https://cvc4.github.io/downloads.html)
+- [CVC4 1.9](https://cvc4.github.io/downloads.html)
 
 ## Execution
+
 - Clone or download the repo
 - Enter top-level directory: `cd lemma-synthesis`
 - Dowload the latest nightly build binary of cvc4 from `https://cvc4.github.io/downloads.html` and add it to `PATH`: execute `export PATH ="/path/to/cvc4binary":$PATH` or add it to `~/.bashrc` and then do `source ~/.bashrc`. Alternatively, you can build from source.
+  - The specific commit used to compile all examples in the Makefile is 2faf908e
 - Make sure that `cvc4 --version` succeeds. You may want to rename the binary or alias it to `cvc4`.
 - Add the path to the src/ folder to `PYTHONPATH`: execute `export PYTHONPATH ="/path/to/src":$PYTHONPATH` or add it to `~/.bashrc` and then do `source ~/.bashrc`.
 - To run all examples: `make -s -i`
@@ -19,29 +21,3 @@
   - add option `--sygus-stream` to print outputs indefinitely
   - add option `--sygus-abort-size=<n>` with previous option to print outputs up to size `n`
 - NOTE: The project uses temporary files to store and read data during execution. Therefore, it is not advisable to run multiple instances of the same example as they will each write to the same temporary files.
-
-## Worked out Example
-
-- input: in Z3py format. see dlist-list.py
-  - signature, rec defs, vc, default values for fcts
-  - SyGuS grammar
-- generate true models
-  - evaluate recursive definitions manually, see true_models.py
-  - can limit number of true models used as parameter
-- generate false model
-  - see false_models.py
-  - if no false model exists, the VC has been proven with the lemmas generated
-- take models and encode in SyGuS
-  - loop through models output by Z3Py, convert to format readable by SyGuS
-  - see lemma-synthesis.py
-- generate SyGuS constraints
-  - see lemma-synthesis.py
-- run generated SyGuS file to output stream of lemmas (up to size n)
-  - see lemma-synthesis.py
-- for each lemma generated:
-  - convert lemma from smtlib format to z3Py format, see lemsynth_utils.py
-  - disregard lemma if it had been previously generated
-  - check if lemma is provable using natural proofs + induction principle, see false_models.py
-  - if so, add lemma to axioms to be instantiated
-  - if not, add lemma to list of lemmas that had been generaated
-  - see dlist-list.py
