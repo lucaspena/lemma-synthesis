@@ -10,6 +10,19 @@ def solveProblem(fcts_z3, axioms_python, axioms_z3, unfold_recdefs_z3, unfold_re
     invalid_lemmas = synth_dict.get('invalid_lemmas',[])
     use_cex_models = config_params.get('use_cex_models', False)
     cex_models = config_params.get('cex_models',[])
+
+    # check if lemma is provable on its own using induction
+    fresh = Int('fresh')
+    x = Int('x')
+    vc_fresh = (substitute(vc, (x, fresh)))
+    lemma_deref = synth_dict.get('lemma_deref',[])
+    print(vc_fresh)
+    (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, vc_fresh, True)
+    if false_model_z3 != None:
+        print('vc cannot be proved using induction.')
+    else:
+        print('vc is provable using induction.')
+        exit(0)
     
     # continuously get valid lemmas until VC has been proven
     while True:
@@ -25,7 +38,6 @@ def solveProblem(fcts_z3, axioms_python, axioms_z3, unfold_recdefs_z3, unfold_re
         replace_fcts = synth_dict.get('translate_lemma_replace_fcts',{})
         rhs_lemma = translateLemma(lemma[0], fcts_z3, addl_decls, swap_fcts, replace_fcts)
         index = int(lemma[1][-2])
-        fresh = Int('fresh')
         lhs_lemma = fcts_z3['recpreds-loc_1_int_bool'][index](fresh)
         z3py_lemma = Implies(lhs_lemma, rhs_lemma)
 
@@ -41,7 +53,6 @@ def solveProblem(fcts_z3, axioms_python, axioms_z3, unfold_recdefs_z3, unfold_re
             else:
                 # Using bag-of-lemmas + prefetching formulation, or the reproposed lemma is a valid one. Continue and hope for the best.
                 continue
-        lemma_deref = synth_dict.get('lemma_deref',[])
         (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, valid_lemmas, unfold_recdefs_z3, lemma_deref, const, z3py_lemma, True)
         if false_model_z3 != None:
             print('proposed lemma cannot be proved.')
