@@ -1,8 +1,8 @@
 from z3 import *
 
-from lemma_synthesis import *
-from false_models import *
-from lemsynth_utils import *
+from src.lemma_synthesis import *
+from src.false_models import *
+from src.lemsynth_utils import *
 
 def solveProblem(fcts_z3, axioms_python, axioms_z3, unfold_recdefs_z3, unfold_recdefs_python, deref, const, vc, name, config_params, synth_dict):
     # Extract relevant parameters for running the verification-synthesis engine from synth_dict

@@ -1,3 +1,4 @@
 out*
-src/__pycache__/
+**/__pycache__/*
 *_KLemmas.txt
+.idea/**

@@ -1,4 +1,4 @@
-from lemsynth_utils import *
+from src.lemsynth_utils import *
 
 from z3 import *
 

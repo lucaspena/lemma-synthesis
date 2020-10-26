@@ -1,6 +1,6 @@
 from z3 import *
 z3.set_param('model.compact', False)
-from lemsynth_utils import *
+from src.lemsynth_utils import *
 
 def makePFP(vc, recdefs, fcts_z3, insts):
     op = vc.decl()

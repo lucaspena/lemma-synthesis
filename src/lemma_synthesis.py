@@ -2,10 +2,10 @@ import subprocess
 
 from z3 import *
 set_param('model.compact', False)
-from true_models import *
-from false_models import *
-from lemsynth_utils import *
-from set_sort import *
+from src.true_models import *
+from src.false_models import *
+from src.lemsynth_utils import *
+from src.set_sort import *
 
 # Add constraints from each model into the given solver
 # Look through model's function entries and adds each input-output constraint
