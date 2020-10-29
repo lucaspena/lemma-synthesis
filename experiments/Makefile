@@ -5,16 +5,16 @@ all:
 	command time -f $(timeformat) python3 dlist-list.py
 	echo "\nRunning quicksort-nil"
 	command time -f $(timeformat) python3 quicksort-nil.py
-# 	echo "\nRunning slist-list"
-# 	time python3 slist-list.py
-# 	echo "\nRunning sdlist-dlist"
-# 	time python3 sdlist-dlist.py
-# 	echo "\nRunning sdlist-dlist-and-slist"
-# 	time python3 sdlist-dlist-and-slist.py
-# 	echo "\nRunning listlen-list"
-# 	time python3 listlen-list.py
-# 	echo "\nRunning lseg-list"
-# 	time python3 lseg-list.py
+	echo "\nRunning slist-list"
+	command time -f $(timeformat) python3 slist-list.py
+	echo "\nRunning sdlist-dlist"
+	command time -f $(timeformat) python3 sdlist-dlist.py
+	echo "\nRunning sdlist-dlist-and-slist"
+	command time -f $(timeformat) python3 sdlist-dlist-and-slist.py
+	echo "\nRunning listlen-list"
+	command time -f $(timeformat) python3 listlen-list.py
+	echo "\nRunning lseg-list"
+	command time -f $(timeformat) python3 lseg-list.py
 # 	echo "\nRunning reachability"
 # 	time python3 reachability.py
 # 	echo "\nRunning reachability2"
@@ -47,7 +47,7 @@ all:
 # 	time python3 bst-tree.py
 # 	echo "\nRunning maxheap-tree"
 # 	time python3 maxheap-tree.py
-	@echo "\nExperiments Done\n"
+	echo "\nExperiments Done\n"
 
 clean:
 	rm -f **/*_KLemmas.txt
