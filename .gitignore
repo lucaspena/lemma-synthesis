@@ -1,4 +1,4 @@
-out*
+**/out*
 **/__pycache__/*
-*_KLemmas.txt
+**/*_KLemmas.txt
 .idea/**

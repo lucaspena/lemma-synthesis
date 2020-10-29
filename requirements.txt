@@ -1,0 +1,2 @@
+z3-solver==4.8.9.0
+importlib_resources=3.3.0
