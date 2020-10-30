@@ -1,5 +1,5 @@
 - Adding one more level of terms (i.e, next <x,y,z>) to list-find does not terminate after 18 min.
-- Similar phenomenon with lseg-list-keys when next is added, even to just build level 1 terms. Does not temrinate.
+- Similar phenomenon with lseg-list-keys when next is added, even to just build level 1 terms. Does not terminate.
 - lesg-keys does not terminate at all with any variation, including a minimal grammar that only has the elements necessary for the desired lemma.
 - slist-find requires extra instantiation beyond what is expected to be able to prove the desired lemma. This is done by manual intervention at the moment. The idea is that after a point we will give up and increase the depth of instantiation from 0 to 1 (not implemented in the tool at the moment), at which point the instance will go through.
 - Adding (next x) and (next y) to the grammar in slseg-nil-slist makes it take a lot more time

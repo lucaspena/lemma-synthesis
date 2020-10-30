@@ -1,4 +1,6 @@
+import os
 import subprocess
+
 from z3 import *
 set_param('model.compact', False)
 
@@ -158,6 +160,9 @@ def generateAllCexConstraints(models, const, pfp_dict, fcts_z3):
 
 # write output to a file that can be parsed by CVC4 SyGuS
 def getSygusOutput(fcts_z3, axioms_python, axioms_z3, lemmas, unfold_recdefs_z3, unfold_recdefs_python, deref, const, vc, problem_instance_name, grammar_string, config_params):
+    # Make log folder if it does not exist already
+    os.makedirs(options.log_file_path, exist_ok=True)
+
     out_file = '{}/out_{}.sy'.format(options.log_file_path, problem_instance_name)
 
     # TODO: false model currently does not have an 'elems' entry. It is not complete either.
