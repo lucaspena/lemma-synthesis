@@ -138,9 +138,10 @@ pfp_dict['bst'] = '''
 # Program, VC, and Instantiation
 
 def vc(x, y):
-    lhs = And( bst(x), IsMember(key(y), keys(x)), key(y) < key(x) )
+    rec = bst(x)
+    lhs = And( IsMember(key(y), keys(x)), key(y) < key(x) )
     rhs = IsMember(key(y), keys(left(x)))
-    return Implies( lhs, rhs )
+    return Implies( rec, Implies ( lhs, rhs ) )
 
 deref = [x, left(x), right(x)]
 const = [nil, y]
