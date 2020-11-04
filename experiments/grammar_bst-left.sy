@@ -1,0 +1,27 @@
+;; lemma to synthesize
+;; TODO: must be generated from problem parameters
+(synth-fun lemma ((x Int) (nil Int) (y Int)) Bool
+           ((Start Bool) (B1 Bool) (S (Set Int)) (S1 (Set Int)) (I Int) (Loc Int))
+
+           ((Start Bool (B1
+                  (=> B1 B1)
+                  (and B1 B1)))
+           (B1 Bool
+                  ((= S S)
+                   (member I S)
+                   (bst Loc)))
+           (S (Set Int) (S1
+                  (union S1 S1)))
+           (S1 (Set Int)
+                  ((keys Loc)))
+           (I Int
+                  ((key Loc)))
+           (Loc Int (x y nil
+                  (left Loc)
+                  (right Loc))))
+)
+
+(synth-fun rswitch () Int
+           ((Start Int))
+           ((Start Int (0)))
+)
