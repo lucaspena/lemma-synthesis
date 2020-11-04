@@ -147,14 +147,6 @@ verification_condition = vc(x, y)
 # Lemma synthesis stub 
 ######################
 
-## REMOVE BELOW: commented code shows desired lemma is provable via induction
-# fresh = Int('fresh')
-# skolem = Int('skolem')
-# lemma_deref = [skolem, left(skolem)]
-# lemma = Implies(bst(fresh), Implies(y == leftmost(fresh), key(y) == minr(fresh)))
-# (false_model_z3, false_model_dict) = getFalseModelDict(fcts_z3, axioms_z3, [], unfold_recdefs_z3, lemma_deref, const, lemma, True)
-# print(false_model_z3) ## this should equal None
-
 config_params = {'mode': 'random', 'num_true_models':0}
 config_params['pfp_dict'] = pfp_dict
 config_params['use_cex_models'] = True
