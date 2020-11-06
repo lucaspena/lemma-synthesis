@@ -28,7 +28,7 @@ def getSortEmptySet(set_sort):
 
 # Returns the universal set of the appropriate sort
 def getSortUniversalSet(set_sort):
-    element_sort = getElementTye(set_sort)
+    element_sort = getElementType(set_sort)
     sort_universal_set = FullSet(element_sort)
     return sort_universal_set
 

@@ -2,6 +2,8 @@ from z3 import *
 z3.set_param('model.compact', False)
 from lemsynth.lemsynth_utils import *
 
+from naturalproofs.fgsort import ann_ctx
+
 def makePFP(vc, recdefs, fcts_z3, insts):
     op = vc.decl()
     if getZ3FctName(op) != '=>':
@@ -9,11 +11,11 @@ def makePFP(vc, recdefs, fcts_z3, insts):
     lhs = vc.arg(0)
     rhs = vc.arg(1)
 
-    fresh = Int('fresh')
-    skolem = Int('skolem')
+    fresh = Int('fresh', ann_ctx)
+    skolem = Int('skolem', ann_ctx)
     lhs_decl = lhs.decl()
     if str(lhs.arg(0)) != 'fresh':
-        return True
+        return BoolVal(True, ann_ctx)
     lhs_decl_name = str(lhs_decl)
     udef = getUnfoldRecdefFct(lhs_decl_name, recdefs)
     rec_rho = udef(skolem).arg(0).arg(1)
@@ -37,17 +39,17 @@ def makePFP(vc, recdefs, fcts_z3, insts):
                     new_pair = (lhs_decl(fct(inst)), And(lhs_decl(fct(inst)), subst_rhs))
                     subst_pairs = subst_pairs + [ new_pair ]
     subst_rho = substitute(rec_rho, subst_pairs)
-    pfp = Implies(subst_rho, substitute(rhs, (fresh, skolem)))
+    pfp = Implies(subst_rho, substitute(rhs, (fresh, skolem)), ann_ctx)
     return pfp
 
 # Get false model - model where VC is false deref is a list of terms that are
 # derefenced. This must be computed prior depending on the depth of instantiation.
 # Only unary recursive predicates and axioms supported
 def getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, vc, ip = False):
-    sol = Solver()
+    sol = Solver(ctx=ann_ctx)
 
     # add skolem variable to instantiations
-    skolem = Int('skolem')
+    skolem = Int('skolem', ann_ctx)
     instantiations = const + deref + ([skolem] if ip and skolem not in deref else [])
     for key in axioms_z3.keys():
         signature = getFctSignature(key)
@@ -63,7 +65,7 @@ def getFalseModel(axioms_z3, fcts_z3, lemmas, unfold_recdefs_z3, deref, const, v
                     sol.add(ax(inst))
 
     # instantiate lemmas
-    fresh = Int('fresh')
+    fresh = Int('fresh', ann_ctx)
     for lemma in lemmas:
         sol.add(lemma)
         for inst in instantiations:

@@ -2,6 +2,8 @@ from z3 import *
 set_param('model.compact', False)
 import re
 
+from naturalproofs.fgsort import ann_ctx
+
 ############################
 # Support for python models
 
@@ -280,7 +282,7 @@ def translateLemma(lemma, fcts_z3, addl_decls = {}, swap_fcts = {}, replace_fcts
     smt_string = const_decls + '\n' + lemma + '\n' + assertion
     z3_str = extractDecls(fcts_z3)
     z3_str.update(addl_decls)
-    z3py_lemma = parse_smt2_string(smt_string, decls=z3_str)[0]
+    z3py_lemma = parse_smt2_string(smt_string, decls=z3_str, ctx=ann_ctx)[0]
     z3py_lemma_replaced = replaceArgs(z3py_lemma, replace_fcts)
     z3py_lemma_fixed = swapArgs(z3py_lemma_replaced, swap_fcts)
     return z3py_lemma_fixed

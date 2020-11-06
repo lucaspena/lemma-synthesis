@@ -96,7 +96,7 @@ def uminr_z3(x):
 def umaxr_z3(x):
     is_nil = x == nil
     then_case = Implies(is_nil, maxr(x) == 101)
-    else_case = Implies(Not(is_nil), maxr(x) == max3(key(x), minr(left(x)), minr(right(x))))
+    else_case = Implies(Not(is_nil), maxr(x) == max3(key(x), maxr(left(x)), maxr(right(x))))
     return And(then_case, else_case)
 
 # No true models so no need for python versions
@@ -131,7 +131,7 @@ def vc(x, k):
     rhs = k <= minr(x)
     return Implies( rec, Implies( lhs, rhs ) )
 
-deref = [x]
+deref = [x, left(x), right(x)]
 const = [nil, k]
 verification_condition = vc(x, k)
 

@@ -12,8 +12,8 @@ def solveProblem(fcts_z3, axioms_python, axioms_z3, unfold_recdefs_z3, unfold_re
     cex_models = config_params.get('cex_models',[])
 
     # check if lemma is provable on its own using induction
-    fresh = Int('fresh')
-    x = Int('x')
+    fresh = Int('fresh', ann_ctx)
+    x = Int('x', ann_ctx)
     vc_fresh = (substitute(vc, (x, fresh)))
     lemma_deref = synth_dict.get('lemma_deref',[])
     # print(vc_fresh)

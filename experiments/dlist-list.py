@@ -1,18 +1,20 @@
 from z3 import *
 import importlib_resources
 
+from naturalproofs.AnnotatedContext import AnnotatedContext
+from naturalproofs.fgsort import FGSort, ann_ctx
+import naturalproofs.decls_api as api
 from lemsynth.lemsynth_engine import solveProblem
-
 
 
 ####### Section 0
 # some general FOL macros
 # TODO: move to utils
 def Iff(b1, b2):
-    return And(Implies(b1, b2), Implies(b2, b1))
+    return And(Implies(b1, b2, ann_ctx), Implies(b2, b1, ann_ctx))
 
 def IteBool(b, l, r):
-    return And(Implies(b, l), Implies(Not(b), r))
+    return If(b, l, r, ann_ctx)
 
 # Datastructure initialisations Below are some dictionaries being
 # initialised. Will be updated later with constants/functions/definitions of
@@ -44,18 +46,23 @@ unfold_recdefs_python = {}
 # python versions). For those that require multiple arguments, this will be
 # packed into a tuple before calling the functions/axioms.
 
+# Foreground sort
+# ann_ctx = AnnotatedContext()
+fg_sort = FGSort('FG', ann_ctx)
+
+
 ######## Section 1
 # Variables and Function Symbols
 
 # The z3py variable for a z3 variable will be the same as its string value.
 # So we will use the string 'x' for python functions and just x for creating z3 types
-x, ret, nil = Ints('x ret nil')
+x, ret, nil = api.Consts('x ret nil', fg_sort)
 fcts_z3['0_int'] = [x, ret, nil]
 
 ######## Section 2
 # Functions
-next = Function('next', IntSort(), IntSort())
-prev = Function('prev', IntSort(), IntSort())
+next = api.Function('next', fg_sort, fg_sort)
+prev = api.Function('prev', fg_sort, fg_sort)
 
 # Axioms for next and prev of nil equals nil as z3py formulas
 next_nil_z3 = next(nil) == nil
@@ -71,16 +78,16 @@ def prev_nil_python(model):
 # Updating fcts and fct_Axioms for next and next_p
 # TODO: change signature to have 'loc' rather than 'int'
 fcts_z3['1_int_int'] = [next, prev]
-axioms_z3['0'] = [next_nil_z3, prev_nil_z3]
-axioms_python['0'] = [next_nil_python, prev_nil_python]
+#axioms_z3['0'] = [next_nil_z3, prev_nil_z3]
+#axioms_python['0'] = [next_nil_python, prev_nil_python]
 
 ######## Section 3
 # Recursive definitions
 
 # Recdefs can only be unary (on the foreground sort?)
 # TODO: add support for recursive functions
-list = Function('list', IntSort(), BoolSort())
-dlist = Function('dlist', IntSort(), BoolSort())
+list = api.Function('list', fg_sort, BoolSort(ann_ctx))
+dlist = api.Function('dlist', fg_sort, BoolSort(ann_ctx))
 
 ############ Section 4
 # Unfolding recursive definitions
@@ -88,7 +95,7 @@ dlist = Function('dlist', IntSort(), BoolSort())
 
 # Macros for unfolding recursive definitions
 def ulist_z3(x):
-    return Iff( list(x), IteBool(x == nil, True, list(next(x))))
+    return Iff( list(x), If(x == nil, True, list(next(x))))
 
 def udlist_z3(x):
     return Iff( dlist(x), IteBool(x == nil,
@@ -144,7 +151,7 @@ def pgm(x, ret):
 
 def vc(x, ret):
     return Implies(dlist(x),
-                    Implies(pgm(x, ret), list(ret)))
+                    Implies(pgm(x, ret), list(ret), ann_ctx), ann_ctx)
 
 deref = [x]
 const = [nil]
@@ -159,6 +166,7 @@ verification_condition = vc(x,ret)
 config_params = {'mode': 'random', 'num_true_models':0}
 config_params['pfp_dict'] = pfp_dict
 config_params['use_cex_models'] = True
+config_params['ctx'] = ann_ctx
 
 name = 'dlist-list'
 grammar_string = importlib_resources.read_text('experiments', 'grammar_{}.sy'.format(name))

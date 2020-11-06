@@ -4,6 +4,8 @@ import subprocess
 from z3 import *
 set_param('model.compact', False)
 
+from naturalproofs.fgsort import ann_ctx
+
 import lemsynth.options as options
 from lemsynth.true_models import *
 from lemsynth.false_models import *
@@ -77,7 +79,7 @@ def translateModelsSets(models, set_defs):
 #  actually integers, whereas the false model's entries are Z3 types like
 #  IntNumRef, etc. Must fix this during false model dict generation.
 def sygusBigModelEncoding(models, fcts_z3, set_defs):
-    sol = Solver()
+    sol = Solver(ctx=ann_ctx)
     for model in models:
         modelToSolver(model, fcts_z3, sol)
     sol.check()
