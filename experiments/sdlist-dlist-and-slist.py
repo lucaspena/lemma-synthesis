@@ -1,18 +1,20 @@
-import importlib_resources
 from z3 import *
-from lemsynth.lemsynth_engine import *
+import importlib_resources
 
+
+from naturalproofs.uct import fgsort, fgsetsort, intsort, intsetsort, boolsort
 import naturalproofs.decls_api as api
-from naturalproofs.fgsort import ann_ctx, FGSort
+from lemsynth.lemsynth_engine import solveProblem
+from lemsynth.lemsynth_engine import *
 
 ####### Section 0
 # some general FOL macros
 # TODO: move to utils
 def Iff(b1, b2):
-    return And(Implies(b1, b2, ann_ctx), Implies(b2, b1, ann_ctx))
+    return And(Implies(b1, b2), Implies(b2, b1))
 
 def IteBool(b, l, r):
-    return And(Implies(b, l, ann_ctx), Implies(Not(b), r, ann_ctx))
+    return If(b, l, r)
 
 # Datastructure initialisations Below are some dictionaries being
 # initialised. Will be updated later with constants/functions/definitions of
@@ -44,23 +46,19 @@ unfold_recdefs_python = {}
 # python versions). For those that require multiple arguments, this will be
 # packed into a tuple before calling the functions/axioms.
 
-# Foreground sort
-# ann_ctx = AnnotatedContext()
-fg_sort = FGSort('FG', ann_ctx)
-
 ######## Section 1
 # Variables and Function Symbols
 
 # The z3py variable for a z3 variable will be the same as its string value.
 # So we will use the string 'x' for python functions and just x for creating z3 types
-x, ret, nil = api.Consts('x ret nil', fg_sort)
+x, ret, nil = api.Consts('x ret nil', fgsort)
 fcts_z3['0_int'] = [x, ret, nil]
 
 ######## Section 2
 # Functions
-next = api.Function('next', fg_sort, fg_sort)
-prev = api.Function('prev', fg_sort, fg_sort)
-key = api.Function('key', fg_sort, fg_sort)
+next = api.Function('next', fgsort, fgsort)
+prev = api.Function('prev', fgsort, fgsort)
+key = api.Function('key', fgsort, fgsort)
 
 # Axioms for next and prev of nil equals nil as z3py formulas
 next_nil_z3 = next(nil) == nil
@@ -89,9 +87,9 @@ axioms_python['0'] = [next_nil_python, prev_nil_python]
 
 # Recdefs can only be unary (on the foreground sort?)
 # TODO: add support for recursive functions
-dlist = api.Function('dlist', fg_sort, BoolSort(ann_ctx))
-slist = api.Function('slist', fg_sort, BoolSort(ann_ctx))
-sdlist = api.Function('sdlist', fg_sort, BoolSort(ann_ctx))
+dlist = api.Function('dlist', fgsort, boolsort)
+slist = api.Function('slist', fgsort, boolsort)
+sdlist = api.Function('sdlist', fgsort, boolsort)
 
 ############ Section 4
 # Unfolding recursive definitions
@@ -195,7 +193,7 @@ def pgm(x, ret):
 
 def vc(x, ret):
     return Implies( sdlist(x),
-                    Implies(pgm(x, ret), And(dlist(ret), slist(ret)), ann_ctx), ann_ctx)
+                    Implies(pgm(x, ret), And(dlist(ret), slist(ret))))
 
 deref = [x]
 const = [nil]

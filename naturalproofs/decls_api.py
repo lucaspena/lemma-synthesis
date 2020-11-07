@@ -1,57 +1,62 @@
 # This module defines the API to declare variables and functions in the UCT fragment.
-# The way these declarations combine is the regular z3py API as these are all z3py objects.
+# The way these declarations combine is the regular z3py API as the returned objects are all z3py objects.
 
 # This API essentially creates a wrapper around the z3py api by simply logging information about the signature of
 # declarations in an AnnotatedContext object.
 
 import z3
-from naturalproofs.fgsort import is_sort_fg_sort
-from naturalproofs.AnnotatedContext import add_alias_annotation
+from naturalproofs.uct import UCTSort
+from naturalproofs.AnnotatedContext import AnnotatedContext, default_annctx, add_alias_annotation
 
 
-def Const(name, intended_sort):
+def Const(name, uct_sort, annctx=default_annctx):
     """
     Wrapper around z3.Const
     :param name: string
-    :param intended_sort: z3.SortRef
+    :param uct_sort: naturalproofs.uct.UCTSort
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
     :return: z3.ExprRef
     """
-    expr = z3.Const(name, intended_sort)
-    if is_sort_fg_sort(intended_sort):
-        annotated_ctx = intended_sort.ctx
-        fg_sort_name = annotated_ctx.__fg_sort_name__
-        add_alias_annotation(expr, tuple([fg_sort_name]))
-    return expr
+    if not isinstance(uct_sort, UCTSort):
+        raise TypeError('UCTSort expected.')
+    z3const = z3.Const(name, uct_sort.z3sort)
+    if not isinstance(annctx, AnnotatedContext):
+        raise TypeError('AnnotatedContext expected.')
+    add_alias_annotation(z3const.decl(), tuple([uct_sort]), annctx)
+    return z3const
 
 
-def Consts(names, intended_sort):
+def Consts(names, uct_sort, annctx=default_annctx):
     """
     Wrapper around z3.Consts
     :param names: string containing all the names separated by a space
-    :param intended_sort: z3.SortRef
-    :return: z3.ExprRef
+    :param uct_sort: naturalproofs.uct.UCTSort
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return: list of z3.ExprRef
     """
-    exprs = z3.Consts(names, intended_sort)
-    if is_sort_fg_sort(intended_sort):
-        annotated_ctx = intended_sort.ctx
-        fg_sort_name = annotated_ctx.__fg_sort_name__
-        for expr in exprs:
-            add_alias_annotation(expr, tuple([fg_sort_name]))
-    return exprs
+    if not isinstance(uct_sort, UCTSort):
+        raise TypeError('UCTSort expected.')
+    z3consts = z3.Consts(names, uct_sort.z3sort)
+    if not isinstance(annctx, AnnotatedContext):
+        raise TypeError('AnnotatedContext expected.')
+    for z3const in z3consts:
+        add_alias_annotation(z3const.decl(), tuple([uct_sort]), annctx)
+    return z3consts
 
 
-def Function(name, *signature):
+def Function(name, *uct_signature, annctx=default_annctx):
     """
     Wrapper around z3.Function
     :param name: string
-    :param signature: tuple of z3.SortRef objects
+    :param uct_signature: tuple of naturalproofs.uct.UCTSort
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
     :return: z3.FuncDeclRef
     """
-    func = z3.Function(name, *signature)
-    range_sort = signature[-1]
-    if is_sort_fg_sort(range_sort):
-        annotated_ctx = range_sort.ctx
-        fg_sort_name = annotated_ctx.__fg_sort_name__
-        signature_annotation = tuple([sig.__repr__() if is_sort_fg_sort(sig) else fg_sort_name for sig in signature])
-        add_alias_annotation(func, signature_annotation)
-    return func
+    if not all([isinstance(sig, UCTSort) for sig in uct_signature]):
+        raise TypeError('UCTSort expected.')
+    if not isinstance(annctx, AnnotatedContext):
+        raise TypeError('AnnotatedContext expected.')
+    z3sig = [sig.z3sort for sig in uct_signature]
+    z3func = z3.Function(name, *z3sig)
+    add_alias_annotation(z3func, uct_signature, annctx)
+    return z3func
