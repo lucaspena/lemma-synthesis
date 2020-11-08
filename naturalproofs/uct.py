@@ -2,7 +2,7 @@
 # Currently it is enough to define and handle the sorts that are supported.
 
 import z3
-from naturalproofs.AnnotatedContext import AnnotatedContext, default_annctx, read_alias_annotation
+from naturalproofs.AnnotatedContext import AnnotatedContext, default_annctx
 
 
 class UCTSort:
@@ -50,9 +50,9 @@ def get_uct_sort(exprref, annctx=default_annctx):
         raise TypeError('AnnotatedContext expected.')
     # The sort of the expression is the range sort of the declaration
     declaration = exprref.decl()
-    sig = read_alias_annotation(declaration)
+    sig = annctx.read_alias_annotation(declaration)
     if sig is None:
-        # Signature cannot be looked up in the annotated context. Default to z3 sort.
+        # Signature cannot be looked up in the annotated context. Default to using z3 sort in the client code.
         return sig
     else:
         return sig[-1]

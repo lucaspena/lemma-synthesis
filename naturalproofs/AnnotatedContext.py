@@ -9,63 +9,134 @@ class AnnotatedContext:
     """
     Class with annotations about various functions.
     Current annotations:
-    - Signature-alias-annotation: keeps track of an 'alias' for the domain/range sorts of various functions.
-    - fg-sort-name: Name of the 'foreground' sort used in natural proofs.
+    - alias-annotation: keeps track of an 'alias' for the domain/range sorts of various functions.
+    - Vocabulary-annotation: tracks all the uninterpreted functions and constants.
+    - Recdef-annotation: tracks all the recursively defined functions and their definitions.
+    - Axiom-annotation: tracks all the axioms.
     """
     def __init__(self):
-        self.__signature_alias_annotation__ = dict()
+        self.__alias_annotation__ = dict()
+        self.__vocabulary_annotation__ = set()
+        self.__recdef_annotation__ = set()
+        self.__axiom_annotation__ = set()
+
+    # Functions to manipulate __alias_annotation__
+    def read_alias_annotation(self, funcdeclref):
+        """
+        Returns the alias annotation given an expression if present in self.
+        :param funcdeclref: z3.FuncDeclRef
+        :return: tuple of naturalproofs.uct.UCTSort objects or None
+        """
+        if not isinstance(funcdeclref, z3.FuncDeclRef):
+            raise TypeError('FuncDeclRef expected.')
+        else:
+            key = _alias_annotation_key_repr(funcdeclref)
+            signature_annotation = self.__alias_annotation__.get(key, None)
+            return signature_annotation
+
+    def is_tracked_alias(self, funcdeclref):
+        """
+        Returns if the given argument is tracked in the __alias_annotation__
+        :param funcdeclref: z3.FuncDeclRef
+        :return: Bool
+        """
+        if not isinstance(funcdeclref, z3.FuncDeclRef):
+            raise TypeError('FuncDeclRef expected.')
+        return _alias_annotation_key_repr(funcdeclref) in self.__alias_annotation__.keys()
+
+    def add_alias_annotation(self, funcdeclref, signature, update=False):
+        """
+        Adds to the __signature_alias_annotation__ dictionary keyed by a representation of the given
+        expression, where the value is the aliased signature of the expression. The expression is
+        meant to be a function, and its signature is (**input-sorts, output-sort).Constants are functions with
+        only one component in the signature.
+        :param funcdeclref: z3.FuncDeclRef
+        :param signature: tuple of naturalproofs.uct.UCTSort objects
+        :param update: Bool (if update is False then previous entries cannot be overwritten)
+        :return: None
+        """
+        if not isinstance(funcdeclref, z3.FuncDeclRef):
+            raise TypeError('FuncDeclRef Expected.')
+        else:
+            key = _alias_annotation_key_repr(funcdeclref)
+            previous_value = self.read_alias_annotation(funcdeclref)
+            if not update and previous_value is not None:
+                raise ValueError('Entry already exists. To override provide update=True.')
+            if not isinstance(signature, tuple):
+                # The expr is a constant and signature was the sort of the expr
+                signature = tuple([signature])
+            self.__alias_annotation__[key] = signature
+
+    # Functions to manipulate __vocabulary_annotation__
+    def get_vocabulary_annotation(self):
+        """
+        Returns all the uninterpreted functions and constants tracked by self.
+        :return: set of z3.FuncDeclRef objects
+        """
+        return self.__vocabulary_annotation__
+
+    def is_tracked_vocabulary(self, funcdeclref):
+        """
+        Returns if the given argument is tracked in the __vocabulary_annotation__
+        :param funcdeclref: z3.FuncDeclRef
+        :return: Bool
+        """
+        if not isinstance(funcdeclref, z3.FuncDeclRef):
+            raise TypeError('FuncDeclRef expected.')
+        return funcdeclref in self.__vocabulary_annotation__
+
+    def add_vocabulary_annotation(self, funcdeclref):
+        """
+        Adds an annotation to the __vocabulary_annotation__ in self. The annotation is a z3.FuncDeclRef
+        :param annotation: z3.FuncDeclRef object
+        :return: None
+        """
+        if not isinstance(funcdeclref, z3.FuncDeclRef):
+            raise TypeError('FuncDeclRef expected.')
+        self.__vocabulary_annotation__.add(funcdeclref)
+
+    # Functions to manipulate __recdef_annotation__
+    def get_recdef_annotation(self):
+        """
+        Returns all the recursive definitions tracked by self.
+        :return: set of (z3.FuncDeclRef, any, any)
+        """
+        return self.__recdef_annotation__
+
+    def add_recdef_annotation(self, annotation):
+        """
+        Adds an annotation to the __recdef_annotation__ in self. Each recursive definition annotation is a triple. The
+        first component of the triple is a z3.FuncDeclRef that is expected to be tracked by __vocabulary_annotation__.
+        The second and third components are bound variables and the body of the definition, respectively.
+        :param annotation: (z3.FuncDeclRef, any, any)
+        :return: None
+        """
+        self.__recdef_annotation__.add(annotation)
+
+    # Functions to manipulate __axiom_annotation__
+    def get_axiom_annotation(self):
+        """
+        Returns all the axioms tracked by self.
+        :return: set of (any, any)
+        """
+        return self.__axiom_annotation__
+
+    def add_axiom_annotation(self, annotation):
+        """
+        Adds an annotation to the __axiom_annotation__ in self. Each axiom is a pair of bound variables and the body of
+        the axiom, respectively.
+        :param annotation: (any, any)
+        :return: None
+        """
+        self.__axiom_annotation__.add(annotation)
 
 
 # Default annotated context. Only one context needed currently.
 default_annctx = AnnotatedContext()
 
 
-# Functions to manipulate __signature_alias_annotation__
-def _signature_alias_annotation_key_repr(astref, annctx=default_annctx):
-    # Internal function to convert AstRef objects to representation against which annotations for that object
+def _alias_annotation_key_repr(astref):
+    # Function to convert AstRef objects to representation against which annotations for that object
     # can be stored in the __signature_alias_annotation__ dictionary.
     return astref.__repr__()
 
-
-def read_alias_annotation(funcdeclref, annctx=default_annctx):
-    """
-    Returns the alias annotation given an expression if present in annctx.
-    :param funcdeclref: z3.FuncDeclRef
-    :param annctx: annotated context in which to look up alias annotation
-    :return: tuple of naturalproofs.uct.UCTSort objects or None
-    """
-    if not isinstance(funcdeclref, z3.FuncDeclRef):
-        raise TypeError('FuncDeclRef expected.')
-    if not isinstance(annctx, AnnotatedContext):
-        raise TypeError('AnnotatedContext expected.')
-    else:
-        key = _signature_alias_annotation_key_repr(funcdeclref)
-        signature_annotation = annctx.__signature_alias_annotation__.get(key, None)
-        return signature_annotation
-
-
-def add_alias_annotation(funcdeclref, signature, update=False, annctx=default_annctx):
-    """
-    Adds to the __signature_alias_annotation__ dictionary keyed by a representation of the given
-    expression, where the value is the aliased signature of the expression. The expression is
-    meant to be a function, and its signature is (**input-sorts, output-sort).Constants are functions with
-    only one component in the signature.
-    :param funcdeclref: z3.FuncDeclRef
-    :param signature: tuple of naturalproofs.uct.UCTSort objects
-    :param update: Bool (if update is False then previous entries cannot be overwritten)
-    :param annctx: annotated context in which to add alias annotation
-    :return: None
-    """
-    if not isinstance(funcdeclref, z3.FuncDeclRef):
-        raise TypeError('FuncDeclRef Expected.')
-    if not isinstance(annctx, AnnotatedContext):
-        raise TypeError('AnnotatedContext expected.')
-    else:
-        key = _signature_alias_annotation_key_repr(funcdeclref)
-        previous_value = read_alias_annotation(funcdeclref)
-        if not update and previous_value is not None:
-            raise ValueError('Entry already exists. To override provide update=True.')
-        if not isinstance(signature, tuple):
-            # The expr is a constant and signature was the sort of the expr
-            signature = tuple([signature])
-        annctx.__signature_alias_annotation__[key] = signature

@@ -1,0 +1,174 @@
+# This module defines the API to declare variables and functions in the UCT fragment.
+
+import z3
+from naturalproofs.uct import UCTSort, is_expr_fg_sort
+from naturalproofs.AnnotatedContext import AnnotatedContext, default_annctx
+
+
+# Functions to create declarations
+def Const(name, uct_sort, annctx=default_annctx):
+    """
+    Declare a constant with the given name and uct sort.
+    :param name: string
+    :param uct_sort: naturalproofs.uct.UCTSort
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return: z3.ExprRef
+    """
+    if not isinstance(uct_sort, UCTSort):
+        raise TypeError('UCTSort expected.')
+    z3const = z3.Const(name, uct_sort.z3sort)
+    if not isinstance(annctx, AnnotatedContext):
+        raise TypeError('AnnotatedContext expected.')
+    # The constant must be tracked as a 0-arity function
+    declaration = z3const.decl()
+    annctx.add_alias_annotation(declaration, tuple([uct_sort]))
+    annctx.add_vocabulary_annotation(declaration)
+    return z3const
+
+
+def Consts(names, uct_sort, annctx=default_annctx):
+    """
+    Declare a list of constants.
+    :param names: string containing all the names separated by a space
+    :param uct_sort: naturalproofs.uct.UCTSort
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return: list of z3.ExprRef
+    """
+    if not isinstance(uct_sort, UCTSort):
+        raise TypeError('UCTSort expected.')
+    z3consts = z3.Consts(names, uct_sort.z3sort)
+    if not isinstance(annctx, AnnotatedContext):
+        raise TypeError('AnnotatedContext expected.')
+    for z3const in z3consts:
+        # Constants must be tracked as a 0-arity function
+        declaration = z3const.decl()
+        annctx.add_alias_annotation(declaration, tuple([uct_sort]))
+        annctx.add_vocabulary_annotation(declaration)
+    return z3consts
+
+
+def Function(name, *uct_signature, annctx=default_annctx):
+    """
+    Declare an uninterpreted function symbol. The signature is given as input-sort, input-sort...output-sort
+    :param name: string
+    :param uct_signature: tuple of naturalproofs.uct.UCTSort
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return: z3.FuncDeclRef
+    """
+    if not all([isinstance(sig, UCTSort) for sig in uct_signature]):
+        raise TypeError('UCTSort expected.')
+    if not isinstance(annctx, AnnotatedContext):
+        raise TypeError('AnnotatedContext expected.')
+    if len(uct_signature) < 2:
+        raise ValueError('There must be atleast one input sort and exactly one output sort.')
+    z3sig = [sig.z3sort for sig in uct_signature]
+    z3func = z3.Function(name, *z3sig)
+    annctx.add_alias_annotation(z3func, uct_signature)
+    annctx.add_vocabulary_annotation(z3func)
+    return z3func
+
+
+def RecFunction(name, *uct_signature, annctx=default_annctx):
+    """
+    Declare a recursively defined function symbol.
+    :param name: string
+    :param uct_signature: tuple of naturalproofs.uct.UCTSort
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return:
+    """
+    # Currently defaults to calling Function as recursive functions are not tracked in a separate way.
+    return Function(name, *uct_signature, annctx)
+
+
+def AddRecDefinition(recdef, formal_params, body, annctx=default_annctx):
+    """
+    Add a definition to a recursive function symbol. The function symbol must be declared and tracked before a definiiton
+    can be added.
+    The definition is given in terms of a tuple of formal parameters that are themselves declared constants, and the body
+    is a z3.ExprRef object constructed from these constants and other declared/built-in functions.
+    :param recdef: z3.FuncDeclRef
+    :param formal_params: tuple of z3.ExprRef (currently only z3.ArithRef)
+    :param body: z3.ExprRef
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return: None
+    """
+    if not annctx.is_tracked_vocabulary(recdef):
+        raise ValueError('Function symbol must be declared using naturalproofs.decl_api.Function')
+    if len(formal_params) != recdef.arity():
+        raise ValueError('Number of formal parameters does not match arity of function symbol.')
+    # Check that all formal parameters are of the foreground sort.
+    # Arguments of other sorts are not supported.
+    elif not all([is_expr_fg_sort(param, annctx) for param in formal_params]):
+        raise TypeError('All formal parameters can only be of the foreground sort.')
+    if not isinstance(body, z3.ExprRef):
+        raise TypeError('ExprRef expected.')
+    annctx.add_recdef_annotation((recdef, formal_params, body))
+
+
+def AddAxiom(formal_params, body, annctx=default_annctx):
+    """
+    Add an axiom with respect to which the reasoning must be performed.
+    The axiom is given in terms of a tuple of formal parameters that are themselves declared constants, and the body
+    is a z3.ExprRef object constructed from these constants and other declared/built-in functions. If the axiom does not
+    take any parameters, the first argument is ().
+    :param formal_params: tuple of z3.ExprRef (currently only z3.ArithRef)
+    :param body: z3.ExprRef
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return: None
+    """
+    # Check that all formal parameters are of the foreground sort.
+    # Arguments of other sorts are not supported.
+    if not all([is_expr_fg_sort(param, annctx) for param in formal_params]):
+        raise TypeError('All formal parameters can only be of the foreground sort.')
+    if not isinstance(body, z3.ExprRef):
+        raise TypeError('ExprRef expected.')
+    annctx.add_axiom_annotation((formal_params, body))
+
+
+# Utility functions to manipulate declarations
+def get_vocabulary(annctx=default_annctx):
+    """
+    Returns the set of all the declarations tracked by annctx
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return: set of z3.FuncDeclRef
+    """
+    return annctx.get_vocabulary_annotation()
+
+
+def get_decl_from_name(declname, annctx=default_annctx):
+    """
+    Returns the declaration whose name is declname if it is tracked by annctx.
+    :param declname: string
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return: z3.FuncDeclRef or None
+    """
+    vocabulary = get_vocabulary(annctx)
+    return next([decl for decl in vocabulary if decl.name() == declname])
+
+
+def get_recursive_definition(recdef, alldefs=False, annctx=default_annctx):
+    """
+    Looks up the definition of the function symbol from the set of recursive definitions in the annctx context.
+    Returns None if no definition exists in the context.
+    If the second argument is true, then all recursive definitions are returned.
+    :param recdef: z3.FuncDeclRef
+    :param alldefs: Bool
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return: (recdef, tuple of z3.ExprRef, z3.ExprRef), or a set of such triples, or None
+    """
+    recdef_set = annctx.get_recdef_annotation()
+    if alldefs:
+        return recdef_set
+    else:
+        if not annctx.is_tracked_vocabulary(recdef):
+            raise ValueError('Function symbol must be declared using naturalproofs.decl_api.Function')
+        return next([definition for definition in recdef_set if recdef == definition])
+
+
+def get_all_axioms(annctx=default_annctx):
+    """
+    Returns all axioms tracked by annctx.
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return: (tuple of z3.ExprRef, z3.ExprRef)
+    """
+    return annctx.get_axiom_annotation()
