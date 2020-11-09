@@ -77,7 +77,7 @@ def RecFunction(name, *uct_signature, annctx=default_annctx):
     :return:
     """
     # Currently defaults to calling Function as recursive functions are not tracked in a separate way.
-    return Function(name, *uct_signature, annctx)
+    return Function(name, *uct_signature, annctx=annctx)
 
 
 def AddRecDefinition(recdef, formal_params, body, annctx=default_annctx):
@@ -92,6 +92,9 @@ def AddRecDefinition(recdef, formal_params, body, annctx=default_annctx):
     :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
     :return: None
     """
+    if not isinstance(formal_params, tuple) and isinstance(formal_params, z3.ExprRef):
+        # Only one formal parameter
+        formal_params = (formal_params,)
     if not annctx.is_tracked_vocabulary(recdef):
         raise ValueError('Function symbol must be declared using naturalproofs.decl_api.Function')
     if len(formal_params) != recdef.arity():
@@ -117,6 +120,9 @@ def AddAxiom(formal_params, body, annctx=default_annctx):
     :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
     :return: None
     """
+    if not isinstance(formal_params, tuple) and isinstance(formal_params, z3.ExprRef):
+        # Only one formal parameter
+        formal_params = (formal_params,)
     # Check that all formal parameters are of the foreground sort.
     # Arguments of other sorts are not supported.
     if not all([is_expr_fg_sort(param, annctx) for param in formal_params]):
@@ -163,7 +169,7 @@ def get_recursive_definition(recdef, alldefs=False, annctx=default_annctx):
     else:
         if not annctx.is_tracked_vocabulary(recdef):
             raise ValueError('Function symbol must be declared using naturalproofs.decl_api.Function')
-        return next((definition for definition in recdef_set if recdef == definition), None)
+        return next((definition for definition in recdef_set if recdef == definition[0]), None)
 
 
 def get_all_axioms(annctx=default_annctx):

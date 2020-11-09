@@ -3,6 +3,11 @@
 import z3
 
 
+# Hack to get a FuncDeclRef corresponding to Implies and IsSubset
+Implies_as_FuncDeclRef = z3.Implies(True, True).decl()
+IsSubset_Int_as_FuncDeclRef = z3.IsSubset(z3.EmptySet(z3.IntSort()), z3.EmptySet(z3.IntSort())).decl()
+
+
 def apply_bound_formula(bound_formula, args):
     """
     A bound formula defines a macro formal_params -> body where formal_params are the formal parameters for the macro

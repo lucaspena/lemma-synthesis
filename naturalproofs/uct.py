@@ -3,6 +3,7 @@
 
 import z3
 from naturalproofs.AnnotatedContext import AnnotatedContext, default_annctx
+import naturalproofs.utils as utils
 
 
 class UCTSort:
@@ -43,19 +44,19 @@ class UCTSort:
 fgsort = UCTSort('Fg', z3.IntSort(), True)
 # Set of foreground sort
 fgsetsort = UCTSort('FgSet', z3.SetSort(z3.IntSort()))
-fgsetsort.lattice_lessequals_operator = z3.IsSubset
+fgsetsort.lattice_lessequals_operator = utils.IsSubset_Int_as_FuncDeclRef
 fgsetsort.lattice_top = z3.FullSet(z3.IntSort())
 fgsetsort.lattice_bottom = z3.EmptySet(z3.IntSort())
 # Generic integer sort
 intsort = UCTSort('Int', z3.IntSort())
 # Set of integer sort
 intsetsort = UCTSort('IntSet', z3.SetSort(z3.IntSort()))
-intsetsort.lattice_lessequals_operator = z3.IsSubset
+intsetsort.lattice_lessequals_operator = utils.IsSubset_Int_as_FuncDeclRef
 intsetsort.lattice_top = z3.FullSet(z3.IntSort())
 intsetsort.lattice_bottom = z3.EmptySet(z3.IntSort())
 # Boolean sort
 boolsort = UCTSort('Bool', z3.BoolSort())
-boolsort.lattice_lessequals_operator = z3.Implies
+boolsort.lattice_lessequals_operator = utils.Implies_as_FuncDeclRef
 boolsort.lattice_top = z3.BoolVal(True)
 boolsort.lattice_bottom = z3.BoolVal(False)
 
