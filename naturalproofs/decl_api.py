@@ -102,6 +102,7 @@ def AddRecDefinition(recdef, formal_params, body, annctx=default_annctx):
         raise TypeError('All formal parameters can only be of the foreground sort.')
     if not isinstance(body, z3.ExprRef):
         raise TypeError('ExprRef expected.')
+    # TODO: check that the definition is of the supported form: positive recursive mentions, for example.
     annctx.add_recdef_annotation((recdef, formal_params, body))
 
 
@@ -143,7 +144,7 @@ def get_decl_from_name(declname, annctx=default_annctx):
     :return: z3.FuncDeclRef or None
     """
     vocabulary = get_vocabulary(annctx)
-    return next([decl for decl in vocabulary if decl.name() == declname])
+    return next((decl for decl in vocabulary if decl.name() == declname), None)
 
 
 def get_recursive_definition(recdef, alldefs=False, annctx=default_annctx):
@@ -162,7 +163,7 @@ def get_recursive_definition(recdef, alldefs=False, annctx=default_annctx):
     else:
         if not annctx.is_tracked_vocabulary(recdef):
             raise ValueError('Function symbol must be declared using naturalproofs.decl_api.Function')
-        return next([definition for definition in recdef_set if recdef == definition])
+        return next((definition for definition in recdef_set if recdef == definition), None)
 
 
 def get_all_axioms(annctx=default_annctx):

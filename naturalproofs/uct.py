@@ -21,6 +21,21 @@ class UCTSort:
         self.is_foreground = is_foreground
         if is_foreground and z3sort != z3.IntSort():
             raise ValueError('Currently foreground sort can only be represented using integers.')
+        # Additional parameters
+        # Lattice structure
+        self.lattice_lessequals_operator = None
+        self.lattice_top = None
+        self.lattice_bottom = None
+
+    # Functions to access the additional parameters
+    def get_lattice_lessequals_operator(self):
+        return self.lattice_lessequals_operator
+
+    def get_lattice_top_element(self):
+        return self.lattice_top
+
+    def get_lattice_bottom_element(self):
+        return self.lattice_bottom
 
 
 # Sorts supported in the UCT fragment
@@ -28,12 +43,21 @@ class UCTSort:
 fgsort = UCTSort('Fg', z3.IntSort(), True)
 # Set of foreground sort
 fgsetsort = UCTSort('FgSet', z3.SetSort(z3.IntSort()))
+fgsetsort.lattice_lessequals_operator = z3.IsSubset
+fgsetsort.lattice_top = z3.FullSet(z3.IntSort())
+fgsetsort.lattice_bottom = z3.EmptySet(z3.IntSort())
 # Generic integer sort
 intsort = UCTSort('Int', z3.IntSort())
 # Set of integer sort
 intsetsort = UCTSort('IntSet', z3.SetSort(z3.IntSort()))
+intsetsort.lattice_lessequals_operator = z3.IsSubset
+intsetsort.lattice_top = z3.FullSet(z3.IntSort())
+intsetsort.lattice_bottom = z3.EmptySet(z3.IntSort())
 # Boolean sort
 boolsort = UCTSort('Bool', z3.BoolSort())
+boolsort.lattice_lessequals_operator = z3.Implies
+boolsort.lattice_top = z3.BoolVal(True)
+boolsort.lattice_bottom = z3.BoolVal(False)
 
 
 # Functions to manipulate sort information
