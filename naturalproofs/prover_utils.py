@@ -35,7 +35,7 @@ def instantiate(bound_formulas, terms):
 def _get_foreground_terms_aux(expr, annctx=default_annctx):
     # Auxiliary function for get_foreground_terms collecting foreground terms from one expression.
     # Recursively break down expression and check if it is of the foreground sort. If it is, add it to the accumulator.
-    fg_set = {expr} if is_expr_fg_sort(expr, annctx) else {}
+    fg_set = {expr} if is_expr_fg_sort(expr, annctx) else set()
     arity = expr.decl().arity()
     if arity == 0:
         return fg_set

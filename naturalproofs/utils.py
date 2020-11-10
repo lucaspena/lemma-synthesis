@@ -33,7 +33,7 @@ def transform_expression(expression, transformations):
     the original expression is returned.
     This function acts as a generalisation of z3.substitute
     :param expression: z3.ExprRef
-    :param transformations: list of (function: z3.ExprRef -> Bool, function z3.ExprRef -> z3.ExprRef)
+    :param transformations: list of (function: z3.ExprRef -> bool, function z3.ExprRef -> z3.ExprRef)
     :return: z3.ExprRef
     """
     declaration = expression.decl()

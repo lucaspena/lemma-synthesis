@@ -89,7 +89,7 @@ def is_expr_fg_sort(exprref, annctx=default_annctx):
     Determine if the sort of the given expression is a foreground sort
     :param exprref: z3.ExprRef
     :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return: Bool
+    :return: bool
     """
     uct_sort = get_uct_sort(exprref, annctx)
     return uct_sort == fgsort

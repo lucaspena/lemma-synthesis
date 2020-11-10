@@ -9,12 +9,13 @@ from naturalproofs.decl_api import get_recursive_definition
 from naturalproofs.utils import transform_expression
 
 
-def make_pfp_formula(formula, annctx=default_annctx):
+def make_pfp_formula(formula, is_strong_induction=True, annctx=default_annctx):
     """
     Construct the 'pre-fixpoint' formula of the given expression. If this pfp formula holds, then the given formula
     holds with least-fixpoint semantics. The formula is almost always of the form recdef => pformula, where recdef is a
     recursively defined function and pformula is any formula.
     :param formula: z3.BoolRef
+    :param is_strong_induction: bool
     :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
     :return:z3.BoolRef
     """
@@ -46,11 +47,12 @@ def make_pfp_formula(formula, annctx=default_annctx):
         raise TypeError('Untracked recursive definition. Add definition using naturalproofs.decl_api.AddRecDefinition')
     _, formal_params, body = recursive_definition
     # Express body of recursive definition in terms of variables in given formula, i.e., recdef_arglist
-    pfp_structure = z3.substitute(body, [(formal_params[i], recdef_arglist[i]) for i in range(arity)])
-    # Substitute recdef with right_side in pfp_structure
+    induction_structure = z3.substitute(body, [(formal_params[i], recdef_arglist[i]) for i in range(arity)])
+    # Substitute recdef with right_side in induction_structure
     if_recdef = lambda x: x.decl() == recdef
-    subst_op = lambda x: z3.substitute(right_side, [(recdef_arglist[i], x.arg(i)) for i in range(arity)])
-    pfp_computation = transform_expression(pfp_structure, [(if_recdef, subst_op)])
-    # pfp property is pfp_computation of claim is smaller than claim
-    pfp_formula = lessequals_operator(pfp_computation, right_side)
-    return pfp_formula
+    inductive_hypothesis = z3.And(right_side, left_side) if is_strong_induction else right_side
+    subst_op = lambda x: z3.substitute(inductive_hypothesis, [(recdef_arglist[i], x.arg(i)) for i in range(arity)])
+    induction_step = transform_expression(induction_structure, [(if_recdef, subst_op)])
+    # pfp property is induction_step of claim is smaller than claim
+    induction_claim = lessequals_operator(induction_step, right_side)
+    return induction_claim

@@ -159,7 +159,7 @@ def get_recursive_definition(recdef, alldefs=False, annctx=default_annctx):
     Returns None if no definition exists in the context.
     If the second argument is true, then all recursive definitions are returned.
     :param recdef: z3.FuncDeclRef
-    :param alldefs: Bool
+    :param alldefs: bool
     :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
     :return: (recdef, tuple of z3.ExprRef, z3.ExprRef), or a set of such triples, or None
     """

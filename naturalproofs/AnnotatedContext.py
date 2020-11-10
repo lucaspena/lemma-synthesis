@@ -38,7 +38,7 @@ class AnnotatedContext:
         """
         Returns if the given argument is tracked in the __alias_annotation__
         :param funcdeclref: z3.FuncDeclRef
-        :return: Bool
+        :return: bool
         """
         if not isinstance(funcdeclref, z3.FuncDeclRef):
             raise TypeError('FuncDeclRef expected.')
@@ -52,7 +52,7 @@ class AnnotatedContext:
         only one component in the signature.
         :param funcdeclref: z3.FuncDeclRef
         :param signature: tuple of naturalproofs.uct.UCTSort objects
-        :param update: Bool (if update is False then previous entries cannot be overwritten)
+        :param update: bool (if update is False then previous entries cannot be overwritten)
         :return: None
         """
         if not isinstance(funcdeclref, z3.FuncDeclRef):
@@ -79,7 +79,7 @@ class AnnotatedContext:
         """
         Returns if the given argument is tracked in the __vocabulary_annotation__
         :param funcdeclref: z3.FuncDeclRef
-        :return: Bool
+        :return: bool
         """
         if not isinstance(funcdeclref, z3.FuncDeclRef):
             raise TypeError('FuncDeclRef expected.')
@@ -139,4 +139,3 @@ def _alias_annotation_key_repr(astref):
     # Function to convert AstRef objects to representation against which annotations for that object
     # can be stored in the __signature_alias_annotation__ dictionary.
     return astref.__repr__()
-
