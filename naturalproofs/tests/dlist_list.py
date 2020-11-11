@@ -1,3 +1,4 @@
+import z3
 from z3 import And, Or, Not, Implies, If
 from z3 import IsSubset, Union, SetIntersect, SetComplement, EmptySet
 
@@ -18,9 +19,9 @@ AddRecDefinition(dlst, x, If(x == nil, True,
                                 And(prv(nxt(x)) == x, dlst(nxt(x))))))
 
 # Problem parameters
-goal = Implies(And(dlst(x), x == nil), lst(x))
-lemma1_params = (x)
-lemma1_body = Implies(dlst(x), lst(x))
+goal = Implies(dlst(x), lst(x))
+lemma1_params = (x,)
+lemma1_body = z3.BoolVal(True)
 lemmas = {(lemma1_params, lemma1_body)}
 # Call a natural proofs solver
 npsolver = NPSolver()
@@ -29,4 +30,7 @@ npsolver.options.instantiation_mode = proveroptions.manual_instantiation
 npsolver.options.terms_to_instantiate = [x, nil]
 # Ask for proof
 npsolution = npsolver.solve(goal, lemmas)
-print(npsolution.if_sat)
+if npsolution.if_sat:
+    print('sat')
+else:
+    print('unsat')

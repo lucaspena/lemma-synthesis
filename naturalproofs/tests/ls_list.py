@@ -15,14 +15,14 @@ AddRecDefinition(lst, x, If(x == nil, True, lst(nxt(x))))
 AddRecDefinition(ls, (x, y), If(x == nil, True, ls(nxt(x), y)))
 # Problem parameters
 goal = Implies(ls(x, nil), lst(x))
-lemma1_params = (x)
+lemma1_params = (x, y)
 lemma1_body = Implies(And(ls(x, y), lst(y)), lst(x))
 lemmas = {(lemma1_params, lemma1_body)}
 # Call a natural proofs solver
 npsolver = NPSolver()
 # Configure the solver
 npsolver.options.instantiation_mode = proveroptions.manual_instantiation
-npsolver.options.terms_to_instantiate = [x, y, nil]
+npsolver.options.terms_to_instantiate = {x, y, nil}
 # Ask for proof
 npsolution = npsolver.solve(goal, lemmas)
 if npsolution.if_sat:
