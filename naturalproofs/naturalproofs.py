@@ -47,7 +47,7 @@ class NPSolver:
         self.annctx = annctx
         self.options = proveroptions.Options()
 
-    def solve(self, goal, lemmas):
+    def solve(self, goal, lemmas=set()):
         """
         Primary function of the NPSolver class. Attempts to prove the goal with respect to given lemmas and the theory
         defined by the AnnotatedContext in self.annctx.

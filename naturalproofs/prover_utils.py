@@ -42,7 +42,7 @@ def _get_foreground_terms_aux(expr, annctx=default_annctx):
     else:
         children = expr.children()
         for child in children:
-            fg_set.union(_get_foreground_terms_aux(child))
+            fg_set = fg_set.union(_get_foreground_terms_aux(child))
     return fg_set
 
 
@@ -61,7 +61,7 @@ def get_foreground_terms(exprs, annctx=default_annctx):
         for expr in exprs:
             if not isinstance(expr, z3.ExprRef):
                 raise TypeError('ExprRef expected')
-            fg_set.union(_get_foreground_terms_aux(expr, annctx))
+            fg_set = fg_set.union(_get_foreground_terms_aux(expr, annctx))
     return fg_set
 
 

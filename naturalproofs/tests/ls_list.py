@@ -25,4 +25,7 @@ npsolver.options.instantiation_mode = proveroptions.manual_instantiation
 npsolver.options.terms_to_instantiate = [x, y, nil]
 # Ask for proof
 npsolution = npsolver.solve(goal, lemmas)
-print(npsolution.if_sat)
+if npsolution.if_sat:
+    print('sat')
+else:
+    print('unsat')
