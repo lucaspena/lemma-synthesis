@@ -15,7 +15,7 @@ AddRecDefinition(lst, x, If(x == nil, True, lst(nxt(x))))
 AddRecDefinition(ls, (x, y), If(x == nil, True, ls(nxt(x), y)))
 # Problem parameters
 goal = Implies(ls(x, nil), lst(x))
-lemma1_params = (x, y)
+lemma1_params = (x)
 lemma1_body = Implies(And(ls(x, y), lst(y)), lst(x))
 lemmas = {(lemma1_params, lemma1_body)}
 # Call a natural proofs solver
