@@ -1,3 +1,7 @@
+"""
+Basic example showing usage of binary functions and pre-fixpoint formula generation for doing inductive proofs.  
+"""
+
 # Only importing this for writing this file as a test
 import unittest
 
@@ -7,7 +11,7 @@ from z3 import IsSubset, Union, SetIntersect, SetComplement, EmptySet
 from naturalproofs.uct import fgsort, fgsetsort, intsort, intsetsort, boolsort
 from naturalproofs.decl_api import Const, Consts, Function, RecFunction, AddRecDefinition, AddAxiom
 from naturalproofs.pfp import make_pfp_formula
-from naturalproofs.naturalproofs import NPSolver
+from naturalproofs.prover import NPSolver
 import naturalproofs.proveroptions as proveroptions
 
 # Declarations

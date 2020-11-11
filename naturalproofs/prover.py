@@ -11,20 +11,20 @@ from naturalproofs.prover_utils import make_recdef_unfoldings, get_foreground_te
 
 class NPSolution:
     """
-    Class for representing solutions discovered by NPSolver instances.
+    Class for representing solutions discovered by NPSolver instances.  
     Such a representation is necessary because logging information can be attached to the NPSolution object, along with
-    default outputs like a satisfying model.
+    default outputs like a satisfying model.  
     """
     def __init__(self, if_sat=None, model=None, fg_terms=None, depth=None, options=None):
         """
-        Explanation of attributes:
-        - if_sat (bool): if there exists a satisfying model under the given configuration.
-        - model (z3.ModelRef or None): satisfying model if exists.
+        Explanation of attributes:  
+        - if_sat (bool): if there exists a satisfying model under the given configuration.  
+        - model (z3.ModelRef or None): satisfying model if exists.  
         - fg_terms (set of z3.ExprRef): logging attribute. Set of foreground terms in the formula given to the smt
                                         solver. A finite model can be extracted over these terms that preserves
-                                        satisfiablity/unsatisfiability.
-        - depth (int): depth at which the solution object was created. Applicable when instantiation mode is bounded depth.
-        - options (proveroptions.Options): logging attribute. Options used to configure the solver.
+                                        satisfiablity/unsatisfiability.  
+        - depth (int): depth at which the solution object was created. Applicable when instantiation mode is bounded depth.  
+        - options (proveroptions.Options): logging attribute. Options used to configure the solver.  
         """
         self.if_sat = if_sat
         self.model = model
@@ -35,25 +35,25 @@ class NPSolution:
 
 class NPSolver:
     """
-    Class for creating Natural Proofs solvers.
-    Can be configured using the 'options' attribute, an instance of the naturalproofs.Options class.
+    Class for creating Natural Proofs solvers.  
+    Can be configured using the 'options' attribute, an instance of the naturalproofs.Options class.  
     """
     def __init__(self, annctx=default_annctx):
         """
         Each solver instance must be created with an AnnotatedContext that stores the vocabulary, recursive definitions,
-         and axioms --- essentially defining a theory for the solver.
-        :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+         and axioms --- essentially defining a theory for the solver.  
+        :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
         """
         self.annctx = annctx
         self.options = proveroptions.Options()
 
-    def solve(self, goal, lemmas=set()):
+    def solve(self, goal, lemmas=None):
         """
         Primary function of the NPSolver class. Attempts to prove the goal with respect to given lemmas and the theory
-        defined by the AnnotatedContext in self.annctx.
-        :param goal: z3.BoolRef
-        :param lemmas: set of z3.BoolRef
-        :return: NPSolution
+        defined by the AnnotatedContext in self.annctx.  
+        :param goal: z3.BoolRef  
+        :param lemmas: set of z3.BoolRef  
+        :return: NPSolution  
         """
         # TODO: check that the given lemmas are legitimate bound formula instances with their formal parameters from
         #  the foreground sort.
@@ -63,7 +63,7 @@ class NPSolver:
         recdef_unfoldings = make_recdef_unfoldings(recdefs)
         # Add them to the set of axioms and lemmas to instantiate
         axioms = get_all_axioms(self.annctx)
-        fo_abstractions = axioms | recdef_unfoldings | lemmas
+        fo_abstractions = axioms | recdef_unfoldings | (lemmas if lemmas is not None else set())
         # Negate the goal
         neg_goal = z3.Not(goal)
         # Create a solver object and add the goal negation to it

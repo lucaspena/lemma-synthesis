@@ -7,12 +7,12 @@ import z3
 
 class AnnotatedContext:
     """
-    Class with annotations about various functions.
-    Current annotations:
-    - alias-annotation: keeps track of an 'alias' for the domain/range sorts of various functions.
-    - Vocabulary-annotation: tracks all the uninterpreted functions and constants.
-    - Recdef-annotation: tracks all the recursively defined functions and their definitions.
-    - Axiom-annotation: tracks all the axioms.
+    Class with annotations about various functions.  
+    Current annotations:  
+    - alias-annotation: keeps track of an 'alias' for the domain/range sorts of various functions.  
+    - Vocabulary-annotation: tracks all the uninterpreted functions and constants.  
+    - Recdef-annotation: tracks all the recursively defined functions and their definitions.  
+    - Axiom-annotation: tracks all the axioms.  
     """
     def __init__(self):
         self.__alias_annotation__ = dict()
@@ -23,9 +23,9 @@ class AnnotatedContext:
     # Functions to manipulate __alias_annotation__
     def read_alias_annotation(self, funcdeclref):
         """
-        Returns the alias annotation given an expression if present in self.
-        :param funcdeclref: z3.FuncDeclRef
-        :return: tuple of naturalproofs.uct.UCTSort objects or None
+        Returns the alias annotation given an expression if present in self.  
+        :param funcdeclref: z3.FuncDeclRef  
+        :return: tuple of naturalproofs.uct.UCTSort objects or None  
         """
         if not isinstance(funcdeclref, z3.FuncDeclRef):
             raise TypeError('FuncDeclRef expected.')
@@ -36,9 +36,9 @@ class AnnotatedContext:
 
     def is_tracked_alias(self, funcdeclref):
         """
-        Returns if the given argument is tracked in the __alias_annotation__
-        :param funcdeclref: z3.FuncDeclRef
-        :return: bool
+        Returns if the given argument is tracked in the __alias_annotation__  
+        :param funcdeclref: z3.FuncDeclRef  
+        :return: bool  
         """
         if not isinstance(funcdeclref, z3.FuncDeclRef):
             raise TypeError('FuncDeclRef expected.')
@@ -49,11 +49,11 @@ class AnnotatedContext:
         Adds to the __signature_alias_annotation__ dictionary keyed by a representation of the given
         expression, where the value is the aliased signature of the expression. The expression is
         meant to be a function, and its signature is (**input-sorts, output-sort).Constants are functions with
-        only one component in the signature.
-        :param funcdeclref: z3.FuncDeclRef
-        :param signature: tuple of naturalproofs.uct.UCTSort objects
-        :param update: bool (if update is False then previous entries cannot be overwritten)
-        :return: None
+        only one component in the signature.  
+        :param funcdeclref: z3.FuncDeclRef  
+        :param signature: tuple of naturalproofs.uct.UCTSort objects  
+        :param update: bool (if update is False then previous entries cannot be overwritten)  
+        :return: None  
         """
         if not isinstance(funcdeclref, z3.FuncDeclRef):
             raise TypeError('FuncDeclRef Expected.')
@@ -70,16 +70,16 @@ class AnnotatedContext:
     # Functions to manipulate __vocabulary_annotation__
     def get_vocabulary_annotation(self):
         """
-        Returns all the uninterpreted functions and constants tracked by self.
-        :return: set of z3.FuncDeclRef objects
+        Returns all the uninterpreted functions and constants tracked by self.  
+        :return: set of z3.FuncDeclRef objects  
         """
         return self.__vocabulary_annotation__
 
     def is_tracked_vocabulary(self, funcdeclref):
         """
-        Returns if the given argument is tracked in the __vocabulary_annotation__
-        :param funcdeclref: z3.FuncDeclRef
-        :return: bool
+        Returns if the given argument is tracked in the __vocabulary_annotation__  
+        :param funcdeclref: z3.FuncDeclRef  
+        :return: bool  
         """
         if not isinstance(funcdeclref, z3.FuncDeclRef):
             raise TypeError('FuncDeclRef expected.')
@@ -87,9 +87,9 @@ class AnnotatedContext:
 
     def add_vocabulary_annotation(self, funcdeclref):
         """
-        Adds an annotation to the __vocabulary_annotation__ in self. The annotation is a z3.FuncDeclRef
-        :param annotation: z3.FuncDeclRef object
-        :return: None
+        Adds an annotation to the __vocabulary_annotation__ in self. The annotation is a z3.FuncDeclRef  
+        :param annotation: z3.FuncDeclRef object  
+        :return: None  
         """
         if not isinstance(funcdeclref, z3.FuncDeclRef):
             raise TypeError('FuncDeclRef expected.')
@@ -98,8 +98,8 @@ class AnnotatedContext:
     # Functions to manipulate __recdef_annotation__
     def get_recdef_annotation(self):
         """
-        Returns all the recursive definitions tracked by self.
-        :return: set of (z3.FuncDeclRef, any, any)
+        Returns all the recursive definitions tracked by self.  
+        :return: set of (z3.FuncDeclRef, any, any)  
         """
         return self.__recdef_annotation__
 
@@ -107,26 +107,26 @@ class AnnotatedContext:
         """
         Adds an annotation to the __recdef_annotation__ in self. Each recursive definition annotation is a triple. The
         first component of the triple is a z3.FuncDeclRef that is expected to be tracked by __vocabulary_annotation__.
-        The second and third components are bound variables and the body of the definition, respectively.
-        :param annotation: (z3.FuncDeclRef, any, any)
-        :return: None
+        The second and third components are bound variables and the body of the definition, respectively.  
+        :param annotation: (z3.FuncDeclRef, any, any)  
+        :return: None  
         """
         self.__recdef_annotation__.add(annotation)
 
     # Functions to manipulate __axiom_annotation__
     def get_axiom_annotation(self):
         """
-        Returns all the axioms tracked by self.
-        :return: set of (any, any)
+        Returns all the axioms tracked by self.  
+        :return: set of (any, any)  
         """
         return self.__axiom_annotation__
 
     def add_axiom_annotation(self, annotation):
         """
         Adds an annotation to the __axiom_annotation__ in self. Each axiom is a pair of bound variables and the body of
-        the axiom, respectively.
-        :param annotation: (any, any)
-        :return: None
+        the axiom, respectively.  
+        :param annotation: (any, any)  
+        :return: None  
         """
         self.__axiom_annotation__.add(annotation)
 

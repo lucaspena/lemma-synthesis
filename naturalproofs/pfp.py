@@ -13,11 +13,11 @@ def make_pfp_formula(formula, is_strong_induction=True, annctx=default_annctx):
     """
     Construct the 'pre-fixpoint' formula of the given expression. If this pfp formula holds, then the given formula
     holds with least-fixpoint semantics. The formula is almost always of the form recdef => pformula, where recdef is a
-    recursively defined function and pformula is any formula.
-    :param formula: z3.BoolRef
-    :param is_strong_induction: bool
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return:z3.BoolRef
+    recursively defined function and pformula is any formula.  
+    :param formula: z3.BoolRef  
+    :param is_strong_induction: bool  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return:z3.BoolRef  
     """
     if not isinstance(formula, z3.BoolRef):
         raise TypeError('BoolRef expected. Given expression is not a formula.')

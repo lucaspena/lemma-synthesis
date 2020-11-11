@@ -12,10 +12,10 @@ from naturalproofs.utils import apply_bound_formula
 def instantiate(bound_formulas, terms):
     """
     Instantiates every formula in bound_formulas with given terms. Each bound formula is a pair
-    (tuple of formal parameters, formula in terms of parameters).
-    :param bound_formulas: (tuple of z3.ExprRef, z3.ExprRef) or a set of such pairs
-    :param terms: set of z3.ExprRef
-    :return: set of z3.ExprRef
+    (tuple of formal parameters, formula in terms of parameters).  
+    :param bound_formulas: (tuple of z3.ExprRef, z3.ExprRef) or a set of such pairs  
+    :param terms: set of z3.ExprRef  
+    :return: set of z3.ExprRef  
     """
     if isinstance(bound_formulas, tuple):
         # Only one bound formula given
@@ -48,10 +48,10 @@ def _get_foreground_terms_aux(expr, annctx=default_annctx):
 
 def get_foreground_terms(exprs, annctx=default_annctx):
     """
-    Return the set of terms in any expression in exprs that are of the foreground sort.
-    :param exprs: z3.ExprRef or set of z3.ExprRef
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return: set of z3.ExprRef
+    Return the set of terms in any expression in exprs that are of the foreground sort.  
+    :param exprs: z3.ExprRef or set of z3.ExprRef  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return: set of z3.ExprRef  
     """
     if isinstance(exprs, z3.ExprRef):
         # Only one expression given
@@ -78,9 +78,9 @@ def _make_recdef_unfoldings_aux(recdef_triple):
 
 def make_recdef_unfoldings(recursive_definitions):
     """
-    Make a bound formula from the given recursive definition that corresponds to its 'unfolding' once on given input.
-    :param recursive_definitions: (z3.FuncDeclRef, tuple of z3.ExprRef, z3.ExprRef) or a set of such triples
-    :return: set of (tuple of z3.ExprRef, z3.ExprRef)
+    Make a bound formula from the given recursive definition that corresponds to its 'unfolding' once on given input.  
+    :param recursive_definitions: (z3.FuncDeclRef, tuple of z3.ExprRef, z3.ExprRef) or a set of such triples  
+    :return: set of (tuple of z3.ExprRef, z3.ExprRef)  
     """
     if not isinstance(recursive_definitions, set):
         # Only one recursive definition given

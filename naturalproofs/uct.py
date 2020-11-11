@@ -8,14 +8,14 @@ import naturalproofs.utils as utils
 
 class UCTSort:
     """
-    Class representing a sort in the UCT signature.
+    Class representing a sort in the UCT signature.  
     """
     def __init__(self, name, z3sort, is_foreground=False):
         """
-        There are three parameters that define a UCT sort.
-        :param name (string): Name or 'alias' of the uct sort.
-        :param z3sort (z3.SortRef): The underlying z3 sort that is used to phrase smt queries.
-        :param is_foreground (bool): If the given sort is a foreground sort.
+        There are three parameters that define a UCT sort.  
+        :param name (string): Name or 'alias' of the uct sort.  
+        :param z3sort (z3.SortRef): The underlying z3 sort that is used to phrase smt queries.  
+        :param is_foreground (bool): If the given sort is a foreground sort.  
         """
         self.name = name
         self.z3sort = z3sort
@@ -64,10 +64,10 @@ boolsort.lattice_bottom = z3.BoolVal(False)
 # Functions to manipulate sort information
 def get_uct_sort(exprref, annctx=default_annctx):
     """
-    Retrieve the sort of the given expression in terms of UCTSort objects.
-    :param exprref: z3.ExprRef
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return: tuple of UCTSort objects or None
+    Retrieve the sort of the given expression in terms of UCTSort objects.  
+    :param exprref: z3.ExprRef  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return: tuple of UCTSort objects or None  
     """
     if not isinstance(exprref, z3.ExprRef):
         raise TypeError('ExprRef expected.')
@@ -86,10 +86,10 @@ def get_uct_sort(exprref, annctx=default_annctx):
 # Specialised function that is used very commonly in the naturalproofs package
 def is_expr_fg_sort(exprref, annctx=default_annctx):
     """
-    Determine if the sort of the given expression is a foreground sort
-    :param exprref: z3.ExprRef
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return: bool
+    Determine if the sort of the given expression is a foreground sort  
+    :param exprref: z3.ExprRef  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return: bool  
     """
     uct_sort = get_uct_sort(exprref, annctx)
     return uct_sort == fgsort

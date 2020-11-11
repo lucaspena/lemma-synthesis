@@ -1,1 +1,3 @@
-# Package containing the source code for the natural proofs engine
+"""
+Package to create and use Natural Proofs solvers. Look at naturalproofs/tests for examples.  
+"""

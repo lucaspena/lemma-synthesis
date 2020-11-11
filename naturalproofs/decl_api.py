@@ -8,11 +8,11 @@ from naturalproofs.AnnotatedContext import AnnotatedContext, default_annctx
 # Functions to create declarations
 def Const(name, uct_sort, annctx=default_annctx):
     """
-    Declare a constant with the given name and uct sort.
-    :param name: string
-    :param uct_sort: naturalproofs.uct.UCTSort
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return: z3.ExprRef
+    Declare a constant with the given name and uct sort.  
+    :param name: string  
+    :param uct_sort: naturalproofs.uct.UCTSort  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return: z3.ExprRef  
     """
     if not isinstance(uct_sort, UCTSort):
         raise TypeError('UCTSort expected.')
@@ -28,11 +28,11 @@ def Const(name, uct_sort, annctx=default_annctx):
 
 def Consts(names, uct_sort, annctx=default_annctx):
     """
-    Declare a list of constants.
-    :param names: string containing all the names separated by a space
-    :param uct_sort: naturalproofs.uct.UCTSort
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return: list of z3.ExprRef
+    Declare a list of constants.  
+    :param names: string containing all the names separated by a space  
+    :param uct_sort: naturalproofs.uct.UCTSort  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return: list of z3.ExprRef  
     """
     if not isinstance(uct_sort, UCTSort):
         raise TypeError('UCTSort expected.')
@@ -49,11 +49,11 @@ def Consts(names, uct_sort, annctx=default_annctx):
 
 def Function(name, *uct_signature, annctx=default_annctx):
     """
-    Declare an uninterpreted function symbol. The signature is given as input-sort, input-sort...output-sort
-    :param name: string
-    :param uct_signature: tuple of naturalproofs.uct.UCTSort
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return: z3.FuncDeclRef
+    Declare an uninterpreted function symbol. The signature is given as input-sort, input-sort...output-sort  
+    :param name: string  
+    :param uct_signature: tuple of naturalproofs.uct.UCTSort  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return: z3.FuncDeclRef  
     """
     if not all([isinstance(sig, UCTSort) for sig in uct_signature]):
         raise TypeError('UCTSort expected.')
@@ -70,11 +70,11 @@ def Function(name, *uct_signature, annctx=default_annctx):
 
 def RecFunction(name, *uct_signature, annctx=default_annctx):
     """
-    Declare a recursively defined function symbol.
-    :param name: string
-    :param uct_signature: tuple of naturalproofs.uct.UCTSort
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return:
+    Declare a recursively defined function symbol.  
+    :param name: string  
+    :param uct_signature: tuple of naturalproofs.uct.UCTSort  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return: z3.FuncDeclRef  
     """
     # Currently defaults to calling Function as recursive functions are not tracked in a separate way.
     return Function(name, *uct_signature, annctx=annctx)
@@ -83,13 +83,13 @@ def RecFunction(name, *uct_signature, annctx=default_annctx):
 def AddRecDefinition(recdef, formal_params, body, annctx=default_annctx):
     """
     Add a definition to a recursive function symbol. The function symbol must be declared and tracked before a definiiton
-    can be added.
+    can be added.  
     The definition is given in terms of a tuple of formal parameters that are themselves declared constants, and the body
-    is a z3.ExprRef object constructed from these constants and other declared/built-in functions.
-    :param recdef: z3.FuncDeclRef
-    :param formal_params: tuple of z3.ExprRef (currently only z3.ArithRef)
-    :param body: z3.ExprRef
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    is a z3.ExprRef object constructed from these constants and other declared/built-in functions.  
+    :param recdef: z3.FuncDeclRef  
+    :param formal_params: tuple of z3.ExprRef (currently only z3.ArithRef)  
+    :param body: z3.ExprRef  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
     :return: None
     """
     if not isinstance(formal_params, tuple) and isinstance(formal_params, z3.ExprRef):
@@ -111,14 +111,14 @@ def AddRecDefinition(recdef, formal_params, body, annctx=default_annctx):
 
 def AddAxiom(formal_params, body, annctx=default_annctx):
     """
-    Add an axiom with respect to which the reasoning must be performed.
+    Add an axiom with respect to which the reasoning must be performed.  
     The axiom is given in terms of a tuple of formal parameters that are themselves declared constants, and the body
     is a z3.ExprRef object constructed from these constants and other declared/built-in functions. If the axiom does not
-    take any parameters, the first argument is ().
-    :param formal_params: tuple of z3.ExprRef (currently only z3.ArithRef)
-    :param body: z3.ExprRef
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return: None
+    take any parameters, the first argument is ().  
+    :param formal_params: tuple of z3.ExprRef (currently only z3.ArithRef)  
+    :param body: z3.ExprRef  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return: None  
     """
     if not isinstance(formal_params, tuple) and isinstance(formal_params, z3.ExprRef):
         # Only one formal parameter
@@ -135,19 +135,19 @@ def AddAxiom(formal_params, body, annctx=default_annctx):
 # Utility functions to manipulate declarations
 def get_vocabulary(annctx=default_annctx):
     """
-    Returns the set of all the declarations tracked by annctx
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return: set of z3.FuncDeclRef
+    Returns the set of all the declarations tracked by annctx  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return: set of z3.FuncDeclRef  
     """
     return annctx.get_vocabulary_annotation()
 
 
 def get_decl_from_name(declname, annctx=default_annctx):
     """
-    Returns the declaration whose name is declname if it is tracked by annctx.
-    :param declname: string
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return: z3.FuncDeclRef or None
+    Returns the declaration whose name is declname if it is tracked by annctx.  
+    :param declname: string  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return: z3.FuncDeclRef or None  
     """
     vocabulary = get_vocabulary(annctx)
     return next((decl for decl in vocabulary if decl.name() == declname), None)
@@ -156,12 +156,12 @@ def get_decl_from_name(declname, annctx=default_annctx):
 def get_recursive_definition(recdef, alldefs=False, annctx=default_annctx):
     """
     Looks up the definition of the function symbol from the set of recursive definitions in the annctx context.
-    Returns None if no definition exists in the context.
-    If the second argument is true, then all recursive definitions are returned.
-    :param recdef: z3.FuncDeclRef
-    :param alldefs: bool
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return: (recdef, tuple of z3.ExprRef, z3.ExprRef), or a set of such triples, or None
+    Returns None if no definition exists in the context.  
+    If the second argument is true, then all recursive definitions are returned.  
+    :param recdef: z3.FuncDeclRef  
+    :param alldefs: bool  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return: (recdef, tuple of z3.ExprRef, z3.ExprRef), or a set of such triples, or None  
     """
     recdef_set = annctx.get_recdef_annotation()
     if alldefs:
@@ -174,8 +174,8 @@ def get_recursive_definition(recdef, alldefs=False, annctx=default_annctx):
 
 def get_all_axioms(annctx=default_annctx):
     """
-    Returns all axioms tracked by annctx.
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return: (tuple of z3.ExprRef, z3.ExprRef)
+    Returns all axioms tracked by annctx.  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return: (tuple of z3.ExprRef, z3.ExprRef)  
     """
     return annctx.get_axiom_annotation()
