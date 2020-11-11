@@ -1,3 +1,6 @@
+# Only importing this for writing this file as a test
+import unittest
+
 import z3
 from z3 import And, Or, Not, Implies, If
 from z3 import IsSubset, Union, SetIntersect, SetComplement, EmptySet
@@ -30,7 +33,12 @@ npsolver.options.instantiation_mode = proveroptions.manual_instantiation
 npsolver.options.terms_to_instantiate = [x, nil]
 # Ask for proof
 npsolution = npsolver.solve(goal, lemmas)
-if npsolution.if_sat:
-    print('sat')
-else:
-    print('unsat')
+
+
+class DlistListTest(unittest.TestCase):
+    def test1(self):
+        self.assertTrue(npsolution.if_sat)
+
+
+if __name__ == '__main__':
+    unittest.main()

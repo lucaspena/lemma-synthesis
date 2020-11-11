@@ -1,3 +1,6 @@
+# Only importing this for writing this file as a test
+import unittest
+
 from z3 import And, Or, Not, Implies, If
 from z3 import IsSubset, Union, SetIntersect, SetComplement, EmptySet
 
@@ -25,7 +28,12 @@ pfp_of_goal = make_pfp_formula(goal)
 npsolver = NPSolver()
 # Ask for proof
 npsolution = npsolver.solve(pfp_of_goal)
-if npsolution.if_sat:
-    print('sat')
-else:
-    print('unsat')
+
+
+class EvenOddTest(unittest.TestCase):
+    def test1(self):
+        self.assertFalse(npsolution.if_sat)
+
+
+if __name__ == '__main__':
+    unittest.main()
