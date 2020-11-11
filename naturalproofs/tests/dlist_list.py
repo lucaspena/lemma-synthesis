@@ -1,6 +1,8 @@
 # Only importing this for writing this file as a test
 import unittest
 
+import importlib_resources
+
 import z3
 from z3 import And, Or, Not, Implies, If
 from z3 import IsSubset, Union, SetIntersect, SetComplement, EmptySet
@@ -9,6 +11,8 @@ from naturalproofs.uct import fgsort, fgsetsort, intsort, intsetsort, boolsort
 from naturalproofs.decl_api import Const, Consts, Function, RecFunction, AddRecDefinition, AddAxiom
 from naturalproofs.prover import NPSolver
 import naturalproofs.proveroptions as proveroptions
+
+from naturalproofs.lemma_synthesis import solveProblem
 
 # Declarations
 x, nil = Consts('x nil', fgsort)
@@ -22,7 +26,7 @@ AddRecDefinition(dlst, x, If(x == nil, True,
                                 And(prv(nxt(x)) == x, dlst(nxt(x))))))
 
 # Problem parameters
-goal = Implies(dlst(x), lst(x))
+goal = Implies(dlst(x), Implies(x == 0, lst(x)))
 lemma1_params = (x,)
 lemma1_body = z3.BoolVal(True)
 lemmas = {(lemma1_params, lemma1_body)}
@@ -34,6 +38,16 @@ npsolver.options.terms_to_instantiate = [x, nil]
 # Ask for proof
 npsolution = npsolver.solve(goal, lemmas)
 
+axioms_python = []
+unfold_recdefs_python = []
+const = [nil]
+name = 'dlist-list'
+grammar_string = importlib_resources.read_text('experiments', 'grammar_{}.sy'.format(name))
+
+config_params = {}
+config_params['use_cex_models'] = False
+
+solveProblem(axioms_python, unfold_recdefs_python, const, goal, name, grammar_string, config_params)
 
 class DlistListTest(unittest.TestCase):
     def test1(self):

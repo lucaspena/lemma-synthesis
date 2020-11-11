@@ -10,7 +10,7 @@
                    (and Start Start)
                    (or Start Start)
                    (not Start)
-                   (list I) (dlist I)))
+                   (lst I) (dlst I)))
             (I Int (x nil
                    (next I)
                    (prev I))))
