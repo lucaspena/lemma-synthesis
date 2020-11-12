@@ -3,6 +3,7 @@ set_param('model.compact', False)
 import re
 
 from naturalproofs.decl_api import get_recursive_definition, get_vocabulary
+from naturalproofs.uct import get_uct_sort
 
 ############################
 # Support for python models
@@ -234,13 +235,14 @@ def extractDecls(fcts_z3):
             z3_str[getZ3FctName(fct)] = fct
     return z3_str
 
-def getLemmaHeader(lemma):
+def getLemmaHeader(lemma, lemma_args):
+    lemma_args_str = [ arg.decl().name() for arg in lemma_args ]
     result = re.search('lemma (.*) Bool', lemma)
     params = result.group(1)[1:][:-1]
     params_list = [ i.split(' ')[0] for i in re.findall('\(([^)]+)', params) ]
     header = ''
-    for p in params_list:
-        header += p + ' '
+    for i in range(len(params_list)):
+        header += lemma_args_str[i] + ' '
     return '(lemma ' + header[:-1] + ')'
 
 # replace arguments of all instances of any function in replace_fcts
@@ -275,15 +277,14 @@ def swapArgs(lemma, swap_fcts):
 
 # translate output of cvc4 into z3py form
 # TODO: abstract this out as general function, not specific to each input
-def translateLemma(lemma, addl_decls, swap_fcts, replace_fcts, annctx):
-    const_decls = '(declare-const fresh Int)' # exactly one free variable assumed
-    header = getLemmaHeader(lemma).replace('x', 'fresh')
+def translateLemma(lemma, lemma_args, addl_decls, swap_fcts, replace_fcts, annctx):
+    header = getLemmaHeader(lemma, lemma_args)
     assertion = '(assert ' + header + ')'
-    smt_string = const_decls + '\n' + lemma + '\n' + assertion
+    smt_string = lemma + '\n' + assertion
     vocab = get_vocabulary(annctx)
-    z3_str = {} # TODO: get this from vocab
-    z3_str.update(addl_decls)
-    z3py_lemma = parse_smt2_string(smt_string, decls=z3_str)[0]
+    translate_dict = {v.name() : v for v in vocab}
+    translate_dict.update(addl_decls)
+    z3py_lemma = parse_smt2_string(smt_string, decls=translate_dict)[0]
     z3py_lemma_replaced = replaceArgs(z3py_lemma, replace_fcts)
     z3py_lemma_fixed = swapArgs(z3py_lemma_replaced, swap_fcts)
     return z3py_lemma_fixed

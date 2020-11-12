@@ -40,14 +40,18 @@ npsolution = npsolver.solve(goal, lemmas)
 
 axioms_python = []
 unfold_recdefs_python = []
-const = [nil]
+
+# must change name of bound variables in lemma arguments
+v = Const('v', fgsort)
+lemma_args = [v, nil]
+
 name = 'dlist-list'
 grammar_string = importlib_resources.read_text('experiments', 'grammar_{}.sy'.format(name))
 
 config_params = {}
 config_params['use_cex_models'] = False
 
-solveProblem(axioms_python, unfold_recdefs_python, const, goal, name, grammar_string, config_params)
+solveProblem(axioms_python, unfold_recdefs_python, lemma_args, goal, name, grammar_string, config_params)
 
 class DlistListTest(unittest.TestCase):
     def test1(self):

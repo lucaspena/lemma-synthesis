@@ -161,7 +161,7 @@ def generateAllCexConstraints(models, const, pfp_dict, fcts_z3):
 
 
 # write output to a file that can be parsed by CVC4 SyGuS
-def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, const, vc, problem_instance_name, grammar_string, config_params, annctx):
+def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, vc, problem_instance_name, grammar_string, config_params, annctx):
     # Make log folder if it does not exist already
     os.makedirs(options.log_file_path, exist_ok=True)
 
@@ -236,19 +236,19 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, const, vc, prob
             pfp_dict = config_params.get('pfp_dict',None)
             if pfp_dict == None or pfp_dict == {}:
                 raise ValueError('Must specify pre-fixpoint formula for recdefs')
-            cex_pfp_constraints = generateAllCexConstraints(cex_models, const, pfp_dict, fcts_z3)
+            cex_pfp_constraints = generateAllCexConstraints(cex_models, lemma_args, pfp_dict, fcts_z3)
             out.write(cex_pfp_constraints)
             out.write('\n')
         out.write('\n')
         out.write(';; constraints from false model\n')
-        # false_constraints = generateFalseConstraints(false_model_dict, deref, const, fcts_z3)
+        # false_constraints = generateFalseConstraints(false_model_dict, deref, lemma_args, fcts_z3)
         false_constraints = ''
         out.write(false_constraints)
         out.write('\n')
         out.write('\n')
         out.write(';; constraints from true models\n')
         true_constraints = ''
-        # true_constraints = generateAllTrueConstraints(true_models, const, fcts_z3)
+        # true_constraints = generateAllTrueConstraints(true_models, lemma_args, fcts_z3)
         out.write(true_constraints)
         out.write('\n')
         out.write('(check-synth)')
