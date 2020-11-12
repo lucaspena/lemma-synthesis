@@ -2,6 +2,8 @@ from z3 import *
 set_param('model.compact', False)
 import re
 
+from naturalproofs.decl_api import get_recursive_definition, get_vocabulary
+
 ############################
 # Support for python models
 
@@ -273,12 +275,13 @@ def swapArgs(lemma, swap_fcts):
 
 # translate output of cvc4 into z3py form
 # TODO: abstract this out as general function, not specific to each input
-def translateLemma(lemma, fcts_z3, addl_decls = {}, swap_fcts = {}, replace_fcts = {}):
+def translateLemma(lemma, addl_decls, swap_fcts, replace_fcts, annctx):
     const_decls = '(declare-const fresh Int)' # exactly one free variable assumed
     header = getLemmaHeader(lemma).replace('x', 'fresh')
     assertion = '(assert ' + header + ')'
     smt_string = const_decls + '\n' + lemma + '\n' + assertion
-    z3_str = extractDecls(fcts_z3)
+    vocab = get_vocabulary(annctx)
+    z3_str = {} # TODO: get this from vocab
     z3_str.update(addl_decls)
     z3py_lemma = parse_smt2_string(smt_string, decls=z3_str)[0]
     z3py_lemma_replaced = replaceArgs(z3py_lemma, replace_fcts)
