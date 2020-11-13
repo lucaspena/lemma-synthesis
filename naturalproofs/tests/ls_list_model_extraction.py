@@ -1,6 +1,6 @@
 """
 Basic example showing how extract a finite model on a finite sub-universe of the foreground sort given a satisfying 
-smt model.    
+smt model.  
 """
 
 # Only importing this for writing this file as a test
@@ -13,7 +13,7 @@ from naturalproofs.uct import fgsort, fgsetsort, intsort, intsetsort, boolsort
 from naturalproofs.decl_api import Const, Consts, Function, RecFunction, AddRecDefinition, AddAxiom
 from naturalproofs.prover import NPSolver
 import naturalproofs.proveroptions as proveroptions
-from naturalproofs.extensions.finitemodel import extract_finite_model
+from naturalproofs.extensions.finitemodel import extract_finite_model, add_fg_element_offset, get_fg_elements
 
 # Declarations
 x, y, nil = Consts('x y nil', fgsort)
@@ -34,27 +34,39 @@ npsolver.options.instantiation_mode = proveroptions.manual_instantiation
 npsolver.options.terms_to_instantiate = {x, y, nil}
 
 
-def without_lemma():
+def extract_model():
     npsolution = npsolver.solve(goal)
     smtmodel = npsolution.model
     terms = npsolution.fg_terms
     finite_model = extract_finite_model(smtmodel, terms)
     return finite_model
-# Uncomment the statement below to see the extracted model
-# print(without_lemma())
+
+
+# Uncomment the statements below to see the extracted model and some other functions that can be performed on it.
+# finite_model = extract_model()
+# print(finite_model)
+# fg_universe = get_fg_elements(finite_model)
+# print(fg_universe)
+# transformed_finite_model = add_fg_element_offset(finite_model, 5)
+# print(transformed_finite_model)
+# new_fg_universe = get_fg_elements(transformed_finite_model)
+# print(new_fg_universe)
 
 
 class LsListModelExtractionTest(unittest.TestCase):
-    def test_without_lemma(self):
+    def test_extract_model(self):
         try:
             # without_lemma does not raise any exceptions
-            finite_model = without_lemma()
+            finite_model = extract_model()
         except Exception:
             self.fail('Finite model extraction failed.')
 
-    def test_with_lemma(self):
-        npsolution = npsolver.solve(goal, lemmas)
-        self.assertFalse(npsolution.if_sat)
+    def test_transform_model(self):
+        finite_model = extract_model()
+        fg_universe = get_fg_elements(finite_model)
+        transformed_finite_model = add_fg_element_offset(finite_model, 5)
+        new_fg_universe = get_fg_elements(transformed_finite_model)
+        self.assertTrue(new_fg_universe == {x + 5 for x in fg_universe})
 
 
 if __name__ == '__main__':

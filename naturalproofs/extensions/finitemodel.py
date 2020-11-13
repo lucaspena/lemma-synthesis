@@ -27,8 +27,9 @@ import z3
 z3.set_param('model.compact', False)
 
 from naturalproofs.AnnotatedContext import default_annctx 
-from naturalproofs.uct import fgsort, fgsetsort, intsort, intsetsort, boolsort, get_uct_sort
-from naturalproofs.decl_api import get_vocabulary
+from naturalproofs.uct import fgsort, fgsetsort, intsort, intsetsort, boolsort
+from naturalproofs.decl_api import get_vocabulary, get_uct_signature
+from naturalproofs.extensions.finitemodel_utils import transform_fg_universe, collect_fg_universe
 
 
 def extract_finite_model(smtmodel, terms, vocabulary=None, annctx=default_annctx):
@@ -53,7 +54,7 @@ def extract_finite_model(smtmodel, terms, vocabulary=None, annctx=default_annctx
         vocabulary = get_vocabulary(annctx)
     for func in vocabulary:
         arity = func.arity()
-        *input_signature, output_sort = annctx.read_alias_annotation(func)
+        *input_signature, output_sort = get_uct_signature(func, annctx)
         # Only supporting uninterpreted functions with input arguments all from the foreground sort
         if not all(sig == fgsort for sig in input_signature):
             raise ValueError('Function with input(s) not from the foreground sort. Unsupported.')
@@ -136,8 +137,20 @@ def _extract_value(value, uct_sort):
         raise ValueError('UCT Sort type not supported for extraction of models.')
 
 
-# Representation of the key in the finite model. Corresponds to 
+# Representation of keys in the finite model top-level dictionary.
 def _model_key_repr(funcdeclref):
     # Should be equivalent to naturalproofs.AnnotatedContext._alias_annotation_key_repr(funcdeclref)
     # For z3.FuncDeclRef objects, this is almost always equal to name()
     return funcdeclref.name()
+
+
+# Some common functions on finite models
+def get_fg_elements(finite_model, annctx=default_annctx):
+    # fg_elem_set = set()
+    # _ = transform_fg_universe(finite_model, lambda x: (fg_elem_set.add(x), x)[1], annctx)
+    # return fg_elem_set
+    return collect_fg_universe(finite_model, annctx)
+
+
+def add_fg_element_offset(finite_model, offset_value, annctx=default_annctx):
+    return transform_fg_universe(finite_model, lambda x: x + offset_value, annctx)

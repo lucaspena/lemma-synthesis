@@ -142,6 +142,16 @@ def get_vocabulary(annctx=default_annctx):
     return annctx.get_vocabulary_annotation()
 
 
+def get_uct_signature(funcdeclref, annctx=default_annctx):
+    """
+    Returns the uct signature of the given function if tracked by annctx.
+    :param funcdeclref: z3.FuncDeclRef
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return: tuple of naturalproofs.uct.UCTSort or None
+    """
+    return annctx.read_alias_annotation(funcdeclref)
+
+
 def get_decl_from_name(declname, annctx=default_annctx):
     """
     Returns the declaration whose name is declname if it is tracked by annctx.  
