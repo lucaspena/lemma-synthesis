@@ -12,7 +12,7 @@ from naturalproofs.decl_api import Const, Consts, Function, RecFunction, AddRecD
 from naturalproofs.prover import NPSolver
 import naturalproofs.proveroptions as proveroptions
 
-from naturalproofs.lemma_synthesis import solveProblem
+from naturalproofs.lemma_synthesis_np import solveProblem
 
 # Declarations
 x, nil = Consts('x nil', fgsort)
