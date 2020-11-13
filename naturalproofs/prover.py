@@ -79,6 +79,7 @@ class NPSolver:
             z3solver.add(instantiations)
             if_sat = _solver_check(z3solver)
             model = z3solver.model() if if_sat else None
+            terms = get_foreground_terms(instantiations, annctx=self.annctx)
             return NPSolution(if_sat=if_sat, model=model, fg_terms=terms, options=options)
         # Automatic instantiation modes
         # Set up initial values of variables
