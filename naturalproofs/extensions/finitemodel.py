@@ -58,12 +58,12 @@ def extract_finite_model(smtmodel, terms, vocabulary=None, annctx=default_annctx
         # Only supporting uninterpreted functions with input arguments all from the foreground sort
         if not all(sig == fgsort for sig in input_signature):
             raise ValueError('Function with input(s) not from the foreground sort. Unsupported.')
-        func_key_repr = _model_key_repr(func)
+        func_key_repr = model_key_repr(func)
         # Distinguish common cases for faster execution
         if arity == 0:
             model[func_key_repr] = {(): _extract_value(smtmodel.eval(func(), model_completion=True), output_sort)}
         elif arity == 1:
-            model[func_key_repr] = {(_extract_value(elem, fgsort),): _extract_value(smtmodel.eval(func(elem)), output_sort) for elem in elems}
+            model[func_key_repr] = {(_extract_value(elem, fgsort),): _extract_value(smtmodel.eval(func(elem), model_completion=True), output_sort) for elem in elems}
         else:
             func_dict = dict()
             args = itertools.product(elems, repeat=arity)
@@ -87,6 +87,13 @@ def _get_all_subterms(terms):
         if term.decl().arity != 0:
             subterm_closure = subterm_closure | _get_all_subterms(set(term.children()))
     return subterm_closure
+
+
+# Representation of keys in the finite model top-level dictionary.
+def model_key_repr(funcdeclref):
+    # Should be equivalent to naturalproofs.AnnotatedContext._alias_annotation_key_repr(funcdeclref)
+    # For z3.FuncDeclRef objects, this is almost always equal to name()
+    return funcdeclref.name()
 
 
 def _extract_value(value, uct_sort):
@@ -137,11 +144,30 @@ def _extract_value(value, uct_sort):
         raise ValueError('UCT Sort type not supported for extraction of models.')
 
 
-# Representation of keys in the finite model top-level dictionary.
-def _model_key_repr(funcdeclref):
-    # Should be equivalent to naturalproofs.AnnotatedContext._alias_annotation_key_repr(funcdeclref)
-    # For z3.FuncDeclRef objects, this is almost always equal to name()
-    return funcdeclref.name()
+def recover_value(value, uct_sort):
+    """
+    Inverse of _extract_value. Given a pythonic value, returns a z3 embedding of it depending on its uct sort. The 
+    explicit embedding scheme is as follows:
+    fgsort -> z3.ArithRef
+    fgsetsort -> z3.ArrayRef
+    intsort -> z3.ArithRef
+    intsetsort -> z3.ArrayRef
+    boolsort -> z3.BoolRef
+    :param value: any
+    :param uct_sort: naturalproofs.uct.UCTSort
+    :return: z3.ExprRef
+    """
+    # TODO: typecheck all the arguments
+    if uct_sort in {fgsort, intsort}:
+        return z3.IntVal(value)
+    elif uct_sort == boolsort:
+        return z3.BoolVal(value)
+    elif uct_sort in {fgsetsort, intsetsort}:
+        expr = z3.EmptySet(z3.IntSort())
+        for elem in value:
+            expr = z3.SetAdd(expr, z3.IntVal(elem))
+    else:
+        raise ValueError('Sort not supported. Check for a list of available sorts in the naturalproofs.uct module.')
 
 
 # Some common functions on finite models

@@ -46,8 +46,9 @@ def transform_expression(expression, transformations):
     for transformation in transformations:
         cond, op = transformation
         try:
-            if cond(transformed_expr_rec):
-                return op(transformed_expr_rec)
+            condition = cond(transformed_expr_rec)
         except Exception:
             continue
+        if condition:
+            return op(transformed_expr_rec)
     return transformed_expr_rec
