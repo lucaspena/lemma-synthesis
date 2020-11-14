@@ -11,8 +11,7 @@ from lemsynth.lemsynth_utils import *
 from lemsynth.set_sort import *
 
 from naturalproofs.prover import NPSolver
-
-from naturalproofs.extensions.finitemodel import extract_finite_model
+from naturalproofs.extensions.finitemodel import extract_finite_model, add_fg_element_offset
 
 # Add constraints from each model into the given solver
 # Look through model's function entries and adds each input-output constraint
@@ -185,7 +184,7 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, mod
     npmodel = npsolution.model
     false_model_dict = extract_finite_model(npmodel, model_terms)
 
-    use_cex_models = config_params.get('use_cex_models', False)
+    use_cex_models = config_params.get('use_cex_models', True)
     cex_models = config_params.get('cex_models', [])
 
     # TODO: below was computation for getting false model dict. that needs to be updated
@@ -204,7 +203,7 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, mod
             # Make the universe of the model positive
             cex_model_positive_universe = makeModelUniverseNonNegative(cex_model)
             # Shift the model by accumulated offset
-            cex_model_with_offset = addOffset(cex_model_positive_universe, lambda x: accumulated_offset + x)
+            cex_model_with_offset = add_fg_element_offset(cex_model_positive_universe, accumulated_offset)
             # Compute new accumulated offset
             accumulated_offset = getRelativeModelOffset(cex_model_with_offset)
             # Add model to cex_models_with_offset

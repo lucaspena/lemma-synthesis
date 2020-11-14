@@ -10,6 +10,7 @@ from naturalproofs.prover import NPSolver
 
 from naturalproofs.decl_api import Const
 from naturalproofs.uct import fgsort
+from naturalproofs.extensions.finitemodel import extract_finite_model
 
 def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, model_terms, goal, name, grammar_string, config_params, annctx=default_annctx):
 
@@ -46,7 +47,6 @@ def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, model_terms, 
         replace_fcts = {membership : IsMember}
 
         # testing translation of lemma
-        lemma = ['(define-fun lemma ((x Int) (nil Int)) Bool (lst x))', '(define-fun rswitch () Int 0)']
         rhs_lemma = translateLemma(lemma[0], lemma_args, addl_decls, swap_fcts, replace_fcts, annctx)
         index = int(lemma[1][-2])
         recs = get_recursive_definition(None, True, annctx)
@@ -73,12 +73,13 @@ def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, model_terms, 
                 continue
         pfp_lemma = make_pfp_formula(z3py_lemma)
         npsolution = npsolver.solve(pfp_lemma)
+        npmodel = npsolution.model
+        false_model_dict = extract_finite_model(npmodel, model_terms)
         if npsolution.if_sat:
             print('proposed lemma cannot be proved.')
             invalid_lemmas = invalid_lemmas + [ z3py_lemma ]
             if use_cex_models:
-                # TODO: need false model dict here using new terms as a parameter
-                cex_models = cex_models
+                cex_models = cex_models + [ false_model_dict ]
         else:
             valid_lemmas.add((tuple(lemma_args), z3py_lemma))
             # check if new valid lemma helped prove original VC

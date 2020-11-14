@@ -51,7 +51,6 @@ name = 'dlist-list'
 grammar_string = importlib_resources.read_text('experiments', 'grammar_{}.sy'.format(name))
 
 config_params = {}
-config_params['use_cex_models'] = False
 
 solveProblem(axioms_python, unfold_recdefs_python, lemma_args, model_terms, goal, name, grammar_string, config_params)
 
