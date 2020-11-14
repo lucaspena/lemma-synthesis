@@ -1,7 +1,6 @@
 from z3 import *
 
 from lemsynth.lemma_synthesis import *
-from lemsynth.false_models import *
 from lemsynth.lemsynth_utils import *
 
 from naturalproofs.AnnotatedContext import default_annctx

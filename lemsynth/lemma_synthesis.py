@@ -6,9 +6,7 @@ set_param('model.compact', False)
 
 import lemsynth.options as options
 from lemsynth.true_models import *
-from lemsynth.false_models import *
 from lemsynth.lemsynth_utils import *
-from lemsynth.set_sort import *
 
 from naturalproofs.prover import NPSolver
 from naturalproofs.extensions.finitemodel import extract_finite_model, add_fg_element_offset
