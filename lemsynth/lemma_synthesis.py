@@ -12,6 +12,8 @@ from lemsynth.set_sort import *
 
 from naturalproofs.prover import NPSolver
 
+from naturalproofs.extensions.finitemodel import extract_finite_model
+
 # Add constraints from each model into the given solver
 # Look through model's function entries and adds each input-output constraint
 def modelToSolver(model, fcts_z3, sol):
@@ -161,7 +163,7 @@ def generateAllCexConstraints(models, const, pfp_dict, fcts_z3):
 
 
 # write output to a file that can be parsed by CVC4 SyGuS
-def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, vc, problem_instance_name, grammar_string, config_params, annctx):
+def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, model_terms, vc, problem_instance_name, grammar_string, config_params, annctx):
     # Make log folder if it does not exist already
     os.makedirs(options.log_file_path, exist_ok=True)
 
@@ -180,45 +182,48 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, vc,
             print(lemma)
         exit(0)
 
+    npmodel = npsolution.model
+    false_model_dict = extract_finite_model(npmodel, model_terms)
+
     use_cex_models = config_params.get('use_cex_models', False)
     cex_models = config_params.get('cex_models', [])
 
     # TODO: below was computation for getting false model dict. that needs to be updated
     # with new natural proof engine
         
-    # # Adding offsets to make sure: (i) all elements in all models are positive (ii) true and false models do not overlap
-    # # Making the universe of the false model positive
-    # false_model_dict = makeModelUniverseNonNegative(false_model_dict)
-    # false_model_relative_offset = getRelativeModelOffset(false_model_dict)
+    # Adding offsets to make sure: (i) all elements in all models are positive (ii) true and false models do not overlap
+    # Making the universe of the false model positive
+    false_model_dict = makeModelUniverseNonNegative(false_model_dict)
+    false_model_relative_offset = getRelativeModelOffset(false_model_dict)
 
-    # # Add counterexample models to true models if use_cex_models is True
-    # accumulated_offset = false_model_relative_offset
-    # if use_cex_models:
-    #     cex_models_with_offset = []
-    #     for cex_model in cex_models:
-    #         # Make the universe of the model positive
-    #         cex_model_positive_universe = makeModelUniverseNonNegative(cex_model)
-    #         # Shift the model by accumulated offset
-    #         cex_model_with_offset = addOffset(cex_model_positive_universe, lambda x: accumulated_offset + x)
-    #         # Compute new accumulated offset
-    #         accumulated_offset = getRelativeModelOffset(cex_model_with_offset)
-    #         # Add model to cex_models_with_offset
-    #         cex_models_with_offset = cex_models_with_offset + [cex_model_with_offset]
-    #     cex_models = cex_models_with_offset
-    # true_model_offset = accumulated_offset
+    # Add counterexample models to true models if use_cex_models is True
+    accumulated_offset = false_model_relative_offset
+    if use_cex_models:
+        cex_models_with_offset = []
+        for cex_model in cex_models:
+            # Make the universe of the model positive
+            cex_model_positive_universe = makeModelUniverseNonNegative(cex_model)
+            # Shift the model by accumulated offset
+            cex_model_with_offset = addOffset(cex_model_positive_universe, lambda x: accumulated_offset + x)
+            # Compute new accumulated offset
+            accumulated_offset = getRelativeModelOffset(cex_model_with_offset)
+            # Add model to cex_models_with_offset
+            cex_models_with_offset = cex_models_with_offset + [cex_model_with_offset]
+        cex_models = cex_models_with_offset
+    true_model_offset = accumulated_offset
 
-    # elems = config_params.get('elems',[])
-    # true_models = getNTrueModels(elems, fcts_z3, unfold_recdefs_python, axioms_python, true_model_offset, config_params)
+    elems = config_params.get('elems',[])
 
-    # all_models = cex_models + true_models + [false_model_dict]
-    # if options.exclude_set_type_definitions_switch == 'on':
-    #     # To assess whether removing set type definitions will help in cases where the lemma does not feature set reasoning.
-    #     set_defs = {}
-    # else:
-    #     set_defs = {key: fcts_z3[key] for key in fcts_z3.keys() if 'set' in key}
-    # fcts_z3 = {key: fcts_z3[key] for key in fcts_z3.keys() if 'set' not in key}
+    all_models = cex_models + [false_model_dict]
+    
+    if options.exclude_set_type_definitions_switch == 'on':
+        # To assess whether removing set type definitions will help in cases where the lemma does not feature set reasoning.
+        set_defs = {}
+    else:
+        set_defs = {key: fcts_z3[key] for key in fcts_z3.keys() if 'set' in key}
+    fcts_z3 = {key: fcts_z3[key] for key in fcts_z3.keys() if 'set' not in key}
 
-    # sygus_model_definitions = sygusBigModelEncoding(all_models, fcts_z3, set_defs)
+    sygus_model_definitions = sygusBigModelEncoding(all_models, fcts_z3, set_defs)
 
     sygus_model_definitions = ''
     with open(out_file, 'w') as out:

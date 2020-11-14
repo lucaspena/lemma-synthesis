@@ -5,6 +5,7 @@ Some utilities for manipulating finite models.
 from naturalproofs.uct import fgsort, fgsetsort
 from naturalproofs.decl_api import get_decl_from_name, get_uct_signature
 
+from naturalproofs.AnnotatedContext import default_annctx
 
 def collect_fg_universe(finite_model, annctx):
     """
@@ -41,7 +42,7 @@ def _collect_value(value, uctsort):
         return set()
 
 
-def transform_fg_universe(finite_model, lambdafunc, annctx):
+def transform_fg_universe(finite_model, lambdafunc, annctx=default_annctx):
     """
     Applies the given function lambdafunc to all elements of the foreground universe present in finite_model. All 
     vocabulary entries must be tracked by annctx.  

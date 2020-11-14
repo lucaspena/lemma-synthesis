@@ -11,7 +11,7 @@ from naturalproofs.prover import NPSolver
 from naturalproofs.decl_api import Const
 from naturalproofs.uct import fgsort
 
-def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, goal, name, grammar_string, config_params, annctx=default_annctx):
+def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, model_terms, goal, name, grammar_string, config_params, annctx=default_annctx):
 
     # Extract relevant parameters for running the verification-synthesis engine from synth_dict
     valid_lemmas = set()
@@ -32,7 +32,7 @@ def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, goal, name, g
 
     # continuously get valid lemmas until VC has been proven
     while True:
-        lemma = getSygusOutput(axioms_python, valid_lemmas, unfold_recdefs_python, lemma_args, goal, name, grammar_string, config_params, annctx)
+        lemma = getSygusOutput(axioms_python, valid_lemmas, unfold_recdefs_python, lemma_args, model_terms, goal, name, grammar_string, config_params, annctx)
         if lemma is None:
             print('CVC4 SyGuS returns unknown. Exiting.')
             exit('Instance failed.')

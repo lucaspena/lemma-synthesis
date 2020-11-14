@@ -5,6 +5,8 @@ import re
 from naturalproofs.decl_api import get_recursive_definition, get_vocabulary
 from naturalproofs.uct import get_uct_sort
 
+from naturalproofs.extensions.finitemodel_utils import transform_fg_universe
+
 ############################
 # Support for python models
 
@@ -32,18 +34,16 @@ def modelUniverse(value):
         return {value}
     elif isinstance(value, set):
         return value
+    elif isinstance(value, tuple):
+        ret = {i for i in value}
+        return ret
     elif isinstance(value, dict):
         universe = set()
         for key in value.keys():
-            if key == 'elems':
-                # The value is going to be a list. Simply add the elements to the universe set
-                universe = universe | set(value[key])
-            else:
-                universe = universe | modelUniverse(key)
-                universe = universe | modelUniverse(value[key])
+            universe = universe | modelUniverse(key)
+            universe = universe | modelUniverse(value[key])
         return universe
     else:
-        print(value)
         raise ValueError('Entry type {} not supported'.format(str(type(value))))
 
 # Returns the highest absolute value among the integers in the model to act as an offset for further models
@@ -63,7 +63,7 @@ def makeModelUniverseNonNegative(model):
         return model
     else:
         model_offset = getRelativeModelOffset(model)
-        new_model = addOffset(model, lambda x : x + model_offset)
+        new_model = transform_fg_universe(model, lambda x : x + model_offset)
     return new_model
 
 # Adds offset to true models to avoid non-unique keys
