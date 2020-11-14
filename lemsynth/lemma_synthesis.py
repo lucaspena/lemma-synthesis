@@ -12,37 +12,34 @@ from lemsynth.set_sort import *
 
 from naturalproofs.prover import NPSolver
 from naturalproofs.extensions.finitemodel import extract_finite_model, add_fg_element_offset
+from naturalproofs.decl_api import get_vocabulary
 
 # Add constraints from each model into the given solver
 # Look through model's function entries and adds each input-output constraint
-def modelToSolver(model, fcts_z3, sol):
-    for key in fcts_z3.keys():
-        signature = getFctSignature(key)
-        arity = signature[0]
+def modelToSolver(model, vocab, sol):
+    for fct in vocab:
+        arity = fct.arity()
         if arity == 0:
             # TODO: handle constant symbols
             # constant symbol
             continue
         else:
-            for fct in fcts_z3[key]:
-                # no need to distinguish by signature as models are organised by
-                # dictionaries pointing from input to output
-                fct_name = getZ3FctName(fct)
-                for input_arg in model[fct_name].keys():
-                    output_value = model[fct_name][input_arg]
-                    if isinstance(output_value, set):
-                        # This step is slightly wrong. We do not know what the intended sort of the output value set's elements is.
-                        # We are assuming integers by default, because that is the only thing being supported. Perhaps booleans. Nothing that cannot be distinguished.
-                        # This is taking the implementation deeper into a territory where it will be hard to distinguish sorts implemented by the same python type.
-                        output_value_converted = getZ3SetConstEncoding('int', output_value)
-                    else:
-                        output_value_converted = output_value
+            fct_name = fct.name()
+            for input_arg in model[fct_name].keys():
+                output_value = model[fct_name][input_arg]
+                if isinstance(output_value, set):
+                    # This step is slightly wrong. We do not know what the intended sort of the output value set's elements is.
+                    # We are assuming integers by default, because that is the only thing being supported. Perhaps booleans. Nothing that cannot be distinguished.
+                    # This is taking the implementation deeper into a territory where it will be hard to distinguish sorts implemented by the same python type.
+                    output_value_converted = getZ3SetConstEncoding('int', output_value)
+                else:
+                    output_value_converted = output_value
 
-                    if isinstance(input_arg, tuple):
-                        # arg must be unpacked as *arg before constructing the Z3 term
-                        sol.add(fct(*input_arg) == output_value_converted)
-                    else:
-                        sol.add(fct(input_arg) == output_value_converted)
+                if isinstance(input_arg, tuple):
+                    # arg must be unpacked as *arg before constructing the Z3 term
+                    sol.add(fct(*input_arg) == output_value_converted)
+                else:
+                    sol.add(fct(input_arg) == output_value_converted)
 
 def translateSet(s):
     out = ''
@@ -53,24 +50,24 @@ def translateSet(s):
         out += ')'
     return out
 
+# translate models of fully evaluated sets to smtlib format
 def translateModelsSets(models, set_defs):
     out = ''
-    for key in set_defs:
-        for fct in set_defs[key]:
-            curr_fct = '(define-fun ' + str(fct) + ' ((x!0 Int)) (Set Int)\n'
-            body = ''
-            for model in models:
-                fct_name = getZ3FctName(fct)
-                curr_model_body = ''
-                for elt in model[fct_name]:
-                    curr_model_body += '  (ite (= x!0 ' + str(elt) + ') ' + translateSet(model[fct_name][elt]) + '\n'
-                body += curr_model_body
-            body += '  (as emptyset (Set Int))'
-            for model in models:
-                for elt in model[fct_name]:
-                    body += ')'
-            curr_fct += body + ')\n\n'
-            out += curr_fct
+    for fct in set_defs:
+        curr_fct = '(define-fun ' + fct.name() + ' ((x!0 Int)) (Set Int)\n'
+        body = ''
+        for model in models:
+            fct_name = getZ3FctName(fct)
+            curr_model_body = ''
+            for elt in model[fct_name]:
+                curr_model_body += '  (ite (= x!0 ' + str(elt) + ') ' + translateSet(model[fct_name][elt]) + '\n'
+            body += curr_model_body
+        body += '  (as emptyset (Set Int))'
+        for model in models:
+            for elt in model[fct_name]:
+                body += ')'
+        curr_fct += body + ')\n\n'
+        out += curr_fct
     return out
 
 # Generate single model from a given list of models
@@ -214,17 +211,17 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, mod
     elems = config_params.get('elems',[])
 
     all_models = cex_models + [false_model_dict]
-    
+
+    vocab = get_vocabulary(annctx)
     if options.exclude_set_type_definitions_switch == 'on':
         # To assess whether removing set type definitions will help in cases where the lemma does not feature set reasoning.
         set_defs = {}
     else:
-        set_defs = {key: fcts_z3[key] for key in fcts_z3.keys() if 'set' in key}
-    fcts_z3 = {key: fcts_z3[key] for key in fcts_z3.keys() if 'set' not in key}
+        set_defs = {v for v in vocab if 'Array' in str(v.range())}
+    vocab = vocab.difference(set_defs)
 
-    sygus_model_definitions = sygusBigModelEncoding(all_models, fcts_z3, set_defs)
-
-    sygus_model_definitions = ''
+    sygus_model_definitions = sygusBigModelEncoding(all_models, vocab, set_defs)
+    print(sygus_model_definitions)
     with open(out_file, 'w') as out:
         out.write('(set-logic ALL)')
         out.write('\n')
