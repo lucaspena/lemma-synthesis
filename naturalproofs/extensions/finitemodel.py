@@ -21,6 +21,7 @@ explicitly specified. Set to 'True' by default, so all offset computations will 
 """
 
 import itertools
+import copy
 import z3
 # model.compact should be turned off to not get lambdas, only actual arrays/sets.
 z3.set_param('model.compact', False)
@@ -29,11 +30,6 @@ from naturalproofs.AnnotatedContext import default_annctx
 from naturalproofs.uct import fgsort, fgsetsort, intsort, intsetsort, boolsort
 from naturalproofs.decl_api import get_vocabulary, get_uct_signature
 from naturalproofs.extensions.finitemodel_utils import transform_fg_universe, collect_fg_universe
-
-# Begin of hack
-# TODO: Remove hack once z3-solver is updated on pypi
-from naturalproofs.extensions.finitemodel_utils import modelref_hack_modelref_deepcopy
-# End of hack
 
 
 class FiniteModel:
@@ -91,6 +87,7 @@ class FiniteModel:
                     arg_value = tuple(_extract_value(component, fgsort) for component in arg)
                     func_dict[arg_value] = _extract_value(smtmodel.eval(func(*arg), model_completion=True), output_sort)
                 model[func_key_repr] = func_dict
+
         # Object attributes
         self.finitemodel = model
         self.smtmodel = smtmodel
@@ -103,10 +100,24 @@ class FiniteModel:
         # Caching attributes
         self.recompute_offset = True
 
-        # Begin of to fix buggy deepcopy in z3py
-        # TODO: remove hack once z3-solver is updated on pypi
-        smtmodel.__deepcopy__ = modelref_hack_modelref_deepcopy
-        # End of hack
+    def copy(self):
+        """
+        Custom copy implementation that 'deepcopies' the finitemodel attribute alone.  
+        :return: naturalproofs.extensions.finitemodel.FiniteModel  
+        """
+        finitemodel_copy = copy.deepcopy(self.finitemodel)
+        # Blank object
+        # Init as defined will not do anything but assign the smtmodel field
+        copy_object = FiniteModel(smtmodel=self.smtmodel, terms={}, vocabulary=[], annctx=None)
+        copy_object.finitemodel = finitemodel_copy
+        copy_object.smtmodel = self.smtmodel
+        copy_object.vocabulary = self.vocabulary
+        copy_object.annctx = self.annctx
+        copy_object.offset = self.offset
+        copy_object.fg_universe = self.fg_universe
+        copy_object.extraction_terms = self.extraction_terms
+        copy_object.recompute_offset = self.recompute_offset
+        return copy_object
 
     # Some common functions on finite models
     def get_fg_elements(self):

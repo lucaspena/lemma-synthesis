@@ -98,18 +98,3 @@ def _transform_value(value, uctsort, lambdafunc):
 # Helper function for evaluate
 # def _evaluate_interpreted_function(funcdeclref):
 #     
-
-
-###### Begin of hack
-# TODO: Remove hack once z3-solver is updated on pypi
-def modelref_hack_z3_assert(cond, msg):
-    if not cond:
-        raise z3.Z3Exception(msg)
-def modelref_hack_translate(oldmodel, target_ctx):
-    if z3.z3_debug():
-        modelref_hack_z3_assert(isinstance(target_ctx, z3.Context), "argument must be a Z3 context")
-    newmodel = z3.Z3_model_translate(oldmodel.ctx.ref(), oldmodel.model, oldmodel.ref())
-    return z3.ModelRef(newmodel, target_ctx)
-def modelref_hack_modelref_deepcopy(oldmodel):
-    return modelref_hack_translate(oldmodel, oldmodel.ctx)
-###### End of hack

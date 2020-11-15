@@ -1,5 +1,4 @@
 import subprocess
-import copy
 import itertools
 
 from z3 import *
@@ -213,7 +212,7 @@ def getSygusOutput(lemmas, lemma_args, vc, problem_instance_name, grammar_string
         cex_models_with_offset = []
         for cex_model in cex_models:
             # Deepcopy the countermodels so the originals are not affected
-            cex_offset_model = copy.deepcopy(cex_model)
+            cex_offset_model = cex_model.copy()
             # Make the universe of the model positive and shift the model by accumulated offset
             cex_model_universe = cex_offset_model.get_fg_elements()
             non_negative_offset = min(cex_model_universe)
