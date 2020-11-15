@@ -9,7 +9,8 @@ from naturalproofs.prover import NPSolver
 
 from naturalproofs.decl_api import Const
 from naturalproofs.uct import fgsort
-from naturalproofs.extensions.finitemodel import extract_finite_model
+from naturalproofs.extensions.finitemodel import FiniteModel
+
 
 def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, model_terms, goal, name, grammar_string, config_params, annctx=default_annctx):
 
@@ -34,7 +35,6 @@ def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, model_terms, 
     while True:
         lemma = getSygusOutput(axioms_python, valid_lemmas, unfold_recdefs_python, lemma_args, model_terms, goal, name, grammar_string, config_params, annctx)
         if lemma is None:
-            print('CVC4 SyGuS returns unknown. Exiting.')
             exit('Instance failed.')
 
         # convert CVC4 versions of membership, insertion to z3py versions
@@ -72,13 +72,13 @@ def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, model_terms, 
                 continue
         pfp_lemma = make_pfp_formula(z3py_lemma)
         npsolution = npsolver.solve(pfp_lemma)
-        npmodel = npsolution.model
-        false_model_dict = extract_finite_model(npmodel, model_terms)
         if npsolution.if_sat:
             print('proposed lemma cannot be proved.')
-            invalid_lemmas = invalid_lemmas + [ z3py_lemma ]
+            invalid_lemmas = invalid_lemmas + [z3py_lemma]
             if use_cex_models:
-                cex_models = cex_models + [ false_model_dict ]
+                npmodel = npsolution.model
+                cex_model = FiniteModel(npmodel, model_terms, annctx=annctx)
+                cex_models = cex_models + [cex_model]
         else:
             valid_lemmas.add((tuple(lemma_args), z3py_lemma))
             # check if new valid lemma helped prove original VC
@@ -89,10 +89,8 @@ def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, model_terms, 
                 for lemma in valid_lemmas:
                     print(lemma[1])
             exit(0)
-            
             # Reset countermodels and invalid lemmas to empty because we have additional information to retry those proofs.
             cex_models = []
             invalid_lemmas = []
         # Update countermodels before next round of synthesis
         config_params['cex_models'] = cex_models
-        

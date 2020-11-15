@@ -5,6 +5,7 @@ satisfaction of quantifier-free formulae. Therefore restricting the obtained to 
 foreground sort appearing in the goal will suffice as a satisfying model for the same goal.  
 
 The extensions package itself will contain various modules for extracting, accessing, and manipulating 
-such finite models. Since they are meant to be an explicit representation requiring constant inspection, the models are 
-not wrapped in an API.  
+such finite models. Since they are meant to be an explicit representation requiring constant inspection, the models 
+are not accessed through an API for basic read/update operations. They are simply wrapped in a class with logging 
+attributes.  
 """

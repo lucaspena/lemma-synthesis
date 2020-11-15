@@ -1,27 +1,26 @@
 """
-This module defines the basic function pertaining to finite models: extraction. An smt model is created with 
-respect to a quantifier-free goal. The extracted model must have a finite foreground universe and must 
-preserve the satisfaction of the original goal. This is done by restricting the smt model to the subterm-closed 
-set containing the set of foreground terms in the quantifier-free goal.  
+This module defines the class FiniteModel representing finite models extracted from smt models witnessing a proof 
+failure using the natural proofs package.  
 
-This module also defines the format of the finite model. These models are meant to be used explicitly 
-and are therefore not abstracted behind an interface.  
-Given a vocabulary of functions f1, f2, ..fm, of arity a1, a2, ...am, the model is as follows:  
-model :: dict {'fk' : dict_fk}  
-where 'fk' is some representation of the function fk, and  
-dict_fk :: dict {(e1, e2,... ek) : fk(e1, e2, ...ek)}  
-where (e1, e2, ...ek) is a tuple such that e1, e2,.. etc are concrete values in python that are dependent on the 
-domain and range sorts of fk.    
-In particular if the arity k is 0, then dict_fk will be of the following form:  
-dict_fk :: dict {() : fk()}  
-
-These models are meant to be partial models, and in general it will not be possible to evaluate an arbitrary formula 
-on such a model, just those that are quantifier-free with foreground terms in the set of terms used to extract the 
-finite model.  
+Explanation of object attributes:  
+- Object attributes  
+-- finitemodel: the finite model extracted from an smt model.  
+-- smtmodel: the smt model that was used for extraction.  
+-- vocabulary: the vocabulary of constants and functions represented in the finite model.  
+-- annctx: the annotated context in which the foreground sort annotation is tracked.  
+-- offset: the 'offset' added to the foreground universe after extraction. Offset is initially 0. If at any point the 
+offset is not 0, then the value of any foreground term present in the finite model is its value as given by the smt 
+ model, plus the offset.  
+--- fg_universe: the set of all foreground elements present in the finite model.  
+- Logging attributes  
+-- extraction_terms: the terms used for finite model extraction at the time of creation.  
+- Caching attributes  
+-- recompute_offset: whether the model is already offset from the true values in the smt model, or if future offset 
+computations must add to the current offset. Used for 'caching' offset models without needing further offsets unless 
+explicitly specified. Set to 'True' by default, so all offset computations will have an effect.  
 """
 
 import itertools
-# import copy
 import z3
 # model.compact should be turned off to not get lambdas, only actual arrays/sets.
 z3.set_param('model.compact', False)
@@ -32,49 +31,95 @@ from naturalproofs.decl_api import get_vocabulary, get_uct_signature
 from naturalproofs.extensions.finitemodel_utils import transform_fg_universe, collect_fg_universe
 
 
-def extract_finite_model(smtmodel, terms, vocabulary=None, annctx=default_annctx):
-    """
-    Finite model extraction.  
-    Foreground universe of extracted model corresponds to terms with subterm-closure. If vocabulary is not specified, 
-    the entire vocabulary tracked in annctx is used.  
-    :param smtmodel: z3.ModelRef  
-    :param terms: set of z3.ExprRef  
-    :param vocabulary: set of z3.ExprRef  
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
-    :return: dict  
-    """
-    model = dict()
-    # TODO: the assumption is that uninterpreted functions have arguments only from the foreground sort. Must handle
-    #  cases where uninterpreted functions have arguments in other domains, primarily integers.
-    # Subterm-close the given terms assuming one-way functions
-    # TODO: checks for all terms being of the foreground sort.
-    subterm_closure = _get_all_subterms(terms)
-    elems = {smtmodel.eval(term, model_completion=True) for term in subterm_closure}
-    if vocabulary is None:
-        vocabulary = get_vocabulary(annctx)
-    for func in vocabulary:
-        arity = func.arity()
-        *input_signature, output_sort = get_uct_signature(func, annctx)
-        # Only supporting uninterpreted functions with input arguments all from the foreground sort
-        if not all(sig == fgsort for sig in input_signature):
-            raise ValueError('Function with input(s) not from the foreground sort. Unsupported.')
-        func_key_repr = model_key_repr(func)
-        # Distinguish common cases for faster execution
-        if arity == 0:
-            model[func_key_repr] = {(): _extract_value(smtmodel.eval(func(), model_completion=True), output_sort)}
-        elif arity == 1:
-            model[func_key_repr] = {(_extract_value(elem, fgsort),): _extract_value(smtmodel.eval(func(elem), model_completion=True), output_sort) for elem in elems}
-        else:
-            func_dict = dict()
-            args = itertools.product(elems, repeat=arity)
-            for arg in args:
-                arg_value = tuple(_extract_value(component, fgsort) for component in arg)
-                func_dict[arg_value] = _extract_value(smtmodel.eval(func(*arg), model_completion=True), output_sort)
-            model[func_key_repr] = func_dict
-    return model
+class FiniteModel:
+    def __init__(self, smtmodel, terms, vocabulary=None, annctx=default_annctx):
+        """
+        Finite model creation.  
+        Foreground universe of extracted model corresponds to terms with subterm-closure. If vocabulary is not 
+        specified, the entire vocabulary tracked in annctx is used.  
+        :param smtmodel: z3.ModelRef  
+        :param terms: set of z3.ExprRef  
+        :param vocabulary: set of z3.ExprRef  
+        :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+
+        This function also defines the format of finite models.  
+        Given a vocabulary of functions f1, f2, ..fm, of arity a1, a2, ...am, the model is as follows:  
+        model :: dict {'fk' : dict_fk}  
+        where 'fk' is some representation of the function fk, and  
+        dict_fk :: dict {(e1, e2,... ek) : fk(e1, e2, ...ek)}  
+        where (e1, e2, ...ek) is a tuple such that e1, e2,.. etc are concrete values in python that are 
+        dependent on the domain and range sorts of fk.  
+        In particular if the arity k is 0, then dict_fk will be of the following form:  
+        dict_fk :: dict {() : fk()}  
+
+        These models are meant to be partial models, and in general it will not be possible to evaluate an arbitrary
+        formula on such a model, just those that are quantifier-free with foreground terms in the set of terms used 
+        to extract the finite model.  
+        """
+        model = dict()
+        # TODO: the assumption is that uninterpreted functions have arguments only from the foreground sort. Must handle
+        #  cases where uninterpreted functions have arguments in other domains, primarily integers.
+        # Subterm-close the given terms assuming one-way functions
+        # TODO: checks for all terms being of the foreground sort.
+        subterm_closure = _get_all_subterms(terms)
+        elems = {smtmodel.eval(term, model_completion=True) for term in subterm_closure}
+        if vocabulary is None:
+            vocabulary = get_vocabulary(annctx)
+        for func in vocabulary:
+            arity = func.arity()
+            *input_signature, output_sort = get_uct_signature(func, annctx)
+            # Only supporting uninterpreted functions with input arguments all from the foreground sort
+            if not all(sig == fgsort for sig in input_signature):
+                raise ValueError('Function with input(s) not from the foreground sort. Unsupported.')
+            func_key_repr = model_key_repr(func)
+            # Distinguish common cases for faster execution
+            if arity == 0:
+                model[func_key_repr] = {(): _extract_value(smtmodel.eval(func(), model_completion=True), output_sort)}
+            elif arity == 1:
+                model[func_key_repr] = {
+                    (_extract_value(elem, fgsort),): _extract_value(smtmodel.eval(func(elem), model_completion=True),
+                                                                    output_sort) for elem in elems}
+            else:
+                func_dict = dict()
+                args = itertools.product(elems, repeat=arity)
+                for arg in args:
+                    arg_value = tuple(_extract_value(component, fgsort) for component in arg)
+                    func_dict[arg_value] = _extract_value(smtmodel.eval(func(*arg), model_completion=True), output_sort)
+                model[func_key_repr] = func_dict
+        # Object attributes
+        self.finitemodel = model
+        self.smtmodel = smtmodel
+        self.vocabulary = vocabulary
+        self.annctx = annctx
+        self.offset = 0
+        self.fg_universe = collect_fg_universe(self.finitemodel, self.annctx)
+        # Logging attributes
+        self.extraction_terms = subterm_closure
+        # Caching attributes
+        self.recompute_offset = True
+
+    # Some common functions on finite models
+    def get_fg_elements(self):
+        # fg_elem_set = set()
+        # _ = transform_fg_universe(finite_model, lambda x: (fg_elem_set.add(x), x)[1], annctx)
+        # return fg_elem_set
+        return self.fg_universe
+
+    def add_fg_element_offset(self, offset_value):
+        if self.recompute_offset:
+            self.finitemodel = transform_fg_universe(self.finitemodel, lambda x: x + offset_value, self.annctx)
+            self.offset = self.offset + offset_value
+            self.fg_universe = {elem + offset_value for elem in self.fg_universe}
 
 
 # Helper functions for extract_finite_model
+# Representation of keys in the finite model top-level dictionary.
+def model_key_repr(funcdeclref):
+    # Should be equivalent to naturalproofs.AnnotatedContext._alias_annotation_key_repr(funcdeclref)
+    # For z3.FuncDeclRef objects, this is almost always equal to name()
+    return funcdeclref.name()
+
+
 # Return all subterms of the given set of terms
 def _get_all_subterms(terms):
     """
@@ -87,13 +132,6 @@ def _get_all_subterms(terms):
         if term.decl().arity != 0:
             subterm_closure = subterm_closure | _get_all_subterms(set(term.children()))
     return subterm_closure
-
-
-# Representation of keys in the finite model top-level dictionary.
-def model_key_repr(funcdeclref):
-    # Should be equivalent to naturalproofs.AnnotatedContext._alias_annotation_key_repr(funcdeclref)
-    # For z3.FuncDeclRef objects, this is almost always equal to name()
-    return funcdeclref.name()
 
 
 def _extract_value(value, uct_sort):
@@ -168,15 +206,3 @@ def recover_value(value, uct_sort):
             expr = z3.SetAdd(expr, z3.IntVal(elem))
     else:
         raise ValueError('Sort not supported. Check for a list of available sorts in the naturalproofs.uct module.')
-
-
-# Some common functions on finite models
-def get_fg_elements(finite_model, annctx=default_annctx):
-    # fg_elem_set = set()
-    # _ = transform_fg_universe(finite_model, lambda x: (fg_elem_set.add(x), x)[1], annctx)
-    # return fg_elem_set
-    return collect_fg_universe(finite_model, annctx)
-
-
-def add_fg_element_offset(finite_model, offset_value, annctx=default_annctx):
-    return transform_fg_universe(finite_model, lambda x: x + offset_value, annctx)

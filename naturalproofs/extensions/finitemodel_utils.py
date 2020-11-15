@@ -60,18 +60,18 @@ def transform_fg_universe(finite_model, lambdafunc, annctx):
     return finite_model
 
 
-def evaluate(finite_model, expr, symbolic_compute):
-    """
-    Evaluates the given expression on a finite model as defined in naturalproofs.extensions.finitemodel. An exception 
-    is raised if any sub-expression cannot be evaluated due to partial interpretations, unless symbolic_compute is set 
-    to True. 
-    Returns a pythonic value type if symbolic_compute is False, otherwise returns z3.ExprRef.
-    :param finite_model: dict {string -> dict {tuple of any -> any}}  
-    :param expr: z3.ExpRef
-    :param symbolic_compute: bool
-    :return: any
-    """
-    return None
+# def evaluate(finite_model, expr, symbolic_compute):
+#     """
+#     Evaluates the given expression on a finite model as defined in naturalproofs.extensions.finitemodel. An exception 
+#     is raised if any sub-expression cannot be evaluated due to partial interpretations, unless symbolic_compute is set 
+#     to True. 
+#     Returns a pythonic value type if symbolic_compute is False, otherwise returns z3.ExprRef.
+#     :param finite_model: dict {string -> dict {tuple of any -> any}}  
+#     :param expr: z3.ExpRef
+#     :param symbolic_compute: bool
+#     :return: any
+#     """
+#     return None
 
 
 # Auxiliary functions

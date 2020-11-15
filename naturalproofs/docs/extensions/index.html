@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.1" />
-<title>naturalproofs API documentation</title>
-<meta name="description" content="Package to create and use Natural Proofs solvers. Look at naturalproofs/tests for examples." />
+<title>extensions API documentation</title>
+<meta name="description" content="Package extending the natural proofs package with finite models extracted from satisfying models.
+The basis for such an extraction being possible is …" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,53 +20,46 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Package <code>naturalproofs</code></h1>
+<h1 class="title">Package <code>extensions</code></h1>
 </header>
 <section id="section-intro">
-<p>Package to create and use Natural Proofs solvers. Look at naturalproofs/tests for examples.</p>
+<p>Package extending the natural proofs package with finite models extracted from satisfying models.<br>
+The basis for such an extraction being possible is because the models are obtained from the
+satisfaction of quantifier-free formulae. Therefore restricting the obtained to terms of the
+foreground sort appearing in the goal will suffice as a satisfying model for the same goal.
+</p>
+<p>The extensions package itself will contain various modules for extracting, accessing, and manipulating
+such finite models. Since they are meant to be an explicit representation requiring constant inspection, the models
+are not accessed through an API for basic read/update operations. They are simply wrapped in a class with logging
+attributes.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
 <pre><code class="python">&#34;&#34;&#34;
-Package to create and use Natural Proofs solvers. Look at naturalproofs/tests for examples.  
+Package extending the natural proofs package with finite models extracted from satisfying models.  
+The basis for such an extraction being possible is because the models are obtained from the 
+satisfaction of quantifier-free formulae. Therefore restricting the obtained to terms of the 
+foreground sort appearing in the goal will suffice as a satisfying model for the same goal.  
+
+The extensions package itself will contain various modules for extracting, accessing, and manipulating 
+such finite models. Since they are meant to be an explicit representation requiring constant inspection, the models 
+are not accessed through an API for basic read/update operations. They are simply wrapped in a class with logging 
+attributes.  
 &#34;&#34;&#34;</code></pre>
 </details>
 </section>
 <section>
 <h2 class="section-title" id="header-submodules">Sub-modules</h2>
 <dl>
-<dt><code class="name"><a title="naturalproofs.AnnotatedContext" href="AnnotatedContext.html">naturalproofs.AnnotatedContext</a></code></dt>
+<dt><code class="name"><a title="extensions.finitemodel" href="finitemodel.html">extensions.finitemodel</a></code></dt>
 <dd>
-<div class="desc"></div>
+<div class="desc"><p>This module defines the class FiniteModel representing finite models extracted from smt models witnessing a proof
+failure using the natural proofs …</p></div>
 </dd>
-<dt><code class="name"><a title="naturalproofs.decl_api" href="decl_api.html">naturalproofs.decl_api</a></code></dt>
+<dt><code class="name"><a title="extensions.finitemodel_utils" href="finitemodel_utils.html">extensions.finitemodel_utils</a></code></dt>
 <dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="naturalproofs.pfp" href="pfp.html">naturalproofs.pfp</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="naturalproofs.prover" href="prover.html">naturalproofs.prover</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="naturalproofs.prover_utils" href="prover_utils.html">naturalproofs.prover_utils</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="naturalproofs.proveroptions" href="proveroptions.html">naturalproofs.proveroptions</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="naturalproofs.uct" href="uct.html">naturalproofs.uct</a></code></dt>
-<dd>
-<div class="desc"></div>
-</dd>
-<dt><code class="name"><a title="naturalproofs.utils" href="utils.html">naturalproofs.utils</a></code></dt>
-<dd>
-<div class="desc"></div>
+<div class="desc"><p>Some utilities for manipulating finite models as defined in naturalproofs.extensions.finitemodel.</p></div>
 </dd>
 </dl>
 </section>
@@ -84,14 +78,8 @@ Package to create and use Natural Proofs solvers. Look at naturalproofs/tests fo
 <ul id="index">
 <li><h3><a href="#header-submodules">Sub-modules</a></h3>
 <ul>
-<li><code><a title="naturalproofs.AnnotatedContext" href="AnnotatedContext.html">naturalproofs.AnnotatedContext</a></code></li>
-<li><code><a title="naturalproofs.decl_api" href="decl_api.html">naturalproofs.decl_api</a></code></li>
-<li><code><a title="naturalproofs.pfp" href="pfp.html">naturalproofs.pfp</a></code></li>
-<li><code><a title="naturalproofs.prover" href="prover.html">naturalproofs.prover</a></code></li>
-<li><code><a title="naturalproofs.prover_utils" href="prover_utils.html">naturalproofs.prover_utils</a></code></li>
-<li><code><a title="naturalproofs.proveroptions" href="proveroptions.html">naturalproofs.proveroptions</a></code></li>
-<li><code><a title="naturalproofs.uct" href="uct.html">naturalproofs.uct</a></code></li>
-<li><code><a title="naturalproofs.utils" href="utils.html">naturalproofs.utils</a></code></li>
+<li><code><a title="extensions.finitemodel" href="finitemodel.html">extensions.finitemodel</a></code></li>
+<li><code><a title="extensions.finitemodel_utils" href="finitemodel_utils.html">extensions.finitemodel_utils</a></code></li>
 </ul>
 </li>
 </ul>

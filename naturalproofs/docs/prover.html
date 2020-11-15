@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.1" />
-<title>naturalproofs.prover API documentation</title>
+<title>prover API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>naturalproofs.prover</code></h1>
+<h1 class="title">Module <code>prover</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -107,6 +107,7 @@ class NPSolver:
             z3solver.add(instantiations)
             if_sat = _solver_check(z3solver)
             model = z3solver.model() if if_sat else None
+            terms = get_foreground_terms(instantiations, annctx=self.annctx)
             return NPSolution(if_sat=if_sat, model=model, fg_terms=terms, options=options)
         # Automatic instantiation modes
         # Set up initial values of variables
@@ -155,7 +156,7 @@ def _solver_check(z3solver):
 <section>
 <h2 class="section-title" id="header-classes">Classes</h2>
 <dl>
-<dt id="naturalproofs.prover.NPSolution"><code class="flex name class">
+<dt id="prover.NPSolution"><code class="flex name class">
 <span>class <span class="ident">NPSolution</span></span>
 <span>(</span><span>if_sat=None, model=None, fg_terms=None, depth=None, options=None)</span>
 </code></dt>
@@ -200,7 +201,7 @@ satisfiablity/unsatisfiability.<br>
         self.options = options</code></pre>
 </details>
 </dd>
-<dt id="naturalproofs.prover.NPSolver"><code class="flex name class">
+<dt id="prover.NPSolver"><code class="flex name class">
 <span>class <span class="ident">NPSolver</span></span>
 <span>(</span><span>annctx=&lt;naturalproofs.AnnotatedContext.AnnotatedContext object&gt;)</span>
 </code></dt>
@@ -261,6 +262,7 @@ and axioms &mdash; essentially defining a theory for the solver.<br>
             z3solver.add(instantiations)
             if_sat = _solver_check(z3solver)
             model = z3solver.model() if if_sat else None
+            terms = get_foreground_terms(instantiations, annctx=self.annctx)
             return NPSolution(if_sat=if_sat, model=model, fg_terms=terms, options=options)
         # Automatic instantiation modes
         # Set up initial values of variables
@@ -290,7 +292,7 @@ and axioms &mdash; essentially defining a theory for the solver.<br>
 </details>
 <h3>Methods</h3>
 <dl>
-<dt id="naturalproofs.prover.NPSolver.solve"><code class="name flex">
+<dt id="prover.NPSolver.solve"><code class="name flex">
 <span>def <span class="ident">solve</span></span>(<span>self, goal, lemmas=None)</span>
 </code></dt>
 <dd>
@@ -335,6 +337,7 @@ defined by the AnnotatedContext in self.annctx.<br>
         z3solver.add(instantiations)
         if_sat = _solver_check(z3solver)
         model = z3solver.model() if if_sat else None
+        terms = get_foreground_terms(instantiations, annctx=self.annctx)
         return NPSolution(if_sat=if_sat, model=model, fg_terms=terms, options=options)
     # Automatic instantiation modes
     # Set up initial values of variables
@@ -374,20 +377,15 @@ defined by the AnnotatedContext in self.annctx.<br>
 <ul></ul>
 </div>
 <ul id="index">
-<li><h3>Super-module</h3>
-<ul>
-<li><code><a title="naturalproofs" href="index.html">naturalproofs</a></code></li>
-</ul>
-</li>
 <li><h3><a href="#header-classes">Classes</a></h3>
 <ul>
 <li>
-<h4><code><a title="naturalproofs.prover.NPSolution" href="#naturalproofs.prover.NPSolution">NPSolution</a></code></h4>
+<h4><code><a title="prover.NPSolution" href="#prover.NPSolution">NPSolution</a></code></h4>
 </li>
 <li>
-<h4><code><a title="naturalproofs.prover.NPSolver" href="#naturalproofs.prover.NPSolver">NPSolver</a></code></h4>
+<h4><code><a title="prover.NPSolver" href="#prover.NPSolver">NPSolver</a></code></h4>
 <ul class="">
-<li><code><a title="naturalproofs.prover.NPSolver.solve" href="#naturalproofs.prover.NPSolver.solve">solve</a></code></li>
+<li><code><a title="prover.NPSolver.solve" href="#prover.NPSolver.solve">solve</a></code></li>
 </ul>
 </li>
 </ul>

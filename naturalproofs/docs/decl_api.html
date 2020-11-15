@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.1" />
-<title>naturalproofs.decl_api API documentation</title>
+<title>decl_api API documentation</title>
 <meta name="description" content="" />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
@@ -19,7 +19,7 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>naturalproofs.decl_api</code></h1>
+<h1 class="title">Module <code>decl_api</code></h1>
 </header>
 <section id="section-intro">
 <details class="source">
@@ -170,6 +170,16 @@ def get_vocabulary(annctx=default_annctx):
     return annctx.get_vocabulary_annotation()
 
 
+def get_uct_signature(funcdeclref, annctx=default_annctx):
+    &#34;&#34;&#34;
+    Returns the uct signature of the given function if tracked by annctx.
+    :param funcdeclref: z3.FuncDeclRef
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return: tuple of naturalproofs.uct.UCTSort or None
+    &#34;&#34;&#34;
+    return annctx.read_alias_annotation(funcdeclref)
+
+
 def get_decl_from_name(declname, annctx=default_annctx):
     &#34;&#34;&#34;
     Returns the declaration whose name is declname if it is tracked by annctx.  
@@ -216,7 +226,7 @@ def get_all_axioms(annctx=default_annctx):
 <section>
 <h2 class="section-title" id="header-functions">Functions</h2>
 <dl>
-<dt id="naturalproofs.decl_api.AddAxiom"><code class="name flex">
+<dt id="decl_api.AddAxiom"><code class="name flex">
 <span>def <span class="ident">AddAxiom</span></span>(<span>formal_params, body, annctx=&lt;naturalproofs.AnnotatedContext.AnnotatedContext object&gt;)</span>
 </code></dt>
 <dd>
@@ -255,7 +265,7 @@ take any parameters, the first argument is ().<br>
     annctx.add_axiom_annotation((formal_params, body))</code></pre>
 </details>
 </dd>
-<dt id="naturalproofs.decl_api.AddRecDefinition"><code class="name flex">
+<dt id="decl_api.AddRecDefinition"><code class="name flex">
 <span>def <span class="ident">AddRecDefinition</span></span>(<span>recdef, formal_params, body, annctx=&lt;naturalproofs.AnnotatedContext.AnnotatedContext object&gt;)</span>
 </code></dt>
 <dd>
@@ -301,7 +311,7 @@ is a z3.ExprRef object constructed from these constants and other declared/built
     annctx.add_recdef_annotation((recdef, formal_params, body))</code></pre>
 </details>
 </dd>
-<dt id="naturalproofs.decl_api.Const"><code class="name flex">
+<dt id="decl_api.Const"><code class="name flex">
 <span>def <span class="ident">Const</span></span>(<span>name, uct_sort, annctx=&lt;naturalproofs.AnnotatedContext.AnnotatedContext object&gt;)</span>
 </code></dt>
 <dd>
@@ -334,7 +344,7 @@ is a z3.ExprRef object constructed from these constants and other declared/built
     return z3const</code></pre>
 </details>
 </dd>
-<dt id="naturalproofs.decl_api.Consts"><code class="name flex">
+<dt id="decl_api.Consts"><code class="name flex">
 <span>def <span class="ident">Consts</span></span>(<span>names, uct_sort, annctx=&lt;naturalproofs.AnnotatedContext.AnnotatedContext object&gt;)</span>
 </code></dt>
 <dd>
@@ -368,7 +378,7 @@ is a z3.ExprRef object constructed from these constants and other declared/built
     return z3consts</code></pre>
 </details>
 </dd>
-<dt id="naturalproofs.decl_api.Function"><code class="name flex">
+<dt id="decl_api.Function"><code class="name flex">
 <span>def <span class="ident">Function</span></span>(<span>name, *uct_signature, annctx=&lt;naturalproofs.AnnotatedContext.AnnotatedContext object&gt;)</span>
 </code></dt>
 <dd>
@@ -402,7 +412,7 @@ is a z3.ExprRef object constructed from these constants and other declared/built
     return z3func</code></pre>
 </details>
 </dd>
-<dt id="naturalproofs.decl_api.RecFunction"><code class="name flex">
+<dt id="decl_api.RecFunction"><code class="name flex">
 <span>def <span class="ident">RecFunction</span></span>(<span>name, *uct_signature, annctx=&lt;naturalproofs.AnnotatedContext.AnnotatedContext object&gt;)</span>
 </code></dt>
 <dd>
@@ -427,7 +437,7 @@ is a z3.ExprRef object constructed from these constants and other declared/built
     return Function(name, *uct_signature, annctx=annctx)</code></pre>
 </details>
 </dd>
-<dt id="naturalproofs.decl_api.get_all_axioms"><code class="name flex">
+<dt id="decl_api.get_all_axioms"><code class="name flex">
 <span>def <span class="ident">get_all_axioms</span></span>(<span>annctx=&lt;naturalproofs.AnnotatedContext.AnnotatedContext object&gt;)</span>
 </code></dt>
 <dd>
@@ -447,7 +457,7 @@ is a z3.ExprRef object constructed from these constants and other declared/built
     return annctx.get_axiom_annotation()</code></pre>
 </details>
 </dd>
-<dt id="naturalproofs.decl_api.get_decl_from_name"><code class="name flex">
+<dt id="decl_api.get_decl_from_name"><code class="name flex">
 <span>def <span class="ident">get_decl_from_name</span></span>(<span>declname, annctx=&lt;naturalproofs.AnnotatedContext.AnnotatedContext object&gt;)</span>
 </code></dt>
 <dd>
@@ -470,7 +480,7 @@ is a z3.ExprRef object constructed from these constants and other declared/built
     return next((decl for decl in vocabulary if decl.name() == declname), None)</code></pre>
 </details>
 </dd>
-<dt id="naturalproofs.decl_api.get_recursive_definition"><code class="name flex">
+<dt id="decl_api.get_recursive_definition"><code class="name flex">
 <span>def <span class="ident">get_recursive_definition</span></span>(<span>recdef, alldefs=False, annctx=&lt;naturalproofs.AnnotatedContext.AnnotatedContext object&gt;)</span>
 </code></dt>
 <dd>
@@ -504,7 +514,29 @@ If the second argument is true, then all recursive definitions are returned.<br>
         return next((definition for definition in recdef_set if recdef == definition[0]), None)</code></pre>
 </details>
 </dd>
-<dt id="naturalproofs.decl_api.get_vocabulary"><code class="name flex">
+<dt id="decl_api.get_uct_signature"><code class="name flex">
+<span>def <span class="ident">get_uct_signature</span></span>(<span>funcdeclref, annctx=&lt;naturalproofs.AnnotatedContext.AnnotatedContext object&gt;)</span>
+</code></dt>
+<dd>
+<div class="desc"><p>Returns the uct signature of the given function if tracked by annctx.
+:param funcdeclref: z3.FuncDeclRef
+:param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+:return: tuple of naturalproofs.uct.UCTSort or None</p></div>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_uct_signature(funcdeclref, annctx=default_annctx):
+    &#34;&#34;&#34;
+    Returns the uct signature of the given function if tracked by annctx.
+    :param funcdeclref: z3.FuncDeclRef
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return: tuple of naturalproofs.uct.UCTSort or None
+    &#34;&#34;&#34;
+    return annctx.read_alias_annotation(funcdeclref)</code></pre>
+</details>
+</dd>
+<dt id="decl_api.get_vocabulary"><code class="name flex">
 <span>def <span class="ident">get_vocabulary</span></span>(<span>annctx=&lt;naturalproofs.AnnotatedContext.AnnotatedContext object&gt;)</span>
 </code></dt>
 <dd>
@@ -535,23 +567,19 @@ If the second argument is true, then all recursive definitions are returned.<br>
 <ul></ul>
 </div>
 <ul id="index">
-<li><h3>Super-module</h3>
-<ul>
-<li><code><a title="naturalproofs" href="index.html">naturalproofs</a></code></li>
-</ul>
-</li>
 <li><h3><a href="#header-functions">Functions</a></h3>
 <ul class="">
-<li><code><a title="naturalproofs.decl_api.AddAxiom" href="#naturalproofs.decl_api.AddAxiom">AddAxiom</a></code></li>
-<li><code><a title="naturalproofs.decl_api.AddRecDefinition" href="#naturalproofs.decl_api.AddRecDefinition">AddRecDefinition</a></code></li>
-<li><code><a title="naturalproofs.decl_api.Const" href="#naturalproofs.decl_api.Const">Const</a></code></li>
-<li><code><a title="naturalproofs.decl_api.Consts" href="#naturalproofs.decl_api.Consts">Consts</a></code></li>
-<li><code><a title="naturalproofs.decl_api.Function" href="#naturalproofs.decl_api.Function">Function</a></code></li>
-<li><code><a title="naturalproofs.decl_api.RecFunction" href="#naturalproofs.decl_api.RecFunction">RecFunction</a></code></li>
-<li><code><a title="naturalproofs.decl_api.get_all_axioms" href="#naturalproofs.decl_api.get_all_axioms">get_all_axioms</a></code></li>
-<li><code><a title="naturalproofs.decl_api.get_decl_from_name" href="#naturalproofs.decl_api.get_decl_from_name">get_decl_from_name</a></code></li>
-<li><code><a title="naturalproofs.decl_api.get_recursive_definition" href="#naturalproofs.decl_api.get_recursive_definition">get_recursive_definition</a></code></li>
-<li><code><a title="naturalproofs.decl_api.get_vocabulary" href="#naturalproofs.decl_api.get_vocabulary">get_vocabulary</a></code></li>
+<li><code><a title="decl_api.AddAxiom" href="#decl_api.AddAxiom">AddAxiom</a></code></li>
+<li><code><a title="decl_api.AddRecDefinition" href="#decl_api.AddRecDefinition">AddRecDefinition</a></code></li>
+<li><code><a title="decl_api.Const" href="#decl_api.Const">Const</a></code></li>
+<li><code><a title="decl_api.Consts" href="#decl_api.Consts">Consts</a></code></li>
+<li><code><a title="decl_api.Function" href="#decl_api.Function">Function</a></code></li>
+<li><code><a title="decl_api.RecFunction" href="#decl_api.RecFunction">RecFunction</a></code></li>
+<li><code><a title="decl_api.get_all_axioms" href="#decl_api.get_all_axioms">get_all_axioms</a></code></li>
+<li><code><a title="decl_api.get_decl_from_name" href="#decl_api.get_decl_from_name">get_decl_from_name</a></code></li>
+<li><code><a title="decl_api.get_recursive_definition" href="#decl_api.get_recursive_definition">get_recursive_definition</a></code></li>
+<li><code><a title="decl_api.get_uct_signature" href="#decl_api.get_uct_signature">get_uct_signature</a></code></li>
+<li><code><a title="decl_api.get_vocabulary" href="#decl_api.get_vocabulary">get_vocabulary</a></code></li>
 </ul>
 </li>
 </ul>

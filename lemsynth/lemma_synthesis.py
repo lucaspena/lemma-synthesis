@@ -1,5 +1,6 @@
 import os
 import subprocess
+import copy
 
 from z3 import *
 set_param('model.compact', False)
@@ -10,7 +11,7 @@ from lemsynth.lemsynth_utils import *
 from lemsynth.induction_constraints import generate_pfp_constraint
 
 from naturalproofs.prover import NPSolver
-from naturalproofs.extensions.finitemodel import extract_finite_model, add_fg_element_offset, get_fg_elements
+from naturalproofs.extensions.finitemodel import FiniteModel
 from naturalproofs.decl_api import get_vocabulary
 
 # Add constraints from each model into the given solver
@@ -193,23 +194,20 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, mod
             print(lemma)
         exit(0)
 
-    npmodel = npsolution.model
-    false_model_dict = extract_finite_model(npmodel, model_terms)
+    false_finitemodel = FiniteModel(npsolution.model, npsolution.fg_terms, annctx=annctx)
 
     use_cex_models = config_params.get('use_cex_models', True)
     cex_models = config_params.get('cex_models', [])
 
-    # TODO: below was computation for getting false model dict. that needs to be updated
-    # with new natural proof engine
-        
     # Adding offsets to make sure: (i) all elements in all models are positive (ii) true and false models do not overlap
     # Making the universe of the false model positive
-    false_model_fg_universe = get_fg_elements(false_model_dict)
+    false_model_fg_universe = false_finitemodel.get_fg_elements()
     non_negative_offset = min(false_model_fg_universe)
     if non_negative_offset >= 0:
         non_negative_offset = 0
     else:
-        false_model_dict = transform_fg_universe(false_model_dict, abs(non_negative_offset))
+        false_finitemodel.recompute_offset = True
+        false_finitemodel.add_fg_element_offset(abs(non_negative_offset))
     false_model_relative_offset = max(false_model_fg_universe) + abs(non_negative_offset) + 1
 
     # Add counterexample models to true models if use_cex_models is True
@@ -217,12 +215,17 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, mod
     if use_cex_models:
         cex_models_with_offset = []
         for cex_model in cex_models:
+            # Deepcopy the countermodels so the originals are not affected
+            cex_model_copy = copy.deepcopy(cex_model)
             # Make the universe of the model positive and shift the model by accumulated offset
-            cex_model_universe = get_fg_elements(cex_model)
+            cex_model_universe = cex_model_copy.get_fg_elements()
             non_negative_offset = min(cex_model_universe)
             if non_negative_offset >= 0:
                 non_negative_offset = 0
-            cex_model_with_offset = add_fg_element_offset(cex_model, abs(non_negative_offset) + accumulated_offset)
+                cex_model_with_offset = cex_model_copy
+            else:
+                cex_model_copy.recompute_offset = True
+                cex_model_with_offset = cex_model_copy.add_fg_element_offset(abs(non_negative_offset) + accumulated_offset)
             # Compute new accumulated offset
             accumulated_offset = max(cex_model_universe) + abs(non_negative_offset) + accumulated_offset + 1
             # Add model to cex_models_with_offset
@@ -232,7 +235,7 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, mod
 
     elems = config_params.get('elems', [])
 
-    all_models = cex_models + [false_model_dict]
+    all_models = [cex_model.finitemodel for cex_model in cex_models] + [false_finitemodel.finitemodel]
 
     vocab = get_vocabulary(annctx)
     if options.exclude_set_type_definitions_switch == 'on':
@@ -300,7 +303,11 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, mod
     else:
         proc = subprocess.Popen(['cvc4', '--lang=sygus2', out_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         cvc4_out, err = proc.communicate()
-        if cvc4_out == 'unknown\n':
+        if cvc4_out == '':
+            print(err)
+            return None
+        elif cvc4_out == 'unknown\n':
+            print('CVC4 SyGuS returns unknown. Exiting.')
             return None
         else:
             lemma = str(cvc4_out).split('\n')[1:][:-1]

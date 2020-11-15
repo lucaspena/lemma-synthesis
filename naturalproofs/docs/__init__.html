@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
 <meta name="generator" content="pdoc 0.9.1" />
-<title>proveroptions API documentation</title>
-<meta name="description" content="" />
+<title>__init__ API documentation</title>
+<meta name="description" content="Package to create and use Natural Proofs solvers. Look at naturalproofs/tests for examples." />
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/sanitize.min.css" integrity="sha256-PK9q560IAAa6WVRRh76LtCaI8pjTJ2z11v0miyNNjrs=" crossorigin>
 <link rel="preload stylesheet" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/11.0.1/typography.min.css" integrity="sha256-7l/o7C8jubJiy74VsKTidCy1yBkRtiUGbVkYBylBqUg=" crossorigin>
 <link rel="stylesheet preload" as="style" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/10.1.1/styles/github.min.css" crossorigin>
@@ -19,40 +19,17 @@
 <main>
 <article id="content">
 <header>
-<h1 class="title">Module <code>proveroptions</code></h1>
+<h1 class="title">Module <code>__init__</code></h1>
 </header>
 <section id="section-intro">
+<p>Package to create and use Natural Proofs solvers. Look at naturalproofs/tests for examples.</p>
 <details class="source">
 <summary>
 <span>Expand source code</span>
 </summary>
-<pre><code class="python"># This module defines an options class that will be used to configure a natural proofs solver.
-
-
-class Options:
-    &#34;&#34;&#34;
-    Class for options and default values to configure a natural proofs solver.  
-    Explanation of options:  
-    - instantiation_mode: generic instantiation config given as a defined constant  
-    --- fixed_depth: instantiate for &#39;depth&#39; number of rounds  
-    --- bounded_depth: instantiate until &#39;depth&#39; number of rounds, checking each time for provability  
-    --- infinite_depth: start at depth=1 and proceed to increase depth until proven  
-    --- manual_instantiation: specify what terms to instantiate with separately using the &#39;terms_to_instantiate&#39; option  
-    - depth: number of rounds for which quantifier instantiation is performed  
-    - terms_to_instantiate: when mode=manual, use only this set of terms to do instantiations  
-    &#34;&#34;&#34;
-    def __init__(self):
-        self.instantiation_mode = fixed_depth
-        self.depth = 1
-        self.terms_to_instantiate = None
-
-
-# Defined constants for options
-# instantiation_mode
-fixed_depth = 0
-bounded_depth = 1
-infinite_depth = 2
-manual_instantiation = 3</code></pre>
+<pre><code class="python">&#34;&#34;&#34;
+Package to create and use Natural Proofs solvers. Look at naturalproofs/tests for examples.  
+&#34;&#34;&#34;</code></pre>
 </details>
 </section>
 <section>
@@ -62,44 +39,6 @@ manual_instantiation = 3</code></pre>
 <section>
 </section>
 <section>
-<h2 class="section-title" id="header-classes">Classes</h2>
-<dl>
-<dt id="proveroptions.Options"><code class="flex name class">
-<span>class <span class="ident">Options</span></span>
-</code></dt>
-<dd>
-<div class="desc"><p>Class for options and default values to configure a natural proofs solver.<br>
-Explanation of options:<br>
-- instantiation_mode: generic instantiation config given as a defined constant<br>
-&mdash; fixed_depth: instantiate for 'depth' number of rounds<br>
-&mdash; bounded_depth: instantiate until 'depth' number of rounds, checking each time for provability<br>
-&mdash; infinite_depth: start at depth=1 and proceed to increase depth until proven<br>
-&mdash; manual_instantiation: specify what terms to instantiate with separately using the 'terms_to_instantiate' option<br>
-- depth: number of rounds for which quantifier instantiation is performed<br>
-- terms_to_instantiate: when mode=manual, use only this set of terms to do instantiations</p></div>
-<details class="source">
-<summary>
-<span>Expand source code</span>
-</summary>
-<pre><code class="python">class Options:
-    &#34;&#34;&#34;
-    Class for options and default values to configure a natural proofs solver.  
-    Explanation of options:  
-    - instantiation_mode: generic instantiation config given as a defined constant  
-    --- fixed_depth: instantiate for &#39;depth&#39; number of rounds  
-    --- bounded_depth: instantiate until &#39;depth&#39; number of rounds, checking each time for provability  
-    --- infinite_depth: start at depth=1 and proceed to increase depth until proven  
-    --- manual_instantiation: specify what terms to instantiate with separately using the &#39;terms_to_instantiate&#39; option  
-    - depth: number of rounds for which quantifier instantiation is performed  
-    - terms_to_instantiate: when mode=manual, use only this set of terms to do instantiations  
-    &#34;&#34;&#34;
-    def __init__(self):
-        self.instantiation_mode = fixed_depth
-        self.depth = 1
-        self.terms_to_instantiate = None</code></pre>
-</details>
-</dd>
-</dl>
 </section>
 </article>
 <nav id="sidebar">
@@ -108,13 +47,6 @@ Explanation of options:<br>
 <ul></ul>
 </div>
 <ul id="index">
-<li><h3><a href="#header-classes">Classes</a></h3>
-<ul>
-<li>
-<h4><code><a title="proveroptions.Options" href="#proveroptions.Options">Options</a></code></h4>
-</li>
-</ul>
-</li>
 </ul>
 </nav>
 </main>
