@@ -6,19 +6,15 @@ from lemsynth.lemsynth_utils import *
 from naturalproofs.AnnotatedContext import default_annctx
 from naturalproofs.pfp import make_pfp_formula
 from naturalproofs.prover import NPSolver
-
-from naturalproofs.decl_api import Const
-from naturalproofs.uct import fgsort
 from naturalproofs.extensions.finitemodel import FiniteModel
 
 
-def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, model_terms, goal, name, grammar_string, config_params, annctx=default_annctx):
-
+def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, lemma_terms, goal, name, grammar_string, config_params, annctx=default_annctx):
     # Extract relevant parameters for running the verification-synthesis engine from synth_dict
     valid_lemmas = set()
     invalid_lemmas = []
     use_cex_models = config_params.get('use_cex_models', True)
-    cex_models = config_params.get('cex_models',[])
+    cex_models = config_params.get('cex_models', [])
 
     # check if goal is provable on its own using induction
     pfp_of_goal = make_pfp_formula(goal)
@@ -33,7 +29,7 @@ def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, model_terms, 
 
     # continuously get valid lemmas until VC has been proven
     while True:
-        lemma = getSygusOutput(axioms_python, valid_lemmas, unfold_recdefs_python, lemma_args, model_terms, goal, name, grammar_string, config_params, annctx)
+        lemma = getSygusOutput(axioms_python, valid_lemmas, unfold_recdefs_python, lemma_args, lemma_terms, goal, name, grammar_string, config_params, annctx)
         if lemma is None:
             exit('Instance failed.')
 
@@ -68,7 +64,9 @@ def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, model_terms, 
                     print('This is a currently known limitation of the tool. Consider restricting your grammar to have terms of lesser height.')
                 exit('Instance failed.')
             else:
-                # Using bag-of-lemmas + prefetching formulation, or the reproposed lemma is a valid one. Continue and hope for the best.
+                # Using bag-of-lemmas + prefetching formulation, or the reproposed lemma is a valid one.
+                # Continue and hope for the best.
+                print('Countermodels not enabled. Retrying lemma synthesis.')
                 continue
         pfp_lemma = make_pfp_formula(z3py_lemma)
         npsolution = npsolver.solve(pfp_lemma)
@@ -77,12 +75,10 @@ def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, model_terms, 
             invalid_lemmas = invalid_lemmas + [z3py_lemma]
             if use_cex_models:
                 npmodel = npsolution.model
-                cex_model = FiniteModel(npmodel, model_terms, annctx=annctx)
+                cex_model = FiniteModel(npmodel, lemma_terms, annctx=annctx)
                 cex_models = cex_models + [cex_model]
         else:
             valid_lemmas.add((tuple(lemma_args), z3py_lemma))
-            # check if new valid lemma helped prove original VC
-            # TODO: currently this check is done in getSygusOutput. Should be moved here
             lemma_solution = npsolver.solve(goal, valid_lemmas)
             if not lemma_solution.if_sat:
                 print('Original goal is proved. Lemmas used to prove goal:')
