@@ -1,6 +1,3 @@
-# Only importing this for writing this file as a test
-import unittest
-
 import importlib_resources
 
 import z3
@@ -56,11 +53,3 @@ grammar_string = importlib_resources.read_text('experiments', 'grammar_{}.sy'.fo
 config_params = {}
 
 solveProblem(axioms_python, unfold_recdefs_python, lemma_grammar_args, lemma_grammar_terms, goal, name, grammar_string, config_params)
-
-class DlistListTest(unittest.TestCase):
-    def test1(self):
-        self.assertTrue(npsolution.if_sat)
-
-
-if __name__ == '__main__':
-    unittest.main()
