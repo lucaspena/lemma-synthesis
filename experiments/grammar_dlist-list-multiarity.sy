@@ -6,7 +6,8 @@
            ((Start Bool) (I Int))
 
            ((Start Bool
-                   ((lst I I) (dlst I I)))
+                  ((=> Start Start)
+                   (lst I I) (dlst I I)))
             (I Int (x y nil
                    (nxt I)
                    (prv I))))
