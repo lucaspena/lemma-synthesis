@@ -119,6 +119,13 @@ def AddRecDefinition(recdef, formal_params, body, annctx=default_annctx):
     :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
     :return: None
     """
+    if isinstance(formal_params, tuple):
+        for param in formal_params:
+            if not is_var_decl(param):
+                raise TypeError('All formal parameters must be variables')
+    else:
+        if not is_var_decl(formal_params):
+            raise TypeError('All formal parameters must be variables')
     if not isinstance(formal_params, tuple) and isinstance(formal_params, z3.ExprRef):
         # Only one formal parameter
         formal_params = (formal_params,)
@@ -147,6 +154,13 @@ def AddAxiom(formal_params, body, annctx=default_annctx):
     :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
     :return: None  
     """
+    if isinstance(formal_params, tuple):
+        for param in formal_params:
+            if not is_var_decl(param):
+                raise TypeError('All formal parameters must be variables')
+    else:
+        if not is_var_decl(formal_params):
+            raise TypeError('All formal parameters must be variables')
     if not isinstance(formal_params, tuple) and isinstance(formal_params, z3.ExprRef):
         # Only one formal parameter
         formal_params = (formal_params,)
