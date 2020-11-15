@@ -17,8 +17,11 @@ nil = Const('nil', fgsort)
 nxt = Function('nxt', fgsort, fgsort)
 lseg = RecFunction('lseg', fgsort, fgsort, boolsort)
 cyclic = RecFunction('cyclic', fgsort, boolsort)
-AddRecDefinition(lseg, (x, y) , If(x == y, True, lseg(nxt(x), y)))
-AddRecDefinition(cyclic, x, And(x != nil, lseg(nxt(x), x)))
+AddRecDefinition(lseg, (x, y) , If(x == y, True,
+                                   If(x == nil, False,
+                                      lseg(nxt(x), y))))
+AddRecDefinition(cyclic, x, If(x == nil, False, lseg(nxt(x), x)))
+AddAxiom((), nxt(nil) == nil)
 
 # Problem parameters
 goal = Implies(cyclic(x), cyclic(nxt(x)))
