@@ -26,6 +26,6 @@ def generate_pfp_constraint(rec_funcdeclref, lemma_args, finite_model, smt_simpl
 def _eval_vars(formula, finite_model):
     # Construct transformation condition/operation pairs for variables of different sorts
     # Handling all sorts uniformly for now
-    cond = lambda expr: expr.decl().arity() == 0
+    cond = lambda expr: expr.decl().arity() == 0 and uct.get_uct_sort(expr) is not None
     op = lambda expr: finitemodel.recover_value(finite_model[finitemodel.model_key_repr(expr.decl())][()], uct.get_uct_sort(expr))
     return nputils.transform_expression(formula, [(cond, op)])
