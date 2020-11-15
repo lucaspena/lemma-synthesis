@@ -5,7 +5,7 @@ from lemsynth.utils import translateLemma
 import lemsynth.options as options
 
 from naturalproofs.AnnotatedContext import default_annctx
-from naturalproofs.decl_api import is_var_decl, get_recursive_definition, get_vocabulary
+from naturalproofs.decl_api import is_var_decl, get_recursive_definition
 from naturalproofs.pfp import make_pfp_formula
 from naturalproofs.prover import NPSolver
 import naturalproofs.proveroptions as proveroptions
@@ -49,8 +49,6 @@ def solveProblem(lemma_grammar_args, lemma_grammar_terms, goal, name, grammar_st
         rhs_lemma = translateLemma(lemma[0], lemma_grammar_args, addl_decls, swap_fcts, replace_fcts, annctx)
         index = int(lemma[1][-2])
         recs = get_recursive_definition(None, True)
-        vocab = get_vocabulary(annctx)
-        vocab_dict = {func.name(): func for func in vocab}
         lhs = sorted(recs, key=lambda x: x[0].name())[index][0]
         lhs_arity = lhs.arity()
         lhs_lemma_args = tuple(lemma_grammar_args[:lhs_arity])

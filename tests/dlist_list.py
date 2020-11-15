@@ -23,9 +23,6 @@ AddRecDefinition(dlst, x, If(x == nil, True,
 # Problem parameters
 goal = Implies(dlst(x), Implies(x == 0, lst(x)))
 
-axioms_python = []
-unfold_recdefs_python = []
-
 # parameters representing the grammar for synth-fun and
 # terms on which finite model is extracted
 # TODO: extract this automatically from grammar_string
