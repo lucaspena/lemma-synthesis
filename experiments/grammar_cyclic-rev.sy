@@ -4,10 +4,12 @@
            ((Start Bool) (BLeaf Bool) (Loc Int) (LocLeaf Int))
 
            ((Start Bool
-                   (BLeaf
+                  (BLeaf
                   (=> BLeaf BLeaf)))
            (BLeaf Bool
-                  ((cyclic Loc)
+                  ((not (= BLeaf BLeaf))
+                  (= BLeaf BLeaf)
+                  (cyclic Loc)
                   (lseg Loc Loc)))
            (Loc Int (LocLeaf
                     (nxt LocLeaf)))
