@@ -200,7 +200,7 @@ def is_var_decl(exprref, annctx=default_annctx):
     """
     if not isinstance(exprref, z3.ExprRef):
         return None
-    if exprref.decl().arity != 0:
+    if exprref.decl().arity() != 0:
         return None
     if not annctx.is_tracked_alias(exprref.decl()):
         return None
