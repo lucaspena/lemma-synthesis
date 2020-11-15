@@ -47,6 +47,33 @@ def Consts(names, uct_sort, annctx=default_annctx):
     return z3consts
 
 
+def Var(name, uct_sort, annctx=default_annctx):
+    """
+    Declare a variable with the given name and uct sort.  
+    :param name: string  
+    :param uct_sort: naturalproofs.uct.UCTSort  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return: z3.ExprRef  
+    """
+    z3const = Const(name, uct_sort, annctx)
+    annctx.add_variable_annotation(z3const)
+    return z3const
+
+
+def Vars(names, uct_sort, annctx=default_annctx):
+    """
+    Declare a list of variables.  
+    :param names: string containing all the names separated by a space  
+    :param uct_sort: naturalproofs.uct.UCTSort  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return: list of z3.ExprRef  
+    """
+    z3consts = Consts(names, uct_sort, annctx)
+    for z3const in z3consts:
+        annctx.add_variable_annotation(z3const)
+    return z3consts
+
+
 def Function(name, *uct_signature, annctx=default_annctx):
     """
     Declare an uninterpreted function symbol. The signature is given as input-sort, input-sort...output-sort  
@@ -163,11 +190,22 @@ def get_decl_from_name(declname, annctx=default_annctx):
     return next((decl for decl in vocabulary if decl.name() == declname), None)
 
 
+def is_const(exprref, annctx=default_annctx):
+    """
+    Determines if the given expression is a constant tracked by annctx, or a variable tracked by annctx. Returns None 
+    if neither is true.  
+    :param exprref: z3.ExprRef  
+    :param annctx: naturalproofs.AnnnotatedContext.AnnotatedContext  
+    :return: bool or None  
+    """
+    return exprref in annctx.get_variable_annotation()
+
+
 def get_recursive_definition(recdef, alldefs=False, annctx=default_annctx):
     """
     Looks up the definition of the function symbol from the set of recursive definitions in the annctx context.
     Returns None if no definition exists in the context.  
-    If the second argument is true, then all recursive definitions are returned.  
+    If the alldefs is true, then all recursive definitions are returned.  
     :param recdef: z3.FuncDeclRef  
     :param alldefs: bool  
     :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  

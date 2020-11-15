@@ -10,15 +10,17 @@ class AnnotatedContext:
     Class with annotations about various functions.  
     Current annotations:  
     - alias-annotation: keeps track of an 'alias' for the domain/range sorts of various functions.  
-    - Vocabulary-annotation: tracks all the uninterpreted functions and constants.  
+    - Vocabulary-annotation: tracks all the uninterpreted functions and constant declarations (in smt).  
     - Recdef-annotation: tracks all the recursively defined functions and their definitions.  
     - Axiom-annotation: tracks all the axioms.  
+    - Variable-annotation: tracks which tracked declarations are 'variables' versus 'constants' in a user-facing sense.  
     """
     def __init__(self):
         self.__alias_annotation__ = dict()
         self.__vocabulary_annotation__ = set()
         self.__recdef_annotation__ = set()
         self.__axiom_annotation__ = set()
+        self.__variable_annotation__ = set()
 
     # Functions to manipulate __alias_annotation__
     def read_alias_annotation(self, funcdeclref):
@@ -129,6 +131,23 @@ class AnnotatedContext:
         :return: None  
         """
         self.__axiom_annotation__.add(annotation)
+
+    # Functions to manipulate __variable_annotation__
+    def get_variable_annotation(self):
+        """
+        Returns all the variables tracked by self.  
+        :return: set of z3.ExprRef  
+        """
+        return self.__variable_annotation__
+
+    def add_variable_annotation(self, annotation):
+        """
+        Adds an annotation to the __variable_annotation__ in self. Each variable is a z3.ExprRef that is tracked by 
+        __alias_annotation__.  
+        :param annotation: z3.ExprRef  
+        :return: None  
+        """
+        self.__variable_annotation__.add(annotation)
 
 
 # Default annotated context. Only one context needed currently.
