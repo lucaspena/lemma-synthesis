@@ -105,21 +105,20 @@ def sygusBigModelEncoding(models, vocab, set_defs):
     return set_encodings + m.sexpr()
 
 # Generate constraints corresponding to false model for SyGuS
-def generateFalseConstraints(model_dict, deref, const, fcts_z3):
+def generateFalseConstraints(model, lemma_args):
     constraints = ''
-    const_values = ' '.join([str(modelDictEval(model_dict, constant_symbol)) for constant_symbol in const])
-    for arg in const + deref:
+    for arg in lemma_args:
         # In general, arg will range over the tuples of instantiated terms
         # TODO: check if this part generalises to k-ary terms. modelDictEval takes k-ary terms
-        arg_value = modelDictEval(model_dict, arg)
+        arg_value = model.smtmodel.eval(arg, model_completion=True).as_long() + model.offset
         curr = ''
-        recs = fcts_z3['recpreds-loc_1_int_bool']
-        for i in range(len(recs)):
-            curr_constraint = '(=> (= rswitch {0}) (not (=> ({1} {2}) (lemma {2} {3}))))\n'.format(i, str(recs[i]), arg_value, const_values)
-            curr = curr + curr_constraint
-        constraints = constraints + '(and {0})\n'.format(curr)
+        # recs = fcts_z3['recpreds-loc_1_int_bool']
+        # for i in range(len(recs)):
+        #     curr_constraint = '(=> (= rswitch {0}) (not (=> ({1} {2}) (lemma {2} {3}))))\n'.format(i, str(recs[i]), arg_value, const_values)
+        #     curr = curr + curr_constraint
+        # constraints = constraints + '(and {0})\n'.format(curr)
     out = '(constraint (or {0}))'.format(constraints)
-    return out
+    return ''
 
 # Old implementation that uses false_model_z3 instead of false_model_dict
 # def generateFalseConstraints(model_dict, deref, const):
@@ -186,7 +185,7 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, lem
     # Also works because the lemma for the current class of examples is not going to use any terms that have not already been explicitly computed.
     # One fix is to evalaute all terms within the false model into itself. Hopefully that can be done easily.
     npsolver = NPSolver()
-    npsolution = npsolver.solve(vc)
+    npsolution = npsolver.solve(vc, lemmas)
     if not npsolution.if_sat:
         # Lemmas generated up to this point are useful. Exit.
         print('Lemmas used to prove original vc:')
@@ -263,8 +262,7 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, lem
             out.write('\n')
         out.write('\n')
         out.write(';; constraints from false model\n')
-        # false_constraints = generateFalseConstraints(false_model_dict, deref, lemma_args, fcts_z3)
-        false_constraints = ''
+        false_constraints = generateFalseConstraints(false_finitemodel, lemma_args)
         out.write(false_constraints)
         out.write('\n')
         out.write('\n')
