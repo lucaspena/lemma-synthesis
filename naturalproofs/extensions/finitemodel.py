@@ -30,6 +30,11 @@ from naturalproofs.uct import fgsort, fgsetsort, intsort, intsetsort, boolsort
 from naturalproofs.decl_api import get_vocabulary, get_uct_signature
 from naturalproofs.extensions.finitemodel_utils import transform_fg_universe, collect_fg_universe
 
+# Begin of hack
+# TODO: Remove hack once z3-solver is updated on pypi
+from naturalproofs.extensions.finitemodel_utils import modelref_hack_modelref_deepcopy
+# End of hack
+
 
 class FiniteModel:
     def __init__(self, smtmodel, terms, vocabulary=None, annctx=default_annctx):
@@ -97,6 +102,11 @@ class FiniteModel:
         self.extraction_terms = subterm_closure
         # Caching attributes
         self.recompute_offset = True
+
+        # Begin of to fix buggy deepcopy in z3py
+        # TODO: remove hack once z3-solver is updated on pypi
+        smtmodel.__deepcopy__ = modelref_hack_modelref_deepcopy
+        # End of hack
 
     # Some common functions on finite models
     def get_fg_elements(self):
