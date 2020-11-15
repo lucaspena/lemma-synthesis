@@ -1,5 +1,5 @@
 from z3 import *
-from lemsynth.lemsynth_utils import *
+from lemsynth.utils import *
 import itertools
 import random
 

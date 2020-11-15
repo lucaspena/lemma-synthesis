@@ -43,18 +43,19 @@ npsolution = npsolver.solve(goal, lemmas)
 axioms_python = []
 unfold_recdefs_python = []
 
-# must change name of bound variables in lemma arguments
+# parameters representing the grammar for synth-fun
+# TODO: extract this automatically from grammar_string
 v = Var('v', fgsort)
-lemma_args = [v, nil]
+lemma_grammar_args = [v, nil]
+lemma_grammar_terms = {v, nil}
 
-model_terms = [x]
 
 name = 'dlist-list'
 grammar_string = importlib_resources.read_text('experiments', 'grammar_{}.sy'.format(name))
 
 config_params = {}
 
-solveProblem(axioms_python, unfold_recdefs_python, lemma_args, model_terms, goal, name, grammar_string, config_params)
+solveProblem(axioms_python, unfold_recdefs_python, lemma_grammar_args, lemma_grammar_terms, goal, name, grammar_string, config_params)
 
 class DlistListTest(unittest.TestCase):
     def test1(self):

@@ -20,9 +20,10 @@ class NPSolution:
         Explanation of attributes:  
         - if_sat (bool): if there exists a satisfying model under the given configuration.  
         - model (z3.ModelRef or None): satisfying model if exists.  
-        - fg_terms (set of z3.ExprRef): logging attribute. Set of foreground terms in the formula given to the smt
-                                        solver. A finite model can be extracted over these terms that preserves
-                                        satisfiablity/unsatisfiability.  
+        - fg_terms (set of z3.ExprRef): logging attribute. Set of 'tracked' foreground terms in the formula given to 
+        the smt solver. 'Tracked' refers to the fact that a finite model can be extracted over these terms that 
+        preserves the failure of the proof attempt. Usually this is the set of all foreground terms in the 
+        quantifier-free formula given to the solver at the end of all instantiations.  
         - depth (int): depth at which the solution object was created. Applicable when instantiation mode is bounded depth.  
         - options (proveroptions.Options): logging attribute. Options used to configure the solver.  
         """
@@ -63,7 +64,9 @@ class NPSolver:
         recdef_unfoldings = make_recdef_unfoldings(recdefs)
         # Add them to the set of axioms and lemmas to instantiate
         axioms = get_all_axioms(self.annctx)
-        fo_abstractions = axioms | recdef_unfoldings | (lemmas if lemmas is not None else set())
+        if lemmas is None:
+            lemmas = set()
+        fo_abstractions = axioms | recdef_unfoldings | lemmas
         # Negate the goal
         neg_goal = z3.Not(goal)
         # Create a solver object and add the goal negation to it
@@ -82,6 +85,17 @@ class NPSolver:
             terms = get_foreground_terms(instantiations, annctx=self.annctx)
             return NPSolution(if_sat=if_sat, model=model, fg_terms=terms, options=options)
         # Automatic instantiation modes
+        # Ignore lemmas strategy at depth one
+        if options.instantiation_mode == proveroptions.depth_one_untracked_lemma_instantiation:
+            conservative_fo_abstractions = axioms | recdef_unfoldings
+            tracked_instantiations = instantiate(conservative_fo_abstractions, terms)
+            z3solver.add(tracked_instantiations)
+            tracked_terms = get_foreground_terms(tracked_instantiations, annctx=self.annctx)
+            untracked_instantiations = instantiate(lemmas, tracked_terms)
+            z3solver.add(untracked_instantiations)
+            if_sat = _solver_check(z3solver)
+            model = z3solver.model() if if_sat else None
+            return NPSolution(if_sat=if_sat, model=model, fg_terms=tracked_terms, options=options)
         # Set up initial values of variables
         depth_counter = 0
         # Keep track of formulae produced by instantiation

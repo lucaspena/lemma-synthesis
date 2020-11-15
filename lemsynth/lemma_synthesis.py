@@ -1,4 +1,3 @@
-import os
 import subprocess
 import copy
 import itertools
@@ -7,17 +6,20 @@ from z3 import *
 set_param('model.compact', False)
 
 import lemsynth.options as options
-from lemsynth.true_models import *
-from lemsynth.lemsynth_utils import *
+import lemsynth.true_models
 from lemsynth.induction_constraints import generate_pfp_constraint
 
+from naturalproofs.decl_api import get_uct_signature, get_recursive_definition
 from naturalproofs.prover import NPSolver
+import naturalproofs.proveroptions as proveroptions
+from naturalproofs.extensions.finitemodel import recover_value
 from naturalproofs.extensions.finitemodel import FiniteModel
 from naturalproofs.decl_api import get_vocabulary, is_var_decl
 
+
 # Add constraints from each model into the given solver
 # Look through model's function entries and adds each input-output constraint
-def modelToSolver(model, vocab, sol):
+def modelToSolver(model, vocab, sol, annctx):
     for fct in vocab:
         arity = fct.arity()
         if arity == 0:
@@ -26,13 +28,11 @@ def modelToSolver(model, vocab, sol):
             continue
         else:
             fct_name = fct.name()
+            uct_signature = get_uct_signature(fct, annctx)
             for input_arg in model[fct_name].keys():
                 output_value = model[fct_name][input_arg]
                 if isinstance(output_value, set):
-                    # This step is slightly wrong. We do not know what the intended sort of the output value set's elements is.
-                    # We are assuming integers by default, because that is the only thing being supported. Perhaps booleans. Nothing that cannot be distinguished.
-                    # This is taking the implementation deeper into a territory where it will be hard to distinguish sorts implemented by the same python type.
-                    output_value_converted = getZ3SetConstEncoding('int', output_value)
+                    output_value_converted = recover_value(output_value, uct_signature[-1])
                 else:
                     output_value_converted = output_value
 
@@ -71,11 +71,11 @@ def getHeader(fct, fct_range):
 def translateModelsSets(models, set_defs):
     out = ''
     for fct in set_defs:
+        fct_name = fct.name()
         fct_range = 'Set ' + str(fct.range().domain())
         curr_fct = getHeader(fct, fct_range) + '\n'
         body = ''
         for model in models:
-            fct_name = fct.name()
             curr_model_body = ''
             for elt in model[fct_name]:
                 args = translateArgs(elt)
@@ -90,127 +90,113 @@ def translateModelsSets(models, set_defs):
         out += curr_fct
     return out
 
+
 # Generate single model from a given list of models
 # Returns the definitions for functions and recdefs.
 # TODO: consider not using z3 for this and just generating the definitions using python code
-# TODO - VERY IMPORTANT: subtle issue here. The true models' entries are
-#  actually integers, whereas the false model's entries are Z3 types like
-#  IntNumRef, etc. Must fix this during false model dict generation.
-def sygusBigModelEncoding(models, vocab, set_defs):
+def sygusBigModelEncoding(models, vocab, set_defs, annctx):
     sol = Solver()
     for model in models:
-        modelToSolver(model, vocab, sol)
+        modelToSolver(model, vocab, sol, annctx)
     sol.check()
     m = sol.model()
     set_encodings = translateModelsSets(models, set_defs)
     return set_encodings + m.sexpr()
 
+
 # Generate constraints corresponding to false model for SyGuS
-def generateFalseConstraints(model, lemma_args, terms):
-    const = [arg for arg in lemma_args if not is_var_decl(arg)]
+def generateFalseConstraints(model, lemma_args, terms, annctx):
+    const = [arg for arg in lemma_args if not is_var_decl(arg, annctx)]
     const_values = ' '.join([str(model.smtmodel.eval(cs, model_completion=True).as_long() + model.offset) for cs in const])
     constraints = ''
     lemma_arity = len(lemma_args) - len(const)
-    eval_terms = { model.smtmodel.eval(term, model_completion=True).as_long() + model.offset for term in terms }
+    eval_terms = {model.smtmodel.eval(term, model_completion=True).as_long() + model.offset for term in terms}
     args = itertools.product(eval_terms, repeat=lemma_arity)
     for arg in args:
-        # In general, arg will range over the tuples of instantiated terms
-        # TODO: check if this part generalises to k-ary terms. modelDictEval takes k-ary terms
         curr = ''
-        recs = set(map(lambda x : x[0], get_recursive_definition(None, True)))
+        recs = set(map(lambda x: x[0], get_recursive_definition(None, True, annctx)))
         recs = sorted(recs, key=lambda x: x.name())
-        arg_str = ' '.join([str(elt) for elt in arg])
+        arg_str = [str(elt) for elt in arg]
         for i in range(len(recs)):
-            arity = recs[i].arity()
+            rec_arity = recs[i].arity()
             rswitch = '(= rswitch {})'.format(i)
-            lhs = '({} {})'.format(recs[i].name(), arg_str)
-            rhs = '(lemma {} {})'.format(arg_str, const_values)
+            # Assuming first 'arity' arguments of lemma variables are arguments for recursive definition
+            lhs = '({} {})'.format(recs[i].name(), ' '.join(arg_str[:rec_arity]))
+            rhs = '(lemma {} {})'.format(' '.join(arg_str), const_values)
             curr_constraint = '(=> {} (not (=> {} {})))\n'.format(rswitch, lhs, rhs)
             curr = curr + curr_constraint
         constraints = constraints + '(and {})\n'.format(curr)
     out = '(constraint (or {}))'.format(constraints)
     return out
 
-# Old implementation that uses false_model_z3 instead of false_model_dict
-# def generateFalseConstraints(model_dict, deref, const):
+
+# # Generate constraints corresponding to one true model for SyGuS
+# def generateTrueConstraints(model, const, fcts_z3):
 #     constraints = ''
-#     # Must convert result of model.eval using as_string() because returned value is a Z3 type like IntNumRef
-#     const_values = ' '.join([model_z3.eval(constant_symbol, model_completion=True).as_string() for constant_symbol in const])
-#     for arg in const + deref:
-#         # In general, arg will range over the tuples of instantiated terms
-#         arg_value = model_z3.eval(arg, model_completion=True)
-#         constraints = constraints + '(not (lemma {0} {1}))\n'.format(arg_value, const_values)
-#     out = '(constraint (or {0}))'.format(constraints)
+#     const_values = ' '.join([str(modelDictEval(model, constant_symbol)) for constant_symbol in const])
+#     elems = model['elems']
+#     for elem in elems:
+#         # TODO: only one universally quantified variable in desired lemma for now
+#         recs = fcts_z3['recpreds-loc_1_int_bool']
+#         for i in range(len(recs)):
+#             curr_constraint = '(=> (= rswitch {0}) (=> ({1} {2}) (lemma {2} {3})))\n'.format(i, str(recs[i]), elem, const_values)
+#             constraints = constraints + curr_constraint
+#     out = '(constraint (and {0}))\n'.format(constraints)
+#     return out
+# 
+# # Generate constraints corresponding to all true models for SyGuS
+# def generateAllTrueConstraints(models, const, fcts_z3):
+#     out = ''
+#     for model in models:
+#         out = out + generateTrueConstraints(model, const, fcts_z3)
 #     return out
 
-# Generate constraints corresponding to one true model for SyGuS
-def generateTrueConstraints(model, const, fcts_z3):
-    constraints = ''
-    const_values = ' '.join([str(modelDictEval(model, constant_symbol)) for constant_symbol in const])
-    elems = model['elems']
-    for elem in elems:
-        # TODO: only one universally quantified variable in desired lemma for now
-        recs = fcts_z3['recpreds-loc_1_int_bool']
-        for i in range(len(recs)):
-            curr_constraint = '(=> (= rswitch {0}) (=> ({1} {2}) (lemma {2} {3})))\n'.format(i, str(recs[i]), elem, const_values)
-            constraints = constraints + curr_constraint
-    out = '(constraint (and {0}))\n'.format(constraints)
-    return out
 
-# Generate constraints corresponding to all true models for SyGuS
-def generateAllTrueConstraints(models, const, fcts_z3):
-    out = ''
-    for model in models:
-        out = out + generateTrueConstraints(model, const, fcts_z3)
-    return out
-
-def generateCexConstraints(model, lemma_args):
+def generateCexConstraints(model, lemma_args, annctx):
     constraints = ''
-    recs = set(map(lambda x : x[0], get_recursive_definition(None, True)))
+    recs = set(x[0] for x in get_recursive_definition(None, True, annctx))
     recs = sorted(recs, key=lambda x: x.name())
     # TODO: NOTE: only one universally quantified variable in desired lemma for now
     for i in range(len(recs)):
-        pfp_formula = generate_pfp_constraint(recs[i], lemma_args, model).sexpr()
+        pfp_formula = generate_pfp_constraint(recs[i], lemma_args, model, annctx).sexpr()
         curr_constraint = '(=> (= rswitch {0}) {1})'.format(i, pfp_formula)
         constraints = constraints + curr_constraint
     out = '(constraint (and {0}))\n'.format(constraints)
     return out
 
-# Generate constraintes corresponding to counterexample models
-def generateAllCexConstraints(models, lemma_args):
+
+# Generate constraints corresponding to counterexample models
+def generateAllCexConstraints(models, lemma_args, annctx):
     out = ''
     for model in models:
-        out = out + generateCexConstraints(model, lemma_args)
+        out = out + generateCexConstraints(model, lemma_args, annctx)
     return out
 
 
 # write output to a file that can be parsed by CVC4 SyGuS
-def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, lemma_terms, vc, problem_instance_name, grammar_string, config_params, annctx):
+def getSygusOutput(axioms_python, unfold_recdefs_python, lemmas, lemma_args, vc, problem_instance_name, grammar_string, config_params, annctx):
     # Make log folder if it does not exist already
     os.makedirs(options.log_file_path, exist_ok=True)
 
     out_file = '{}/out_{}.sy'.format(options.log_file_path, problem_instance_name)
 
-    # TODO: false model currently does not have an 'elems' entry. It is not complete either.
-    # However, it works because we only need the false model to provide us with valuations of the dereferenced terms.
-    # Also works because the lemma for the current class of examples is not going to use any terms that have not already been explicitly computed.
-    # One fix is to evalaute all terms within the false model into itself. Hopefully that can be done easily.
-    npsolver = NPSolver()
-    npsolution = npsolver.solve(vc, lemmas)
-    if not npsolution.if_sat:
+    vcsolver = NPSolver()
+    vcsolver.options.instantiation_mode = proveroptions.depth_one_untracked_lemma_instantiation
+    vc_npsolution = vcsolver.solve(vc, lemmas)
+    if not vc_npsolution.if_sat:
         # Lemmas generated up to this point are useful. Exit.
         print('Lemmas used to prove original vc:')
         for lemma in lemmas:
             print(lemma[1])
         exit(0)
 
-    fg_terms = npsolution.fg_terms
-    false_finitemodel = FiniteModel(npsolution.model, fg_terms, annctx=annctx)
+    fg_terms = vc_npsolution.fg_terms
+    false_finitemodel = FiniteModel(vc_npsolution.model, fg_terms, annctx=annctx)
 
     use_cex_models = config_params.get('use_cex_models', True)
     cex_models = config_params.get('cex_models', [])
 
-    # Adding offsets to make sure: (i) all elements in all models are positive (ii) true and false models do not overlap
+    # Adding offsets to make sure: (i) all elements in all models are positive (ii) models do not overlap
     # Making the universe of the false model positive
     false_model_fg_universe = false_finitemodel.get_fg_elements()
     non_negative_offset = min(false_model_fg_universe)
@@ -227,20 +213,17 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, lem
         cex_models_with_offset = []
         for cex_model in cex_models:
             # Deepcopy the countermodels so the originals are not affected
-            cex_model_copy = copy.deepcopy(cex_model)
+            cex_offset_model = copy.deepcopy(cex_model)
             # Make the universe of the model positive and shift the model by accumulated offset
-            cex_model_universe = cex_model_copy.get_fg_elements()
+            cex_model_universe = cex_offset_model.get_fg_elements()
             non_negative_offset = min(cex_model_universe)
             if non_negative_offset >= 0:
                 non_negative_offset = 0
-                cex_model_with_offset = cex_model_copy
-            else:
-                cex_model_copy.recompute_offset = True
-                cex_model_with_offset = cex_model_copy.add_fg_element_offset(abs(non_negative_offset) + accumulated_offset)
+            cex_offset_model.add_fg_element_offset(abs(non_negative_offset) + accumulated_offset)
             # Compute new accumulated offset
             accumulated_offset = max(cex_model_universe) + abs(non_negative_offset) + accumulated_offset + 1
             # Add model to cex_models_with_offset
-            cex_models_with_offset = cex_models_with_offset + [cex_model_with_offset]
+            cex_models_with_offset = cex_models_with_offset + [cex_offset_model]
         cex_models = cex_models_with_offset
     true_model_offset = accumulated_offset
 
@@ -250,13 +233,14 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, lem
 
     vocab = get_vocabulary(annctx)
     if options.exclude_set_type_definitions_switch == 'on':
-        # To assess whether removing set type definitions will help in cases where the lemma does not feature set reasoning.
+        # To assess whether removing set type definitions will help in cases 
+        # where the lemma does not feature set reasoning.
         set_defs = {}
     else:
-        set_defs = {v for v in vocab if 'Array' in str(v.range())}
+        set_defs = {func for func in vocab if 'Array' in str(func.range())}
     vocab = vocab.difference(set_defs)
 
-    sygus_model_definitions = sygusBigModelEncoding(all_models, vocab, set_defs)
+    sygus_model_definitions = sygusBigModelEncoding(all_models, vocab, set_defs, annctx)
     with open(out_file, 'w') as out:
         out.write('(set-logic ALL)')
         out.write('\n')
@@ -269,12 +253,12 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, lem
         out.write('\n')
         out.write(';; pfp constraints from counterexample models\n')
         if use_cex_models:
-            cex_pfp_constraints = generateAllCexConstraints(cex_models, lemma_args)
+            cex_pfp_constraints = generateAllCexConstraints(cex_models, lemma_args, annctx)
             out.write(cex_pfp_constraints)
             out.write('\n')
         out.write('\n')
         out.write(';; constraints from false model\n')
-        false_constraints = generateFalseConstraints(false_finitemodel, lemma_args, fg_terms)
+        false_constraints = generateFalseConstraints(false_finitemodel, lemma_args, fg_terms, annctx)
         out.write(false_constraints)
         out.write('\n')
         out.write('\n')
@@ -290,11 +274,10 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, lem
     if options.experimental_prefetching_switch == 'on':
         # Must include a parameter in the overall call for number of lemmas to be prefetched
         # Currently hardcoded
-        prefetch_count = config_params.get('prefetch_count',1)
-        klemmas_file = '{}{}_KLemmas.txt'.format(options.log_file_path, problem_instance_name)
+        prefetch_count = config_params.get('prefetch_count', 1)
+        k_lemmas_file = '{}{}_KLemmas.txt'.format(options.log_file_path, problem_instance_name)
         sygus_proc = subprocess.Popen(['cvc4', '--lang=sygus2', '--sygus-stream', out_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        prefetch_proc = subprocess.Popen(['python3', 'prefetch_lemmas.py', klemmas_file, str(prefetch_count)], stdin=sygus_proc.stdout, stdout=subprocess.PIPE, universal_newlines=True)
-        #Timeout is given in seconds
+        prefetch_proc = subprocess.Popen(['python3', 'prefetch_lemmas.py', k_lemmas_file, str(prefetch_count)], stdin=sygus_proc.stdout, stdout=subprocess.PIPE, universal_newlines=True)
         try:
             # Timeout given is given in seconds.
             # Currently hardcoded. Must make it a parameter
@@ -302,8 +285,8 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, lem
         except subprocess.TimeoutExpired:
             prefetch_proc.kill()
         sygus_proc.kill()
-        with open(klemmas_file, 'r') as klemmas:
-            lemmas = klemmas.readlines()
+        with open(k_lemmas_file, 'r') as k_lemmas:
+            lemmas = k_lemmas.readlines()
             # Lemmas are returned as strings. Possibly terminated by '\n'
             # Removing possible '\n' before returning
             lemmas = [lemma[:-1] if lemma[-1] == '\n' else lemma for lemma in lemmas]

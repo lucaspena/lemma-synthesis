@@ -119,16 +119,11 @@ def AddRecDefinition(recdef, formal_params, body, annctx=default_annctx):
     :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
     :return: None
     """
-    if isinstance(formal_params, tuple):
-        for param in formal_params:
-            if not is_var_decl(param):
-                raise TypeError('All formal parameters must be variables')
-    else:
-        if not is_var_decl(formal_params):
-            raise TypeError('All formal parameters must be variables')
     if not isinstance(formal_params, tuple) and isinstance(formal_params, z3.ExprRef):
         # Only one formal parameter
         formal_params = (formal_params,)
+    if not all(is_var_decl(v, annctx) for v in formal_params):
+        raise ValueError('All formal parameters must be variables declared using naturalproofs.decl_api.{Var, Vars}.')
     if not annctx.is_tracked_vocabulary(recdef):
         raise ValueError('Function symbol must be declared using naturalproofs.decl_api.Function')
     if len(formal_params) != recdef.arity():
@@ -154,16 +149,11 @@ def AddAxiom(formal_params, body, annctx=default_annctx):
     :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
     :return: None  
     """
-    if isinstance(formal_params, tuple):
-        for param in formal_params:
-            if not is_var_decl(param):
-                raise TypeError('All formal parameters must be variables')
-    else:
-        if not is_var_decl(formal_params):
-            raise TypeError('All formal parameters must be variables')
     if not isinstance(formal_params, tuple) and isinstance(formal_params, z3.ExprRef):
         # Only one formal parameter
         formal_params = (formal_params,)
+    if not all(is_var_decl(v, annctx) for v in formal_params):
+        raise ValueError('All formal parameters must be variables declared using naturalproofs.decl_api.{Var, Vars}.')
     # Check that all formal parameters are of the foreground sort.
     # Arguments of other sorts are not supported.
     if not all([is_expr_fg_sort(param, annctx) for param in formal_params]):

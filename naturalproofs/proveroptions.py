@@ -10,11 +10,16 @@ class Options:
     --- bounded_depth: instantiate until 'depth' number of rounds, checking each time for provability  
     --- infinite_depth: start at depth=1 and proceed to increase depth until proven  
     --- manual_instantiation: specify what terms to instantiate with separately using the 'terms_to_instantiate' option  
+    --- depth_one_ignore_lemmas: tracked instantiation of all axioms and recursive definitions 'depth' number of times 
+    (once in this case), and then one untracked instantiation of given lemmas with terms collected after k rounds. 
+    Intuitively, this method considers terms obtained from lemma instantiations to be irrelevant. Lemma instantiations 
+    only serve to provide additional relationships between terms that are already tracked.  
+    instantiation, but lemmas provide further relationships between these terms.  
     - depth: number of rounds for which quantifier instantiation is performed  
     - terms_to_instantiate: when mode=manual, use only this set of terms to do instantiations  
     """
     def __init__(self):
-        self.instantiation_mode = fixed_depth
+        self.instantiation_mode = bounded_depth
         self.depth = 1
         self.terms_to_instantiate = None
 
@@ -25,3 +30,4 @@ fixed_depth = 0
 bounded_depth = 1
 infinite_depth = 2
 manual_instantiation = 3
+depth_one_untracked_lemma_instantiation = 4
