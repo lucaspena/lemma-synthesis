@@ -12,7 +12,7 @@ from naturalproofs.decl_api import Const, Consts, Var, Vars, Function, RecFuncti
 from naturalproofs.prover import NPSolver
 import naturalproofs.proveroptions as proveroptions
 
-from naturalproofs.lemma_synthesis_np import solveProblem
+from lemsynth.lemsynth_engine import solveProblem
 
 # Declarations
 x = Var('x', fgsort)
