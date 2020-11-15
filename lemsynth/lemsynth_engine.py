@@ -80,7 +80,7 @@ def solveProblem(lemma_grammar_args, lemma_grammar_terms, goal, name, grammar_st
             if options.debug:
                 # Check that the ground terms do not exceed lemma_terms, or finite model extraction will not work
                 lemma_terms = lemma_npsolution.fg_terms
-                if not lemma_terms.issubset(lemma_terms):
+                if not lemma_terms.issubset(lemma_grammar_terms):
                     raise ValueError(
                         'lemma_terms is too small.\nLemma: {}\nTerms: {}'.format(str(z3py_lemma), lemma_terms))
             invalid_lemmas = invalid_lemmas + [z3py_lemma]
