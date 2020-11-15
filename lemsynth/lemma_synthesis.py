@@ -190,7 +190,7 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, lem
         # Lemmas generated up to this point are useful. Exit.
         print('Lemmas used to prove original vc:')
         for lemma in lemmas:
-            print(lemma)
+            print(lemma[1])
         exit(0)
 
     false_finitemodel = FiniteModel(npsolution.model, npsolution.fg_terms, annctx=annctx)

@@ -77,6 +77,8 @@ def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, lemma_terms, 
                 npmodel = npsolution.model
                 cex_model = FiniteModel(npmodel, lemma_terms, annctx=annctx)
                 cex_models = cex_models + [cex_model]
+        else:
+            valid_lemmas.add((tuple(lemma_args), z3py_lemma))
             # Reset countermodels and invalid lemmas to empty because we have additional information to retry those proofs.
             cex_models = []
             invalid_lemmas = []
