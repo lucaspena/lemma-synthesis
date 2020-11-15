@@ -16,7 +16,7 @@ from naturalproofs.lemma_synthesis_np import solveProblem
 
 # Declarations
 x, nil = Consts('x nil', fgsort)
-mytest = Function('mytest', fgsort, fgsetsort)
+mytest = Function('mytest', fgsort, fgsort, fgsetsort)
 nxt = Function('nxt', fgsort, fgsort)
 prv = Function('prv', fgsort, fgsort)
 lst = RecFunction('lst', fgsort, boolsort)

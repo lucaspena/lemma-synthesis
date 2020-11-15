@@ -39,28 +39,47 @@ def modelToSolver(model, vocab, sol):
                 else:
                     sol.add(fct(input_arg) == output_value_converted)
 
-def translateSet(s):
+def translateSet(s, fct_range):
     out = ''
     for i in s:
         out += '(insert ' + str(i) + ' '
-    out += '(as emptyset (Set Int))'
+    out += '(as emptyset (' + fct_range + '))'
     for i in s:
         out += ')'
+    return out
+
+# translate tuple of args to conjunction of equalities in smt format
+def translateArgs(elt):
+    out = ''
+    for i in range(len(elt)):
+        out += '(= (x!' + str(i) + ' ' + str(elt[i]) + ') '
+    return out[:-1]
+
+# get header of set function
+def getHeader(fct, fct_range):
+    out = '(define-fun ' + fct.name() + ' ('
+    for i in range(0, fct.arity()):
+        out += '(x!' + str(i) + ' ' + str(fct.domain(i)) + ') '
+    out = out[:-1] + ') '
+    out += '(' + fct_range + ')'
     return out
 
 # translate models of fully evaluated sets to smtlib format
 def translateModelsSets(models, set_defs):
     out = ''
     for fct in set_defs:
-        curr_fct = '(define-fun ' + fct.name() + ' ((x!0 Int)) (Set Int)\n'
+        fct_range = 'Set ' + str(fct.range().domain())
+        curr_fct = getHeader(fct, fct_range) + '\n'
         body = ''
         for model in models:
-            fct_name = getZ3FctName(fct)
+            fct_name = fct.name()
             curr_model_body = ''
             for elt in model[fct_name]:
-                curr_model_body += '  (ite (= x!0 ' + str(elt) + ') ' + translateSet(model[fct_name][elt]) + '\n'
+                args = translateArgs(elt)
+                set_translate = translateSet(model[fct_name][elt], fct_range)
+                curr_model_body += '  (ite (and ' + args + ') ' + set_translate + '\n'
             body += curr_model_body
-        body += '  (as emptyset (Set Int))'
+        body += '  (as emptyset (' + fct_range + '))'
         for model in models:
             for elt in model[fct_name]:
                 body += ')'
@@ -74,10 +93,10 @@ def translateModelsSets(models, set_defs):
 # TODO - VERY IMPORTANT: subtle issue here. The true models' entries are
 #  actually integers, whereas the false model's entries are Z3 types like
 #  IntNumRef, etc. Must fix this during false model dict generation.
-def sygusBigModelEncoding(models, fcts_z3, set_defs):
+def sygusBigModelEncoding(models, vocab, set_defs):
     sol = Solver()
     for model in models:
-        modelToSolver(model, fcts_z3, sol)
+        modelToSolver(model, vocab, sol)
     sol.check()
     m = sol.model()
     set_encodings = translateModelsSets(models, set_defs)
