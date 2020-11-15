@@ -14,7 +14,7 @@ def generate_pfp_constraint(rec_funcdeclref, lemma_args, finite_model, smt_simpl
     lemma_rhs_macro = Function('lemma', *([IntSort()]*lemma_arity), BoolSort())
     # Assuming that the arguments for the recursive deifnition on the lhs are the first 'k' variables in lemma_args
     lhs_args = lemma_args[:rec_funcdeclref.arity()]
-    lemma = Implies(rec_funcdeclref(*lhs_args), lemma_rhs_macro)
+    lemma = Implies(rec_funcdeclref(*lhs_args), lemma_rhs_macro(*lemma_args))
     lemma_pfp = pfp.make_pfp_formula(lemma)
     # 'Evaluate' the pfp formula on the given finite model
     lemma_pfp_eval = _eval_vars(lemma_pfp, finite_model)
