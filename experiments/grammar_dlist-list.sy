@@ -12,8 +12,8 @@
                    (not Start)
                    (lst I) (dlst I)))
             (I Int (x nil
-                   (next I)
-                   (prev I))))
+                   (nxt I)
+                   (prv I))))
 
 )
 

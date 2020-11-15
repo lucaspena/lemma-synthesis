@@ -54,7 +54,7 @@ def translateSet(s, fct_range):
 def translateArgs(elt):
     out = ''
     for i in range(len(elt)):
-        out += '(= (x!' + str(i) + ' ' + str(elt[i]) + ') '
+        out += '(= x!' + str(i) + ' ' + str(elt[i]) + ') '
     return out[:-1]
 
 # get header of set function
@@ -246,7 +246,6 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, lem
     vocab = vocab.difference(set_defs)
 
     sygus_model_definitions = sygusBigModelEncoding(all_models, vocab, set_defs)
-    print(sygus_model_definitions)
     with open(out_file, 'w') as out:
         out.write('(set-logic ALL)')
         out.write('\n')
