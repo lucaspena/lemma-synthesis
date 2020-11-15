@@ -7,6 +7,7 @@ set_param('model.compact', False)
 import lemsynth.options as options
 import lemsynth.true_models
 from lemsynth.induction_constraints import generate_pfp_constraint
+from lemsynth.cvc4_compliance import cvc4_complicant_formula_sexpr
 
 from naturalproofs.decl_api import get_uct_signature, get_recursive_definition
 from naturalproofs.prover import NPSolver
@@ -157,8 +158,9 @@ def generateCexConstraints(model, lemma_args, annctx):
     recs = sorted(recs, key=lambda x: x.name())
     # TODO: NOTE: only one universally quantified variable in desired lemma for now
     for i in range(len(recs)):
-        pfp_formula = generate_pfp_constraint(recs[i], lemma_args, model, annctx).sexpr()
-        curr_constraint = '(=> (= rswitch {0}) {1})'.format(i, pfp_formula)
+        pfp_formula = generate_pfp_constraint(recs[i], lemma_args, model, annctx)
+        pfp_formula_sexpr = cvc4_complicant_formula_sexpr(pfp_formula)
+        curr_constraint = '(=> (= rswitch {0}) {1})'.format(i, pfp_formula_sexpr)
         constraints = constraints + curr_constraint
     out = '(constraint (and {0}))\n'.format(constraints)
     return out
