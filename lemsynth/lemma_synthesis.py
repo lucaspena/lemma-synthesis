@@ -1,6 +1,7 @@
 import os
 import subprocess
 import copy
+import itertools
 
 from z3 import *
 set_param('model.compact', False)
@@ -12,7 +13,7 @@ from lemsynth.induction_constraints import generate_pfp_constraint
 
 from naturalproofs.prover import NPSolver
 from naturalproofs.extensions.finitemodel import FiniteModel
-from naturalproofs.decl_api import get_vocabulary
+from naturalproofs.decl_api import get_vocabulary, is_var_decl
 
 # Add constraints from each model into the given solver
 # Look through model's function entries and adds each input-output constraint
@@ -105,20 +106,30 @@ def sygusBigModelEncoding(models, vocab, set_defs):
     return set_encodings + m.sexpr()
 
 # Generate constraints corresponding to false model for SyGuS
-def generateFalseConstraints(model, lemma_args):
+def generateFalseConstraints(model, lemma_args, terms):
+    const = [arg for arg in lemma_args if not is_var_decl(arg)]
+    const_values = ' '.join([str(model.smtmodel.eval(cs, model_completion=True).as_long() + model.offset) for cs in const])
     constraints = ''
-    for arg in lemma_args:
+    lemma_arity = len(lemma_args) - len(const)
+    eval_terms = { model.smtmodel.eval(term, model_completion=True).as_long() + model.offset for term in terms }
+    args = itertools.product(eval_terms, repeat=lemma_arity)
+    for arg in args:
         # In general, arg will range over the tuples of instantiated terms
         # TODO: check if this part generalises to k-ary terms. modelDictEval takes k-ary terms
-        arg_value = model.smtmodel.eval(arg, model_completion=True).as_long() + model.offset
         curr = ''
-        # recs = fcts_z3['recpreds-loc_1_int_bool']
-        # for i in range(len(recs)):
-        #     curr_constraint = '(=> (= rswitch {0}) (not (=> ({1} {2}) (lemma {2} {3}))))\n'.format(i, str(recs[i]), arg_value, const_values)
-        #     curr = curr + curr_constraint
-        # constraints = constraints + '(and {0})\n'.format(curr)
-    out = '(constraint (or {0}))'.format(constraints)
-    return ''
+        recs = set(map(lambda x : x[0], get_recursive_definition(None, True)))
+        recs = sorted(recs, key=lambda x: x.name())
+        arg_str = ' '.join([str(elt) for elt in arg])
+        for i in range(len(recs)):
+            arity = recs[i].arity()
+            rswitch = '(= rswitch {})'.format(i)
+            lhs = '({} {})'.format(recs[i].name(), arg_str)
+            rhs = '(lemma {} {})'.format(arg_str, const_values)
+            curr_constraint = '(=> {} (not (=> {} {})))\n'.format(rswitch, lhs, rhs)
+            curr = curr + curr_constraint
+        constraints = constraints + '(and {})\n'.format(curr)
+    out = '(constraint (or {}))'.format(constraints)
+    return out
 
 # Old implementation that uses false_model_z3 instead of false_model_dict
 # def generateFalseConstraints(model_dict, deref, const):
@@ -193,7 +204,8 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, lem
             print(lemma[1])
         exit(0)
 
-    false_finitemodel = FiniteModel(npsolution.model, npsolution.fg_terms, annctx=annctx)
+    fg_terms = npsolution.fg_terms
+    false_finitemodel = FiniteModel(npsolution.model, fg_terms, annctx=annctx)
 
     use_cex_models = config_params.get('use_cex_models', True)
     cex_models = config_params.get('cex_models', [])
@@ -262,7 +274,7 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, lem
             out.write('\n')
         out.write('\n')
         out.write(';; constraints from false model\n')
-        false_constraints = generateFalseConstraints(false_finitemodel, lemma_args)
+        false_constraints = generateFalseConstraints(false_finitemodel, lemma_args, fg_terms)
         out.write(false_constraints)
         out.write('\n')
         out.write('\n')
