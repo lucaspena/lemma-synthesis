@@ -12,7 +12,7 @@ import naturalproofs.proveroptions as proveroptions
 from naturalproofs.extensions.finitemodel import FiniteModel
 
 
-def solveProblem(axioms_python, unfold_recdefs_python, lemma_grammar_args, lemma_grammar_terms, goal, name, grammar_string, config_params, annctx=default_annctx):
+def solveProblem(lemma_grammar_args, lemma_grammar_terms, goal, name, grammar_string, config_params={}, annctx=default_annctx):
     # Extract relevant parameters for running the verification-synthesis engine from config_params
     valid_lemmas = set()
     invalid_lemmas = []
@@ -33,7 +33,7 @@ def solveProblem(axioms_python, unfold_recdefs_python, lemma_grammar_args, lemma
 
     # continuously get valid lemmas until VC has been proven
     while True:
-        lemma = getSygusOutput(axioms_python, unfold_recdefs_python, valid_lemmas, lemma_grammar_args, goal, name, grammar_string, config_params, annctx)
+        lemma = getSygusOutput(valid_lemmas, lemma_grammar_args, goal, name, grammar_string, config_params, annctx)
         if lemma is None:
             exit('Instance failed.')
 

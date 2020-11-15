@@ -174,7 +174,7 @@ def generateAllCexConstraints(models, lemma_args, annctx):
 
 
 # write output to a file that can be parsed by CVC4 SyGuS
-def getSygusOutput(axioms_python, unfold_recdefs_python, lemmas, lemma_args, vc, problem_instance_name, grammar_string, config_params, annctx):
+def getSygusOutput(lemmas, lemma_args, vc, problem_instance_name, grammar_string, config_params, annctx):
     # Make log folder if it does not exist already
     os.makedirs(options.log_file_path, exist_ok=True)
 
