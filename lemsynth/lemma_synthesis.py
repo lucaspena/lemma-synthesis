@@ -186,7 +186,7 @@ def getSygusOutput(lemmas, lemma_args, vc, problem_instance_name, grammar_string
     vc_npsolution = vcsolver.solve(vc, lemmas)
     if not vc_npsolution.if_sat:
         # Lemmas generated up to this point are useful. Exit.
-        print('Lemmas used to prove original vc:')
+        print('VC has been proven. Lemmas used to prove original vc:')
         for lemma in lemmas:
             print(lemma[1])
         exit(0)

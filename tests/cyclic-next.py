@@ -20,7 +20,7 @@ cyclic = RecFunction('cyclic', fgsort, boolsort)
 AddRecDefinition(lseg, (x, y) , If(x == y, True,
                                    If(x == nil, False,
                                       lseg(nxt(x), y))))
-AddRecDefinition(cyclic, x, If(x == nil, False, lseg(nxt(x), x)))
+AddRecDefinition(cyclic, x, And(x != nil, lseg(nxt(x), x)))
 AddAxiom((), nxt(nil) == nil)
 
 # Problem parameters
@@ -31,7 +31,7 @@ goal = Implies(cyclic(x), cyclic(nxt(x)))
 # TODO: extract this automatically from grammar_string
 v1, v2 = Vars('v1 v2', fgsort)
 lemma_grammar_args = [v1, v2, nil]
-lemma_grammar_terms = {v1, v2, nil}
+lemma_grammar_terms = {v1, v2, nxt(v1), nxt(v2), nil}
 
 name = 'cyclic-next'
 grammar_string = importlib_resources.read_text('experiments', 'grammar_{}.sy'.format(name))
