@@ -1,19 +1,20 @@
 """
-Some utilities for manipulating finite models.
+Some utilities for manipulating finite models as defined in naturalproofs.extensions.finitemodel.  
 """
+
+import z3
 
 from naturalproofs.uct import fgsort, fgsetsort
 from naturalproofs.decl_api import get_decl_from_name, get_uct_signature
 
-from naturalproofs.AnnotatedContext import default_annctx
 
 def collect_fg_universe(finite_model, annctx):
     """
     Returns all elements of the foreground universe present in finite_model. All vocabulary entries must be tracked by 
-    annctx.    
-    :param finite_model: dict {string -> dict {tuple of any -> any}}
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return: set of any
+    annctx.  
+    :param finite_model: dict {string -> dict {tuple of any -> any}}  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return: set of any  
     """
     fg_elem_set = set()
     vocab_keys = finite_model.keys()
@@ -32,24 +33,14 @@ def collect_fg_universe(finite_model, annctx):
     return fg_elem_set
 
 
-# Helper function for collect_fg_universe
-def _collect_value(value, uctsort):
-    if uctsort == fgsort:
-        return {value}
-    elif uctsort == fgsetsort:
-        return value
-    else:
-        return set()
-
-
-def transform_fg_universe(finite_model, lambdafunc, annctx=default_annctx):
+def transform_fg_universe(finite_model, lambdafunc, annctx):
     """
     Applies the given function lambdafunc to all elements of the foreground universe present in finite_model. All 
     vocabulary entries must be tracked by annctx.  
-    :param finite_model: dict {string -> dict {tuple of any -> any}}
-    :param lambdafunc: function
-    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return: dict {string -> dict {tuple of any -> any}}
+    :param finite_model: dict {string -> dict {tuple of any -> any}}  
+    :param lambdafunc: function  
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext  
+    :return: dict {string -> dict {tuple of any -> any}}  
     """
     vocab_keys = finite_model.keys()
     for vocab_key in vocab_keys:
@@ -69,6 +60,31 @@ def transform_fg_universe(finite_model, lambdafunc, annctx=default_annctx):
     return finite_model
 
 
+def evaluate(finite_model, expr, symbolic_compute):
+    """
+    Evaluates the given expression on a finite model as defined in naturalproofs.extensions.finitemodel. An exception 
+    is raised if any sub-expression cannot be evaluated due to partial interpretations, unless symbolic_compute is set 
+    to True. 
+    Returns a pythonic value type if symbolic_compute is False, otherwise returns z3.ExprRef.
+    :param finite_model: dict {string -> dict {tuple of any -> any}}  
+    :param expr: z3.ExpRef
+    :param symbolic_compute: bool
+    :return: any
+    """
+    return None
+
+
+# Auxiliary functions
+# Helper function for collect_fg_universe
+def _collect_value(value, uctsort):
+    if uctsort == fgsort:
+        return {value}
+    elif uctsort == fgsetsort:
+        return value
+    else:
+        return set()
+
+
 # Helper function for transform_fg_universe
 def _transform_value(value, uctsort, lambdafunc):
     if uctsort == fgsort:
@@ -77,3 +93,8 @@ def _transform_value(value, uctsort, lambdafunc):
         return set(lambdafunc(x) for x in value)
     else:
         return value
+
+
+# Helper function for evaluate
+# def _evaluate_interpreted_function(funcdeclref):
+#     

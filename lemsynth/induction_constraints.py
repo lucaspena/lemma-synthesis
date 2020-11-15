@@ -4,8 +4,8 @@ z3.set_param('model.compact', False)
 
 import naturalproofs.uct as uct
 import naturalproofs.pfp as pfp
-import naturalproofs.utils as nputils #transform_expression, apply_bound_formula
-import naturalproofs.extensions.finitemodel as finitemodel #model_key_repr
+import naturalproofs.utils as nputils
+import naturalproofs.extensions.finitemodel as finitemodel
 
 
 def generate_pfp_constraint(rec_funcdeclref, lemma_args, finite_model, smt_simplify=False):
@@ -17,16 +17,15 @@ def generate_pfp_constraint(rec_funcdeclref, lemma_args, finite_model, smt_simpl
     lemma = Implies(rec_funcdeclref(*lhs_args), lemma_rhs_macro)
     lemma_pfp = pfp.make_pfp_formula(lemma)
     # 'Evaluate' the pfp formula on the given finite model
-    lemma_pfp_eval = _finitemodel_eval(lemma_pfp, finite_model)
+    lemma_pfp_eval = _eval_vars(lemma_pfp, finite_model)
     if smt_simplify:
         lemma_pfp_eval = simplify(lemma_pfp_eval)
-        
+    return lemma_pfp_eval
 
 
-def _finitemodel_eval(formula, finite_model):
-    # Construct transformation condition/operation pairs for each sort
-    # fgsort and intsort
-    cond_fgsort_intsort = lambda expr: expr.decl().arity() == 0 and uct.get_uct_sort(expr) in {uct.fgsort, uct.intsort}
-    op_fgsort_intsort = lambda expr: IntVal(finite_model[finitemodel.model_key_repr(expr.decl())][()])
-    # fgsetsort and intsetsort
-    return None
+def _eval_vars(formula, finite_model):
+    # Construct transformation condition/operation pairs for variables of different sorts
+    # Handling all sorts uniformly for now
+    cond = lambda expr: expr.decl().arity() == 0
+    op = lambda expr: finitemodel.recover_value(finite_model[finitemodel.model_key_repr(expr.decl())][()], uct.get_uct_sort(expr))
+    return nputils.transform_expression(formula, [(cond, op)])

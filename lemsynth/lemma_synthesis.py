@@ -9,7 +9,7 @@ from lemsynth.true_models import *
 from lemsynth.lemsynth_utils import *
 
 from naturalproofs.prover import NPSolver
-from naturalproofs.extensions.finitemodel import extract_finite_model, add_fg_element_offset
+from naturalproofs.extensions.finitemodel import extract_finite_model, add_fg_element_offset, get_fg_elements
 from naturalproofs.decl_api import get_vocabulary
 
 # Add constraints from each model into the given solver
@@ -187,26 +187,33 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, mod
         
     # Adding offsets to make sure: (i) all elements in all models are positive (ii) true and false models do not overlap
     # Making the universe of the false model positive
-    false_model_dict = makeModelUniverseNonNegative(false_model_dict)
-    false_model_relative_offset = getRelativeModelOffset(false_model_dict)
+    false_model_fg_universe = get_fg_elements(false_model_dict)
+    non_negative_offset = min(false_model_fg_universe)
+    if non_negative_offset >= 0:
+        non_negative_offset = 0
+    else:
+        false_model_dict = transform_fg_universe(false_model_dict, abs(non_negative_offset))
+    false_model_relative_offset = max(false_model_fg_universe) + abs(non_negative_offset) + 1
 
     # Add counterexample models to true models if use_cex_models is True
     accumulated_offset = false_model_relative_offset
     if use_cex_models:
         cex_models_with_offset = []
         for cex_model in cex_models:
-            # Make the universe of the model positive
-            cex_model_positive_universe = makeModelUniverseNonNegative(cex_model)
-            # Shift the model by accumulated offset
-            cex_model_with_offset = add_fg_element_offset(cex_model_positive_universe, accumulated_offset)
+            # Make the universe of the model positive and shift the model by accumulated offset
+            cex_model_universe = get_fg_elements(cex_model)
+            non_negative_offset = min(cex_model_universe)
+            if non_negative_offset >= 0:
+                non_negative_offset = 0
+            cex_model_with_offset = add_fg_element_offset(cex_model, abs(non_negative_offset) + accumulated_offset)
             # Compute new accumulated offset
-            accumulated_offset = getRelativeModelOffset(cex_model_with_offset)
+            accumulated_offset = max(cex_model_universe) + abs(non_negative_offset) + accumulated_offset + 1
             # Add model to cex_models_with_offset
             cex_models_with_offset = cex_models_with_offset + [cex_model_with_offset]
         cex_models = cex_models_with_offset
     true_model_offset = accumulated_offset
 
-    elems = config_params.get('elems',[])
+    elems = config_params.get('elems', [])
 
     all_models = cex_models + [false_model_dict]
 
