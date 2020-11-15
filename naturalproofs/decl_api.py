@@ -190,14 +190,20 @@ def get_decl_from_name(declname, annctx=default_annctx):
     return next((decl for decl in vocabulary if decl.name() == declname), None)
 
 
-def is_const(exprref, annctx=default_annctx):
+def is_var_decl(exprref, annctx=default_annctx):
     """
-    Determines if the given expression is a constant tracked by annctx, or a variable tracked by annctx. Returns None 
-    if neither is true.  
+    Determines if the given expression is a variable tracked by annctx, or a constant tracked by annctx in the alias 
+    annotation. Returns None if neither is true.  
     :param exprref: z3.ExprRef  
     :param annctx: naturalproofs.AnnnotatedContext.AnnotatedContext  
     :return: bool or None  
     """
+    if not isinstance(exprref, z3.ExprRef):
+        return None
+    if exprref.decl().arity != 0:
+        return None
+    if not annctx.is_tracked_alias(exprref.decl()):
+        return None
     return exprref in annctx.get_variable_annotation()
 
 
