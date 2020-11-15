@@ -7,6 +7,7 @@ set_param('model.compact', False)
 import lemsynth.options as options
 from lemsynth.true_models import *
 from lemsynth.lemsynth_utils import *
+from lemsynth.induction_constraints import generate_pfp_constraint
 
 from naturalproofs.prover import NPSolver
 from naturalproofs.extensions.finitemodel import extract_finite_model, add_fg_element_offset, get_fg_elements
@@ -152,26 +153,23 @@ def generateAllTrueConstraints(models, const, fcts_z3):
         out = out + generateTrueConstraints(model, const, fcts_z3)
     return out
 
-def generateCexConstraints(model, const, pfp_dict, fcts_z3):
+def generateCexConstraints(model, lemma_args):
     constraints = ''
-    const_values = ' '.join([str(modelDictEval(model, constant_symbol)) for constant_symbol in const])
-    recs = fcts_z3['recpreds-loc_1_int_bool']
+    recs = set(map(lambda x : x[0], get_recursive_definition(None, True)))
+    recs = sorted(recs, key=lambda x: x.name())
     # TODO: NOTE: only one universally quantified variable in desired lemma for now
     for i in range(len(recs)):
-        skolem = Int('skolem')
-        quantified_var_value = modelDictEval(model, skolem)
-        pfp_formula_stub = pfp_dict[getZ3FctName(recs[i])]
-        constval_dict = {getZ3FctName(constant_symbol):modelDictEval(model,constant_symbol) for constant_symbol in const}
-        pfp_formula = pfp_formula_stub.format(primary_arg=quantified_var_value, rest_args=const_values, **constval_dict)
+        pfp_formula = generate_pfp_constraint(recs[i], lemma_args, model).sexpr()
         curr_constraint = '(=> (= rswitch {0}) {1})'.format(i, pfp_formula)
         constraints = constraints + curr_constraint
     out = '(constraint (and {0}))\n'.format(constraints)
     return out
 
-def generateAllCexConstraints(models, const, pfp_dict, fcts_z3):
+# Generate constraintes corresponding to counterexample models
+def generateAllCexConstraints(models, lemma_args):
     out = ''
     for model in models:
-        out = out + generateCexConstraints(model, const, pfp_dict, fcts_z3)
+        out = out + generateCexConstraints(model, lemma_args)
     return out
 
 
@@ -258,10 +256,7 @@ def getSygusOutput(axioms_python, lemmas, unfold_recdefs_python, lemma_args, mod
         out.write('\n')
         out.write(';; pfp constraints from counterexample models\n')
         if use_cex_models:
-            pfp_dict = config_params.get('pfp_dict',None)
-            if pfp_dict == None or pfp_dict == {}:
-                raise ValueError('Must specify pre-fixpoint formula for recdefs')
-            cex_pfp_constraints = generateAllCexConstraints(cex_models, lemma_args, pfp_dict, fcts_z3)
+            cex_pfp_constraints = generateAllCexConstraints(cex_models, lemma_args)
             out.write(cex_pfp_constraints)
             out.write('\n')
         out.write('\n')

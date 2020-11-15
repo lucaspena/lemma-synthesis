@@ -38,7 +38,7 @@ def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, model_terms, 
             exit('Instance failed.')
 
         # convert CVC4 versions of membership, insertion to z3py versions
-        SetIntSort = createSetSort('int')
+        SetIntSort = SetSort(IntSort())
         membership = Function('membership', IntSort(), SetIntSort, BoolSort())
         insertion = Function('insertion', IntSort(), SetIntSort, SetIntSort)
         addl_decls = {'member' : membership, 'insert' : insertion}
@@ -48,7 +48,7 @@ def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, model_terms, 
         # testing translation of lemma
         rhs_lemma = translateLemma(lemma[0], lemma_args, addl_decls, swap_fcts, replace_fcts, annctx)
         index = int(lemma[1][-2])
-        recs = get_recursive_definition(None, True, annctx)
+        recs = get_recursive_definition(None, True)
         vocab = get_vocabulary(annctx)
         vocab_dict = {v.name() : v for v in vocab}
         var = vocab_dict['x']
