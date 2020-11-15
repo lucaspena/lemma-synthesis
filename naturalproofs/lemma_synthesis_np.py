@@ -4,6 +4,7 @@ from lemsynth.lemma_synthesis import *
 from lemsynth.lemsynth_utils import *
 
 from naturalproofs.AnnotatedContext import default_annctx
+from naturalproofs.decl_api import is_var_decl
 from naturalproofs.pfp import make_pfp_formula
 from naturalproofs.prover import NPSolver
 from naturalproofs.extensions.finitemodel import FiniteModel
@@ -78,7 +79,7 @@ def solveProblem(axioms_python, unfold_recdefs_python, lemma_args, lemma_terms, 
                 cex_model = FiniteModel(npmodel, lemma_terms, annctx=annctx)
                 cex_models = cex_models + [cex_model]
         else:
-            valid_lemmas.add((tuple(lemma_args), z3py_lemma))
+            valid_lemmas.add((tuple([arg for arg in lemma_args if is_var_decl(arg)]), z3py_lemma))
             # Reset countermodels and invalid lemmas to empty because we have additional information to retry those proofs.
             cex_models = []
             invalid_lemmas = []

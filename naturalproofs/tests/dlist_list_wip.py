@@ -8,14 +8,15 @@ from z3 import And, Or, Not, Implies, If
 from z3 import IsSubset, Union, SetIntersect, SetComplement, EmptySet
 
 from naturalproofs.uct import fgsort, fgsetsort, intsort, intsetsort, boolsort
-from naturalproofs.decl_api import Const, Consts, Function, RecFunction, AddRecDefinition, AddAxiom
+from naturalproofs.decl_api import Const, Consts, Var, Vars, Function, RecFunction, AddRecDefinition, AddAxiom
 from naturalproofs.prover import NPSolver
 import naturalproofs.proveroptions as proveroptions
 
 from naturalproofs.lemma_synthesis_np import solveProblem
 
 # Declarations
-x, nil = Consts('x nil', fgsort)
+x = Var('x', fgsort)
+nil = Const('nil', fgsort)
 mytest = Function('mytest', fgsort, fgsort, fgsetsort)
 nxt = Function('nxt', fgsort, fgsort)
 prv = Function('prv', fgsort, fgsort)
@@ -43,7 +44,7 @@ axioms_python = []
 unfold_recdefs_python = []
 
 # must change name of bound variables in lemma arguments
-v = Const('v', fgsort)
+v = Var('v', fgsort)
 lemma_args = [v, nil]
 
 model_terms = [x]
