@@ -180,7 +180,7 @@ def _extract_value(value, uct_sort):
                 else:
                     return extracted_set
             elif z3.is_store(value):
-                remaining_set, entry, if_belongs = value.childrne()
+                remaining_set, entry, if_belongs = value.children()
                 value = remaining_set
                 extracted_set = extracted_set | ({entry.as_long()} if z3.is_true(if_belongs) else {})
             else:
