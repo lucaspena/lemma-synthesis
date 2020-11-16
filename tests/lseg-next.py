@@ -11,7 +11,7 @@ from lemsynth.lemsynth_engine import solveProblem
 
 # Declarations
 x, y, z = Vars('x y z', fgsort)
-c = Consts('c', fgsort)
+c = Const('c', fgsort)
 nxt = Function('nxt', fgsort, fgsort)
 lseg = RecFunction('lseg', fgsort, fgsort, boolsort)
 AddRecDefinition(lseg, (x, y), If(x == y, True, lseg(nxt(x), y)))
