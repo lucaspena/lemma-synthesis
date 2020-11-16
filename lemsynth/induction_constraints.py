@@ -1,3 +1,4 @@
+import warnings
 import z3
 # model.compact should be turned off to get uncompressed models
 z3.set_param('model.compact', False)
@@ -9,6 +10,9 @@ import naturalproofs.extensions.finitemodel as finitemodel
 
 
 def generate_pfp_constraint(rec_funcdeclref, lemma_args, finite_model, annctx, smt_simplify=False):
+    if smt_simplify:
+        warnings.warn('setting simplify to true causes problems in formula parse tree traversal. Ignoring simplify.')
+        smt_simplify = False
     model_dict = finite_model.finitemodel
     lemma_arity = len(lemma_args)
     # Assuming that all arguments of the lemma are of the foreground sort
