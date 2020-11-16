@@ -29,6 +29,7 @@ z3.set_param('model.compact', False)
 from naturalproofs.AnnotatedContext import default_annctx 
 from naturalproofs.uct import fgsort, fgsetsort, intsort, intsetsort, boolsort
 from naturalproofs.decl_api import get_vocabulary, get_uct_signature
+from naturalproofs.utils import get_all_subterms
 from naturalproofs.extensions.finitemodel_utils import transform_fg_universe, collect_fg_universe
 
 
@@ -62,7 +63,7 @@ class FiniteModel:
         #  cases where uninterpreted functions have arguments in other domains, primarily integers.
         # Subterm-close the given terms assuming one-way functions
         # TODO: checks for all terms being of the foreground sort.
-        subterm_closure = _get_all_subterms(terms)
+        subterm_closure = get_all_subterms(terms)
         elems = {smtmodel.eval(term, model_completion=True) for term in subterm_closure}
         if vocabulary is None:
             vocabulary = get_vocabulary(annctx)
@@ -139,20 +140,6 @@ def model_key_repr(funcdeclref):
     # Should be equivalent to naturalproofs.AnnotatedContext._alias_annotation_key_repr(funcdeclref)
     # For z3.FuncDeclRef objects, this is almost always equal to name()
     return funcdeclref.name()
-
-
-# Return all subterms of the given set of terms
-def _get_all_subterms(terms):
-    """
-    :param terms: set of z3.ExprRef
-    :return: set of z3.ExprRef
-    """
-    subterm_closure = set()
-    for term in terms:
-        subterm_closure.add(term)
-        if term.decl().arity != 0:
-            subterm_closure = subterm_closure | _get_all_subterms(set(term.children()))
-    return subterm_closure
 
 
 def _extract_value(value, uct_sort):

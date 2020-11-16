@@ -15,21 +15,26 @@ class NPSolution:
     Such a representation is necessary because logging information can be attached to the NPSolution object, along with
     default outputs like a satisfying model.  
     """
-    def __init__(self, if_sat=None, model=None, fg_terms=None, depth=None, options=None):
+    def __init__(self, if_sat=None, model=None, extraction_terms=None, instantiation_terms=None, depth=None, options=None):
         """
         Explanation of attributes:  
         - if_sat (bool): if there exists a satisfying model under the given configuration.  
         - model (z3.ModelRef or None): satisfying model if exists.  
-        - fg_terms (set of z3.ExprRef): logging attribute. Set of 'tracked' foreground terms in the formula given to 
-        the smt solver. 'Tracked' refers to the fact that a finite model can be extracted over these terms that 
-        preserves the failure of the proof attempt. Usually this is the set of all foreground terms in the 
-        quantifier-free formula given to the solver at the end of all instantiations.  
-        - depth (int): depth at which the solution object was created. Applicable when instantiation mode is bounded depth.  
+        - extraction_terms (set of z3.ExprRef): logging attribute. Set of foreground terms in the formula 
+        given to the smt solver. A finite model can be extracted over these terms that preserves the failure of 
+        the proof attempt. Usually this is the set of all foreground terms in the quantifier-free formula given 
+        to the solver at the end of all instantiations.  
+        - instantiation_terms: the set of terms that were used for instantiating all axioms and recursive 
+        definitions. Only applicable when the instantiation is uniform for all axioms. Not applicable when 
+        instantiation mode is depth_one_untracked_lemma_instantiation.  
+        - depth (int): depth at which the solution object was created. Applicable when instantiation mode is 
+        bounded depth.  
         - options (proveroptions.Options): logging attribute. Options used to configure the solver.  
         """
         self.if_sat = if_sat
         self.model = model
-        self.fg_terms = fg_terms
+        self.extraction_terms = extraction_terms
+        self.instantiation_terms = instantiation_terms
         self.depth = depth
         self.options = options
 
@@ -73,29 +78,36 @@ class NPSolver:
         z3solver = z3.Solver()
         z3solver.add(neg_goal)
         # Keep track of terms in the quantifier-free problem given to the solver
-        terms = get_foreground_terms(neg_goal, annctx=self.annctx)
+        initial_terms = get_foreground_terms(neg_goal, annctx=self.annctx)
+        extraction_terms = initial_terms
+        instantiation_terms = set()
         # Instantiate and check for provability according to options
         # Handle manual instantiation mode first
         if options.instantiation_mode == proveroptions.manual_instantiation:
-            terms_for_instantiation = options.terms_to_instantiate
-            instantiations = instantiate(fo_abstractions, terms_for_instantiation)
+            instantiation_terms = options.terms_to_instantiate
+            instantiations = instantiate(fo_abstractions, instantiation_terms)
+            extraction_terms = extraction_terms.union(get_foreground_terms(instantiations, annctx=self.annctx))
             z3solver.add(instantiations)
             if_sat = _solver_check(z3solver)
             model = z3solver.model() if if_sat else None
-            terms = get_foreground_terms(instantiations, annctx=self.annctx)
-            return NPSolution(if_sat=if_sat, model=model, fg_terms=terms, options=options)
+            return NPSolution(if_sat=if_sat, model=model, extraction_terms=extraction_terms, 
+                              instantiation_terms=instantiation_terms, options=options)
         # Automatic instantiation modes
-        # Ignore lemmas strategy at depth one
+        # Untracked lemma instantiation strategy
         if options.instantiation_mode == proveroptions.depth_one_untracked_lemma_instantiation:
             conservative_fo_abstractions = axioms | recdef_unfoldings
-            tracked_instantiations = instantiate(conservative_fo_abstractions, terms)
-            z3solver.add(tracked_instantiations)
+            tracked_instantiations = instantiate(conservative_fo_abstractions, initial_terms)
             tracked_terms = get_foreground_terms(tracked_instantiations, annctx=self.annctx)
+            extraction_terms = extraction_terms.union(tracked_terms)
+            z3solver.add(tracked_instantiations)
             untracked_instantiations = instantiate(lemmas, tracked_terms)
+            untracked_terms = get_foreground_terms(untracked_instantiations, annctx=self.annctx)
+            extraction_terms = extraction_terms.union(untracked_terms)
             z3solver.add(untracked_instantiations)
             if_sat = _solver_check(z3solver)
             model = z3solver.model() if if_sat else None
-            return NPSolution(if_sat=if_sat, model=model, fg_terms=tracked_terms, options=options)
+            return NPSolution(if_sat=if_sat, model=model, extraction_terms=extraction_terms, 
+                              instantiation_terms=tracked_terms, options=options)
         # Set up initial values of variables
         depth_counter = 0
         # Keep track of formulae produced by instantiation
@@ -107,19 +119,25 @@ class NPSolver:
             if_continue = _solver_check(z3solver) if options.instantiation_mode == proveroptions.bounded_depth else True
             if not if_continue:
                 # bounded_depth mode and Unsat achieved at this depth
-                return NPSolution(if_sat=if_continue, fg_terms=terms, depth=depth_counter, options=options)
+                return NPSolution(if_sat=if_continue, extraction_terms=extraction_terms, 
+                                  instantiation_terms=instantiation_terms, depth=depth_counter, options=options)
             else:
                 # bounded_depth mode with sat or fixed_depth mode with target depth not reached.
                 # Do another round of instantiations.
-                instantiations = instantiate(fo_abstractions, terms)
+                # TODO: optimise instantiations so repeated instantiation is not done. Currently all instantiations 
+                #  are done in every round. But optimisation is difficult in the presence of multiple arities.
+                instantiation_terms = extraction_terms
+                instantiations = instantiate(fo_abstractions, instantiation_terms)
                 depth_counter = depth_counter + 1
-                terms = get_foreground_terms(instantiations, annctx=self.annctx)
+                new_terms = get_foreground_terms(instantiations, annctx=self.annctx)
+                extraction_terms = extraction_terms.union(new_terms)
         # Reach this case when depth_counter = target depth, either in fixed_depth or bounded_depth mode.
         # Final attempt at proving goal
         z3solver.add(instantiations)
         if_sat = _solver_check(z3solver)
         model = z3solver.model() if if_sat else None
-        return NPSolution(if_sat=if_sat, model=model, fg_terms=terms, depth=depth_counter, options=options)
+        return NPSolution(if_sat=if_sat, model=model, extraction_terms=extraction_terms, 
+                          instantiation_terms=instantiation_terms, depth=depth_counter, options=options)
 
 
 # Helper function to check the satisfiability and throw exception if solver returns unknown

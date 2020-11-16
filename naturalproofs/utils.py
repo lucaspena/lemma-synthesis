@@ -52,3 +52,18 @@ def transform_expression(expression, transformations):
         if condition:
             return op(transformed_expr_rec)
     return transformed_expr_rec
+
+
+# Cheap subterm closure without checks for sort.
+def get_all_subterms(terms):
+    """
+    Return all subterms of the given set of terms.
+    :param terms: set of z3.ExprRef
+    :return: set of z3.ExprRef
+    """
+    subterm_closure = set()
+    for term in terms:
+        subterm_closure.add(term)
+        if term.decl().arity != 0:
+            subterm_closure = subterm_closure | get_all_subterms(set(term.children()))
+    return subterm_closure

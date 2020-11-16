@@ -191,8 +191,9 @@ def getSygusOutput(lemmas, lemma_args, vc, problem_instance_name, grammar_string
             print(lemma[1])
         exit(0)
 
-    fg_terms = vc_npsolution.fg_terms
-    false_finitemodel = FiniteModel(vc_npsolution.model, fg_terms, annctx=annctx)
+    vc_extraction_terms = vc_npsolution.extraction_terms
+    vc_instantiation_terms = vc_npsolution.instantiation_terms
+    false_finitemodel = FiniteModel(vc_npsolution.model, vc_extraction_terms, annctx=annctx)
 
     use_cex_models = config_params.get('use_cex_models', True)
     cex_models = config_params.get('cex_models', [])
@@ -226,9 +227,9 @@ def getSygusOutput(lemmas, lemma_args, vc, problem_instance_name, grammar_string
             # Add model to cex_models_with_offset
             cex_models_with_offset = cex_models_with_offset + [cex_offset_model]
         cex_models = cex_models_with_offset
-    true_model_offset = accumulated_offset
+    # true_model_offset = accumulated_offset
 
-    elems = config_params.get('elems', [])
+    # elems = config_params.get('elems', [])
 
     all_models = [cex_model.finitemodel for cex_model in cex_models] + [false_finitemodel.finitemodel]
 
@@ -259,7 +260,7 @@ def getSygusOutput(lemmas, lemma_args, vc, problem_instance_name, grammar_string
             out.write('\n')
         out.write('\n')
         out.write(';; constraints from false model\n')
-        false_constraints = generateFalseConstraints(false_finitemodel, lemma_args, fg_terms, annctx)
+        false_constraints = generateFalseConstraints(false_finitemodel, lemma_args, vc_instantiation_terms, annctx)
         out.write(false_constraints)
         out.write('\n')
         out.write('\n')
