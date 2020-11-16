@@ -5,3 +5,4 @@
 - Adding (next x) and (next y) to the grammar in slseg-nil-slist makes it take a lot more time
 - lseg-nil-length needs a severely restricted grammar to go through. Small extensions do not terminate in reasonable time or trigger errors. 
 
+- tests/lseg-next.py: currently goes through, but bug arises when removing nxt(nil) = nil axiom

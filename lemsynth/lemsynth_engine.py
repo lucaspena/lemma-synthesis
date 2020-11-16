@@ -54,9 +54,10 @@ def solveProblem(lemma_grammar_args, lemma_grammar_terms, goal, name, grammar_st
         lhs_lemma_args = tuple(lemma_grammar_args[:lhs_arity])
         lhs_lemma = lhs(lhs_lemma_args)
         z3py_lemma = Implies(lhs_lemma, rhs_lemma)
+        z3py_lemma_params = tuple([arg for arg in lemma_grammar_args if is_var_decl(arg)])
 
         print('proposed lemma: ' + str(z3py_lemma))
-        if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
+        if z3py_lemma in invalid_lemmas or (z3py_lemma_params, z3py_lemma) in valid_lemmas:
             print('lemma has already been proposed')
             if use_cex_models:
                 if z3py_lemma in invalid_lemmas:
@@ -88,7 +89,7 @@ def solveProblem(lemma_grammar_args, lemma_grammar_terms, goal, name, grammar_st
                 cex_model = FiniteModel(lemma_npsolution.model, lemma_grammar_terms, annctx=annctx)
                 cex_models = cex_models + [cex_model]
         else:
-            valid_lemmas.add((tuple([arg for arg in lemma_grammar_args if is_var_decl(arg)]), z3py_lemma))
+            valid_lemmas.add((z3py_lemma_params, z3py_lemma))
             # Reset countermodels and invalid lemmas to [] because we have additional information to retry those proofs.
             cex_models = []
             invalid_lemmas = []
