@@ -13,14 +13,14 @@ from lemsynth.lemsynth_engine import solveProblem
 
 # Declarations
 x, y = Vars('x y', fgsort)
-nil, c = Consts('nil c', fgsort)
+nil = Const('nil', fgsort)
 nxt = Function('nxt', fgsort, fgsort)
 lst = RecFunction('lst', fgsort, boolsort)
 hlst = RecFunction('hlst', fgsort, fgsetsort)
 lseg = RecFunction('lseg', fgsort, fgsort, boolsort)
 AddRecDefinition(lst, x, If(x == nil, True, lst(nxt(x))))
-AddRecDefinition(lst, x, If(x == nil, fgsetsort.lattice_bottom, SetAdd(hlst(nxt(x)), x)))
-AddRecDefinition(lseg, (x, y) , If(x == y, True, lseg(nxt(x), y)))
+AddRecDefinition(hlst, x, If(x == nil, fgsetsort.lattice_bottom, SetAdd(hlst(nxt(x)), x)))
+AddRecDefinition(lseg, (x, y), If(x == y, True, lseg(nxt(x), y)))
 AddAxiom((), nxt(nil) == nil)
 
 # Problem parameters
