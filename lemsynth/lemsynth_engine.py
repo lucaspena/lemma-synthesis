@@ -26,16 +26,16 @@ def solveProblem(lemma_grammar_args, lemma_grammar_terms, goal, name, grammar_st
 
     # check if goal is provable on its own using induction
     pfp_of_goal = make_pfp_formula(goal)
-    vcsolver = NPSolver()
-    vc_npsolution = vcsolver.solve(pfp_of_goal)
+    goalsolver = NPSolver()
+    goal_npsolution = goalsolver.solve(pfp_of_goal)
 
-    if vc_npsolution.if_sat:
-        print('vc cannot be proved using induction.')
+    if goal_npsolution.if_sat:
+        print('goal cannot be proved using induction.')
     else:
-        print('vc is provable using induction.')
+        print('goal is provable using induction.')
         exit(0)
 
-    # continuously get valid lemmas until VC has been proven
+    # continuously get valid lemmas until goal has been proven
     while True:
         lemma = getSygusOutput(valid_lemmas, lemma_grammar_args, goal, name, grammar_string, config_params, annctx)
         if lemma is None:
@@ -88,9 +88,10 @@ def solveProblem(lemma_grammar_args, lemma_grammar_terms, goal, name, grammar_st
                 # Check that the terms needed from the pfp of the proposed lemma do not exceed lemma_grammar_terms.
                 # Otherwise finite model extraction will not work.
                 needed_instantiation_terms = get_foreground_terms(pfp_lemma, annctx)
-                if not needed_instantiation_terms.issubset(lemma_grammar_terms):
+                remaining_terms = needed_instantiation_terms - lemma_grammar_terms
+                if remaining_terms != set():
                     raise ValueError('lemma_terms is too small.'
-                                     '\nLemma: {}\nTerms: {}'.format(str(z3py_lemma_body), needed_instantiation_terms))
+                                     '\nLemma: {}\nTerms remaining: {}'.format(str(z3py_lemma_body), remaining_terms))
             invalid_lemmas = invalid_lemmas + [z3py_lemma]
             if use_cex_models:
                 extraction_terms = lemma_npsolution.extraction_terms
