@@ -26,8 +26,10 @@ AddRecDefinition(bst, x, If(x == nil, True,
                                 And(key(x) < 100,
                                     And(bst(lft(x)),
                                         And(bst(rght(x)),
-                                            maxr(lft(x)) <= key(x),
-                                                key(x) <= minr(rght(x))))))))
+                                            And(maxr(lft(x)) <= key(x),
+                                                key(x) <= minr(rght(x)))))))))
+AddAxiom((), lft(nil) == nil)
+AddAxiom((), rght(nil) == nil)
 
 # Problem parameters
 goal = Implies(bst(x), Implies(k <= minr(lft(x)), k <= minr(x)))
@@ -37,7 +39,7 @@ goal = Implies(bst(x), Implies(k <= minr(lft(x)), k <= minr(x)))
 # TODO: extract this automatically from grammar_string
 v = Var('v', fgsort)
 lemma_grammar_args = [v, k, nil]
-lemma_grammar_terms = {v, k, nil}
+lemma_grammar_terms = {lft(v), rght(v), nil, rght(rght(nil)), rght(nil), v}
 
 name = 'bst-left-min'
 grammar_string = importlib_resources.read_text('experiments', 'grammar_{}.sy'.format(name))

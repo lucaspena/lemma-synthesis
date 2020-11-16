@@ -118,6 +118,8 @@ def generateFalseConstraints(model, lemma_args, terms, annctx):
         recs = sorted(recs, key=lambda x: x.name())
         arg_str = [str(elt) for elt in arg]
         for i in range(len(recs)):
+            if recs[i].range().name() != 'Bool':
+                continue
             rec_arity = recs[i].arity()
             rswitch = '(= rswitch {})'.format(i)
             # Assuming first 'arity' arguments of lemma variables are arguments for recursive definition
@@ -158,6 +160,8 @@ def generateCexConstraints(model, lemma_args, annctx):
     recs = sorted(recs, key=lambda x: x.name())
     # TODO: NOTE: only one universally quantified variable in desired lemma for now
     for i in range(len(recs)):
+        if recs[i].range().name() != 'Bool':
+            continue
         pfp_formula = generate_pfp_constraint(recs[i], lemma_args, model, annctx)
         pfp_formula_sexpr = cvc4_complicant_formula_sexpr(pfp_formula)
         curr_constraint = '(=> (= rswitch {0}) {1})'.format(i, pfp_formula_sexpr)
