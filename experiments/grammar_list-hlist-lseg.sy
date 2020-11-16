@@ -1,0 +1,22 @@
+;; lemma to synthesize - simplified grammar
+(synth-fun lemma ((x Int) (nil Int) (k Int)) Bool
+
+           ((Start Bool) (BLeaf Bool) (S (Set Int)) (S1 (Set Int)) (Key Int) (Loc Int))
+
+           ((Start Bool
+                  ((=> BLeaf BLeaf)))
+           (BLeaf Bool
+                  ((member Loc S)
+                   (lst Loc)
+                   (lseg Loc Loc)))
+            (S (Set Int)
+                  ((hlst Loc)))
+            (Loc Int (x y nil)))
+)
+
+(synth-fun rswitch () Int
+
+           ((Start Int))
+           ((Start Int (0 1)))
+
+)
