@@ -93,3 +93,36 @@ def is_expr_fg_sort(exprref, annctx=default_annctx):
     """
     uct_sort = get_uct_sort(exprref, annctx)
     return uct_sort == fgsort
+
+
+# Functions specific to various sorts
+# min function on intsort
+def min_intsort(*args, annctx=default_annctx):
+    """
+    z3.ExprRef constructing the minimum of given arguments.
+    :param args: z3.ExprRef
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return: z3.ExprRef
+    """
+    if not all(get_uct_sort(arg, annctx) == intsort for arg in args):
+        raise ValueError('intsort expressions expected.')
+    min_expr = args[0]
+    for arg in args[1:]:
+        min_expr = z3.If(min_expr < arg, min_expr, arg)
+    return min_expr
+
+
+# max function on intsort
+def max_intsort(*args, annctx=default_annctx):
+    """
+    z3.ExprRef constructing the maximum of given arguments.
+    :param args: z3.ExprRef
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return: z3.ExprRef
+    """
+    if not all(get_uct_sort(arg, annctx) == intsort for arg in args):
+        raise ValueError('intsort expressions expected.')
+    max_expr = args[0]
+    for arg in args[1:]:
+        max_expr = z3.If(max_expr > arg, max_expr, arg)
+    return max_expr
