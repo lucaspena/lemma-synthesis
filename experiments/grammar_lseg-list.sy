@@ -12,7 +12,8 @@
                   (lst Loc)
                   (lseg Loc Loc)))
             (Loc Int (LocLeaf))
-            (LocLeaf Int (x y nil)))
+            (LocLeaf Int (x y nil
+                         (nxt x))))
 
 )
 
