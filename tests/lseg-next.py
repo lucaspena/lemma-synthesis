@@ -10,8 +10,8 @@ from naturalproofs.decl_api import Const, Consts, Var, Vars, Function, RecFuncti
 from lemsynth.lemsynth_engine import solveProblem
 
 # Declarations
-x, y = Vars('x y', fgsort)
-c, z = Consts('c z', fgsort)
+x, y, z = Vars('x y z', fgsort)
+c = Consts('c', fgsort)
 nxt = Function('nxt', fgsort, fgsort)
 lseg = RecFunction('lseg', fgsort, fgsort, boolsort)
 AddRecDefinition(lseg, (x, y), If(x == y, True, lseg(nxt(x), y)))
@@ -22,9 +22,9 @@ goal = Implies(lseg(x, y), Implies(x != c, Implies(nxt(y) == z, lseg(x, z))))
 # parameters representing the grammar for synth-fun and
 # terms on which finite model is extracted
 # TODO: extract this automatically from grammar_string
-v1, v2 = Vars('v1 v2', fgsort)
-lemma_grammar_args = [v1, v2]
-lemma_grammar_terms = {nxt(v1), nxt(nxt(v1)), nxt(v2), nxt(nxt(v2))}
+v1, v2, v3 = Vars('v1 v2 v3', fgsort)
+lemma_grammar_args = [v1, v2, v3]
+lemma_grammar_terms = {nxt(v1), nxt(nxt(v1)), nxt(v2), nxt(nxt(v2)), nxt(v3), nxt(nxt(v3))}
 
 name = 'lseg-next'
 grammar_string = importlib_resources.read_text('experiments', 'grammar_{}.sy'.format(name))

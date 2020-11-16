@@ -1,6 +1,6 @@
 ;; lemma to synthesize
 ;; TODO: must be generated from problem parameters
-(synth-fun lemma ((x Int) (y Int)) Bool
+(synth-fun lemma ((x Int) (y Int) (z Int)) Bool
            ((Start Bool) (BLeaf Bool) (Loc Int) (LocLeaf Int))
 
            ((Start Bool
@@ -11,7 +11,7 @@
                   (= Loc Loc)))
            (Loc Int (LocLeaf
                     (nxt LocLeaf)))
-           (LocLeaf Int (x y)))
+           (LocLeaf Int (x y z)))
 )
 
 (synth-fun rswitch () Int
