@@ -7,9 +7,9 @@
                   (BLeaf
                   (=> BLeaf BLeaf)))
            (BLeaf Bool
-                  ((not (= BLeaf BLeaf))
-                  (= BLeaf BLeaf)
-                  (cyclic Loc)
+                  ((cyclic Loc)
+                  (= Loc Loc)
+                  (not (= Loc Loc))
                   (lseg Loc Loc)))
            (Loc Int (LocLeaf
                     (nxt LocLeaf)))

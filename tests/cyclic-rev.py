@@ -23,6 +23,8 @@ AddRecDefinition(lseg, (x, y) , If(x == y, True,
 AddRecDefinition(cyclic, x, And(x != nil, lseg(nxt(x), x)))
 AddAxiom((), nxt(nil) == nil)
 
+# AddAxiom(x, Implies(cyclic(x), cyclic(nxt(x))))
+
 # Problem parameters
 goal = Implies(lseg(x, y), Implies(cyclic(x), lseg(y, x)))
 
@@ -31,7 +33,7 @@ goal = Implies(lseg(x, y), Implies(cyclic(x), lseg(y, x)))
 # TODO: extract this automatically from grammar_string
 v1, v2 = Vars('v1 v2', fgsort)
 lemma_grammar_args = [v1, v2, nil]
-lemma_grammar_terms = {v1, v2, nxt(v1), nxt(v2), nil}
+lemma_grammar_terms = {v1, v2, nxt(v1), nxt(nxt(v1)), nxt(nxt(nxt(v1))), nxt(v2), nxt(nxt(v2)), nil, nxt(nil)}
 
 name = 'cyclic-rev'
 grammar_string = importlib_resources.read_text('experiments', 'grammar_{}.sy'.format(name))
