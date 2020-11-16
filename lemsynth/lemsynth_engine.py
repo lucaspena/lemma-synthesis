@@ -63,7 +63,7 @@ def solveProblem(lemma_grammar_args, lemma_grammar_terms, goal, name, grammar_st
                 if z3py_lemma in invalid_lemmas:
                     print('Something is wrong. Lemmas should not be re-proposed in the presence of countermodels. '
                           'Exiting.') 
-                if z3py_lemma in valid_lemmas:
+                if (z3py_lemma_params, z3py_lemma) in valid_lemmas:
                     print('This is a currently known limitation of the tool. Consider restricting your grammar to '
                           'have terms of lesser height.') 
                 exit('Instance failed.')
