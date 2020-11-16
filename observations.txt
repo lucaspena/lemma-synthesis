@@ -12,8 +12,8 @@ New tool
 ------------
 - tests/lseg-next.py: currently goes through, but bug arises when removing nxt(nil) = nil axiom --- solved
 - tests/cyclic-rev.py: currently does not go through. grammar can be restricted likely 
-- tests/lseg-list.py: when adding (nxt x) to grammar, lemma is reproposed
-- tests/dlseg-prev.py: desired lemma is proposed but not proved. may need strong IP or other lemmas
+- tests/lseg-list.py: when adding (nxt x) to grammar, lemma is reproposed --- solved
+- tests/dlseg-prev.py: running forever
 
 
 
@@ -27,4 +27,17 @@ Things to talk about the tool in the paper:
 - Experiments with putting in lemmas discovered in earlier examples -- shows reusability. Many problems end up fiding true lemmas that are maybe unnecessary for that particular example, but could be
 useful for others.-- TODO: find a concrete example where this happens.
 - Call the tool FOSILS. Say it is one of the first of its kind (aarti's is perhaps another) that does multiple sorts and datastructures (here we may truly be the first). Make a big deal about it as something people could maybe build verification procedures.
+- 
+
+
+
+
+TODO Future:
+- Shift to cvc4sy python api if that would work better/be cleaner code
+- Recdefs with bindings instead of rswitch
+- BitVec encoding for fgsort
+- Simplify (dovetail various combinations)
+- cvc4 flags (ask andrew and then dovetail various combinations)
+- Serious logging infrastructure
+- Grammar sampler + lemsynth engine (much later)
 - 
