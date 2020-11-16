@@ -1,3 +1,5 @@
+Old tool
+-------------
 - Adding one more level of terms (i.e, next <x,y,z>) to list-find does not terminate after 18 min.
 - Similar phenomenon with lseg-list-keys when next is added, even to just build level 1 terms. Does not terminate.
 - lesg-keys does not terminate at all with any variation, including a minimal grammar that only has the elements necessary for the desired lemma.
@@ -5,7 +7,24 @@
 - Adding (next x) and (next y) to the grammar in slseg-nil-slist makes it take a lot more time
 - lseg-nil-length needs a severely restricted grammar to go through. Small extensions do not terminate in reasonable time or trigger errors. 
 
-- tests/lseg-next.py: currently goes through, but bug arises when removing nxt(nil) = nil axiom
-- tests/cyclic-rev.py: currently does not go through. grammar can be restricted likely
+
+New tool
+------------
+- tests/lseg-next.py: currently goes through, but bug arises when removing nxt(nil) = nil axiom --- solved
+- tests/cyclic-rev.py: currently does not go through. grammar can be restricted likely 
 - tests/lseg-list.py: when adding (nxt x) to grammar, lemma is reproposed
 - tests/dlseg-prev.py: desired lemma is proposed but not proved. may need strong IP or other lemmas
+
+
+
+Things to talk about the tool in the paper:
+--------------------
+- CVC4Sy does not support uninterpreted sorts, Z3 does not support subsorting. Our tool is therefore notrivial and not reducible to existing tools.
+- Universal model generation. Made possible because queries are quantifier-free on the foreground sort, so we can extract finite models.
+- Finite model extraction is determined by particular proof attempt. That makes the algorithm something that can adapt over time, do several retries.
+- Instantiations are determined by grammar. That's a nice bit of complexity and shows that the proof method is goal driven as well as grammar-driven (like aarti's paper)
+- Sensitivity of results to changes in grammar. Obvious because cvc4sy likely does enumerative synthesis.
+- Experiments with putting in lemmas discovered in earlier examples -- shows reusability. Many problems end up fiding true lemmas that are maybe unnecessary for that particular example, but could be
+useful for others.-- TODO: find a concrete example where this happens.
+- Call the tool FOSILS. Say it is one of the first of its kind (aarti's is perhaps another) that does multiple sorts and datastructures (here we may truly be the first). Make a big deal about it as something people could maybe build verification procedures.
+- 
