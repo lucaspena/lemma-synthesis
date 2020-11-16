@@ -8,3 +8,4 @@
 - tests/lseg-next.py: currently goes through, but bug arises when removing nxt(nil) = nil axiom
 - tests/cyclic-rev.py: currently does not go through. grammar can be restricted likely
 - tests/lseg-list.py: when adding (nxt x) to grammar, lemma is reproposed
+- tests/dlseg-prev.py: desired lemma is proposed but not proved. may need strong IP or other lemmas

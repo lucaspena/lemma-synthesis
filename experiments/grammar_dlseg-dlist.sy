@@ -11,8 +11,8 @@
            (BLeaf Bool (
                   (dlst Loc)
                   (dlseg Loc Loc)))
-            (Loc Int (LocLeaf))
-            (LocLeaf Int (x y nil)))
+           (Loc Int (LocLeaf))
+           (LocLeaf Int (x y nil)))
 
 )
 
