@@ -47,13 +47,19 @@
    {v2 = nil}
    Lemma: reach(x) => v2(x) == v1(x)
 
-10. Theorem: lseg(x, y) => (If(x == nil, ret == nil, ret == nxt(x)) => (y == nil => lst(ret)))
+10. {v1 = n(v2)}
+    while (v1 != nil) do
+      v1 := n(v1);
+      if (v2 != c) {v2 := n(v2)}
+    endwhile
+    {n(v2) = nil \/ v2 = c}
+    Lemma: reach(x) => v2(x) == v1(x)
+
+11. Theorem: lseg(x, y) => (If(x == nil, ret == nil, ret == nxt(x)) => (y == nil => lst(ret)))
     Lemma: lseg(x, y) => (list(y) => list(n(x)))
 
-11. Theorem: lseg(x, y) => (list(y) /\ x != c /\ next(y) == z => (lseg(x, z) /\ list(z)))
+12. Theorem: lseg(x, y) => (list(y) /\ x != c /\ next(y) == z => (lseg(x, z) /\ list(z)))
     Lemmas: list(x) => lseg(y, y) -- not needed
             lseg(x, y) => (lseg(y, z) => lseg(x, z))
     Notes: restricted grammar
            PFP is provable when x != c removed from theorem
-
-

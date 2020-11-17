@@ -35,7 +35,7 @@ z = Var('z', fgsort)
 lemma_grammar_args = [z, nil, s, c]
 lemma_grammar_terms = {z, nil, s, c, v1(z), v1(p(z)), p(z), v2(z), v2(p(z)), n(v2(p(z))), n(v1(p(z))), n(c), n(nil), n(n(nil)), v1(z), n(v2(z)), n(n(c)), n(v1(z)), n(n(n(nil))), n(n(n(c)))}
 
-name = 'reachability'
+name = 'reachability2'
 grammar_string = importlib_resources.read_text('experiments', 'grammar_{}.sy'.format(name))
 
 solveProblem(lemma_grammar_args, lemma_grammar_terms, goal, name, grammar_string)
