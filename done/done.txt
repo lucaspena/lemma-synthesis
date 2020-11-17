@@ -11,3 +11,12 @@
    Lemmas: sdlst(x) => dlst(x)
            sdlst(x) => slst(x)
 
+5. {v1 = v2}
+   while (v1 != nil) do
+     v1 := n(v1);
+     if (v2 != c) {v2 := n(v2)}
+   endwhile
+   {v2 = nil \/ v2 = c}
+   Lemma: reach(x) => v2(x) == v1(x) \/ v2(x) == c)
+
+
