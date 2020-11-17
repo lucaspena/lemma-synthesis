@@ -11,7 +11,11 @@
    Lemmas: sdlst(x) => dlst(x)
            sdlst(x) => slst(x)
 
-5. {v1 = v2}
+5. Theorem: listlen(x, l) => (If(l == 1, ret == x, ret == nxt(x)), list(x))
+   Lemmas: listlen(x, l) => list(nil) -- not needed
+           listlen(x, l) => list(x)
+
+6. {v1 = v2}
    while (v1 != nil) do
      v1 := n(v1);
      if (v2 != c) {v2 := n(v2)}
@@ -19,8 +23,31 @@
    {v2 = nil \/ v2 = c}
    Lemma: reach(x) => v2(x) == v1(x) \/ v2(x) == c)
 
-6. Theorem: listlen(x, l) => (If(l == 1, ret == x, ret == nxt(x)), list(x))
-   Lemmas: listlen(x, l) => list(nil) -- not needed
-           listlen(x, l) => list(x)
+7. {v1 = v2}
+   while (v1 != nil) do
+     v1 := n(v1);
+     v2 := n(v2)
+   endwhile
+   {v2 = nil}
+   Lemma: reach(x) => v2(x) == v1(x)
+
+8. {v1 = v2}
+   while (v1 != c) do
+     v1 := n(v1);
+     if (v2 != c) {v2 := n(v2)}
+   endwhile
+   {v2 = nil \/ v2 = c}
+   Lemma: reach(x) => v2(x) == v1(x)
+
+9. {v1 = v2}
+   while (v1 != c) do
+     v1 := n(v1);
+     v2 := n(v2)
+   endwhile
+   {v2 = nil}
+   Lemma: reach(x) => v2(x) == v1(x)
+
+10. Theorem: lseg(x, y) => (If(x == nil, ret == nil, ret == nxt(x)) => (y == nil => lst(ret)))
+    Lemma: lseg(x, y) => (list(y) => list(n(x)))
 
 
