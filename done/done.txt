@@ -50,4 +50,10 @@
 10. Theorem: lseg(x, y) => (If(x == nil, ret == nil, ret == nxt(x)) => (y == nil => lst(ret)))
     Lemma: lseg(x, y) => (list(y) => list(n(x)))
 
+11. Theorem: lseg(x, y) => (list(y) /\ x != c /\ next(y) == z => (lseg(x, z) /\ list(z)))
+    Lemmas: list(x) => lseg(y, y) -- not needed
+            lseg(x, y) => (lseg(y, z) => lseg(x, z))
+    Notes: restricted grammar
+           PFP is provable when x != c removed from theorem
+
 
