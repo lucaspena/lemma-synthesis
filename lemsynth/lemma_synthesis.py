@@ -45,7 +45,11 @@ def modelToSolver(model, vocab, sol, annctx):
 def translateSet(s, fct_range):
     out = ''
     for i in s:
-        out += '(insert ' + str(i) + ' '
+        if i < 0:
+            val = '(- ' + str(i * -1) + ')'
+        else:
+            val = str(i)
+        out += '(insert ' + val + ' '
     out += '(as emptyset (' + fct_range + '))'
     for i in s:
         out += ')'
@@ -55,7 +59,11 @@ def translateSet(s, fct_range):
 def translateArgs(elt):
     out = ''
     for i in range(len(elt)):
-        out += '(= x!' + str(i) + ' ' + str(elt[i]) + ') '
+        if elt[i] < 0:
+            val = '(- ' + str(elt[i] * -1) + ')'
+        else:
+            val = str(elt[i])
+        out += '(= x!' + str(i) + ' ' + val + ') '
     return out[:-1]
 
 # get header of set function
@@ -107,7 +115,9 @@ def sygusBigModelEncoding(models, vocab, set_defs, annctx):
 # Generate constraints corresponding to false model for SyGuS
 def generateFalseConstraints(model, lemma_args, terms, annctx):
     const = [arg for arg in lemma_args if not is_var_decl(arg, annctx)]
-    const_values = ' '.join([str(model.smtmodel.eval(cs, model_completion=True).as_long() + model.offset) for cs in const])
+    const_values = [model.smtmodel.eval(cs, model_completion=True).as_long() + model.offset for cs in const]
+    const_values = ['(- ' + str(cv * -1) + ')' if cv < 0 else str(cv) for cv in const_values]
+    const_values = ' '.join(const_values)
     constraints = ''
     lemma_arity = len(lemma_args) - len(const)
     eval_terms = {model.smtmodel.eval(term, model_completion=True).as_long() + model.offset for term in terms}

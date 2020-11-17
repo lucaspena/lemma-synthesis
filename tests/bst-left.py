@@ -14,7 +14,7 @@ x = Var('x', fgsort)
 nil = Const('nil', fgsort)
 k = Const('k', intsort)
 key = Function('key', fgsort, intsort)
-keys = Function('keys', fgsort, fgsetsort)
+keys = Function('keys', fgsort, intsetsort)
 lft = Function('lft', fgsort, fgsort)
 rght = Function('rght', fgsort, fgsort)
 minr = Function('minr', fgsort, intsort)
@@ -42,7 +42,7 @@ goal = Implies(bst(x), Implies(And(IsMember(k, keys(x)), k < key(x)), IsMember(k
 # TODO: extract this automatically from grammar_string
 v = Var('v', fgsort)
 lemma_grammar_args = [v, k, nil]
-lemma_grammar_terms = {lft(v), rght(v), nil, rght(rght(nil)), rght(nil), v}
+lemma_grammar_terms = {lft(v), rght(v), nil, rght(rght(nil)), rght(nil), v, rght(rght(v)), rght(lft(v)), lft(lft(v)), rght(rght(v)), lft(rght(v))}
 
 name = 'bst-left'
 grammar_string = importlib_resources.read_text('experiments', 'grammar_{}.sy'.format(name))
