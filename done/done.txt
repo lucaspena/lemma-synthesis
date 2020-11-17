@@ -19,4 +19,8 @@
    {v2 = nil \/ v2 = c}
    Lemma: reach(x) => v2(x) == v1(x) \/ v2(x) == c)
 
+6. Theorem: listlen(x, l) => (If(l == 1, ret == x, ret == nxt(x)), list(x))
+   Lemmas: listlen(x, l) => list(nil) -- not needed
+           listlen(x, l) => list(x)
+
 
