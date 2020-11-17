@@ -20,6 +20,7 @@ AddRecDefinition(dlst, x, If(x == nil, True,
                              If(nxt(x) == nil, True,
                                 And(prv(nxt(x)) == x, dlst(nxt(x))))))
 AddAxiom((), nxt(nil) == nil)
+AddAxiom((), prv(nil) == nil)
 
 # Problem parameters
 pgm = If(x == nil, ret == nil, ret == nxt(x))

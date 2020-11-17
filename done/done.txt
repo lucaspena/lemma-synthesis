@@ -1,0 +1,6 @@
+1. Theorem: dlst(x) => (If(x == nil, ret == nil, ret == nxt(x)) => lst(ret))
+   Lemma: dlst(x) => lst(x)
+
+2. Theorem: slst(x) => (If(x == nil, ret == nil, ret == nxt(x)) => lst(ret))
+   Lemma: slst(x) => lst(x)
+
