@@ -1,5 +1,6 @@
 import subprocess
 import itertools
+import warnings
 
 from z3 import *
 set_param('model.compact', False)
@@ -9,7 +10,7 @@ import lemsynth.true_models
 from lemsynth.induction_constraints import generate_pfp_constraint
 from lemsynth.cvc4_compliance import cvc4_complicant_formula_sexpr
 
-from naturalproofs.decl_api import get_uct_signature, get_boolean_recursive_definitions
+from naturalproofs.decl_api import get_uct_signature, get_boolean_recursive_definitions, is_expr_fg_sort
 from naturalproofs.prover import NPSolver
 import naturalproofs.proveroptions as proveroptions
 from naturalproofs.extensions.finitemodel import recover_value
@@ -115,7 +116,7 @@ def sygusBigModelEncoding(models, vocab, set_defs, annctx):
 # Generate constraints corresponding to false model for SyGuS
 def generateFalseConstraints(model, lemma_args, terms, annctx):
     const = [arg for arg in lemma_args if not is_var_decl(arg, annctx)]
-    const_values = [model.smtmodel.eval(cs, model_completion=True).as_long() + model.offset for cs in const]
+    const_values = [model.smtmodel.eval(cs, model_completion=True).as_long() + (model.offset if is_expr_fg_sort(cs, annctx) else 0) for cs in const]
     const_values = ['(- ' + str(cv * -1) + ')' if cv < 0 else str(cv) for cv in const_values]
     const_values = ' '.join(const_values)
     constraints = ''
