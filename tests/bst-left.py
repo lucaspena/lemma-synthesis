@@ -20,8 +20,8 @@ rght = Function('rght', fgsort, fgsort)
 minr = Function('minr', fgsort, intsort)
 maxr = Function('maxr', fgsort, intsort)
 bst = RecFunction('bst', fgsort, boolsort)
-AddRecDefinition(minr, x, If(x == nil, -1, min_intsort(key(x), minr(lft(x)), minr(rght(x)))))
-AddRecDefinition(maxr, x, If(x == nil, 100, max_intsort(key(x), maxr(lft(x)), maxr(rght(x)))))
+AddRecDefinition(minr, x, If(x == nil, 100, min_intsort(key(x), minr(lft(x)), minr(rght(x)))))
+AddRecDefinition(maxr, x, If(x == nil, -1, max_intsort(key(x), maxr(lft(x)), maxr(rght(x)))))
 AddRecDefinition(bst, x, If(x == nil, True,
                             And(0 < key(x),
                                 And(key(x) < 100,
