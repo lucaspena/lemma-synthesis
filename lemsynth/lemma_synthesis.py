@@ -9,7 +9,7 @@ import lemsynth.true_models
 from lemsynth.induction_constraints import generate_pfp_constraint
 from lemsynth.cvc4_compliance import cvc4_complicant_formula_sexpr
 
-from naturalproofs.decl_api import get_uct_signature, get_recursive_definition
+from naturalproofs.decl_api import get_uct_signature, get_boolean_recursive_definitions
 from naturalproofs.prover import NPSolver
 import naturalproofs.proveroptions as proveroptions
 from naturalproofs.extensions.finitemodel import recover_value
@@ -114,12 +114,9 @@ def generateFalseConstraints(model, lemma_args, terms, annctx):
     args = itertools.product(eval_terms, repeat=lemma_arity)
     for arg in args:
         curr = ''
-        recs = set(map(lambda x: x[0], get_recursive_definition(None, True, annctx)))
-        recs = sorted(recs, key=lambda x: x.name())
+        recs = get_boolean_recursive_definitions()
         arg_str = [str(elt) for elt in arg]
         for i in range(len(recs)):
-            if recs[i].range().name() != 'Bool':
-                continue
             rec_arity = recs[i].arity()
             rswitch = '(= rswitch {})'.format(i)
             # Assuming first 'arity' arguments of lemma variables are arguments for recursive definition
@@ -156,12 +153,9 @@ def generateFalseConstraints(model, lemma_args, terms, annctx):
 
 def generateCexConstraints(model, lemma_args, annctx):
     constraints = ''
-    recs = set(x[0] for x in get_recursive_definition(None, True, annctx))
-    recs = sorted(recs, key=lambda x: x.name())
+    recs = get_boolean_recursive_definitions()
     # TODO: NOTE: only one universally quantified variable in desired lemma for now
     for i in range(len(recs)):
-        if recs[i].range().name() != 'Bool':
-            continue
         pfp_formula = generate_pfp_constraint(recs[i], lemma_args, model, annctx)
         pfp_formula_sexpr = cvc4_complicant_formula_sexpr(pfp_formula)
         curr_constraint = '(=> (= rswitch {0}) {1})'.format(i, pfp_formula_sexpr)

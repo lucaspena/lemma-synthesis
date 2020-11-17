@@ -230,6 +230,19 @@ def get_recursive_definition(recdef, alldefs=False, annctx=default_annctx):
         return next((definition for definition in recdef_set if recdef == definition[0]), None)
 
 
+def get_boolean_recursive_definitions(annctx=default_annctx):
+    """
+    Returns sorted list of all recursive definitions that return a boolean.
+    Returns [] if no recursive definitions exist in the context.
+    :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
+    :return: [recdefs] such that recdef[i].name() < recdef[j].name() if i < j
+    """
+    recdef_set = annctx.get_recdef_annotation()
+    recs = set(x[0] for x in recdef_set)
+    sorted_recs = sorted(recs, key=lambda x: x.name())
+    bool_recs = [x for x in sorted_recs if x.range().name() == 'Bool']
+    return bool_recs
+
 def get_all_axioms(annctx=default_annctx):
     """
     Returns all axioms tracked by annctx.  
