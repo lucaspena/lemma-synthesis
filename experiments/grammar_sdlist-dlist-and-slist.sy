@@ -10,10 +10,10 @@
                    (and Start Start)
                    (or Start Start)
                    (not Start)
-                   (dlist I) (slist I) (sdlist I)))
+                   (dlst I) (slst I) (sdlst I)))
             (I Int (x nil
-                   (next I)
-                   (prev I))))
+                   (nxt I)
+                   (prv I))))
 
 )
 

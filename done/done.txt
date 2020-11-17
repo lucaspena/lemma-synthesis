@@ -4,3 +4,10 @@
 2. Theorem: slst(x) => (If(x == nil, ret == nil, ret == nxt(x)) => lst(ret))
    Lemma: slst(x) => lst(x)
 
+3. Theorem: sdlst(x) => (If(x == nil, ret == nil, ret == nxt(x)) => dlst(ret))
+   Lemma: sdlst(x) => dlst(x)
+
+4. Theorem: sdlst(x) => (If(x == nil, ret == nil, ret == nxt(x)) => dlst(ret) /\ slst(ret))
+   Lemmas: sdlst(x) => dlst(x)
+           sdlst(x) => slst(x)
+
