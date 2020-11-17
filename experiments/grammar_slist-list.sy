@@ -10,9 +10,9 @@
                    (and Start Start)
                    (or Start Start)
                    (not Start)
-                   (list I) (slist I)))
+                   (lst I) (slst I)))
             (I Int (x nil
-                   (next I)
+                   (nxt I)
                    (key I))))
 
 )
