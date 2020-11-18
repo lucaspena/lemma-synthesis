@@ -12,28 +12,25 @@ import naturalproofs.proveroptions as proveroptions
 from lemsynth.lemsynth_engine import solveProblem
 
 # Declarations
-x, y = Vars('x y', fgsort)
-nil = Const('nil', fgsort)
+x, y, z = Vars('x y z', fgsort)
 nxt = Function('nxt', fgsort, fgsort)
 lseg = RecFunction('lseg', fgsort, fgsort, boolsort)
 cyclic = RecFunction('cyclic', fgsort, boolsort)
-AddRecDefinition(lseg, (x, y) , If(x == y, True,
-                                   If(x == nil, False,
-                                      lseg(nxt(x), y))))
-AddRecDefinition(cyclic, x, And(x != nil, lseg(nxt(x), x)))
-AddAxiom((), nxt(nil) == nil)
+AddRecDefinition(lseg, (x, y), If(x == y, True, lseg(nxt(x), y)))
+AddRecDefinition(cyclic, x, lseg(nxt(x), x))
 
 # AddAxiom(x, Implies(cyclic(x), cyclic(nxt(x))))
-
+AddAxiom((x, y, z), Implies(lseg(x, y), Implies(lseg(y, z), lseg(x, z))))
 # Problem parameters
-goal = Implies(lseg(x, y), Implies(cyclic(x), lseg(y, x)))
+goal = Implies(cyclic(x), Implies( x != nxt(x), cyclic(nxt(x))))
+#Implies(lseg(x, y), Implies(cyclic(x), lseg(y, x)))
 
 # parameters representing the grammar for synth-fun and
 # terms on which finite model is extracted
 # TODO: extract this automatically from grammar_string
 v1, v2 = Vars('v1 v2', fgsort)
-lemma_grammar_args = [v1, v2, nil]
-lemma_grammar_terms = {v1, v2, nxt(v1), nxt(nxt(v1)), nxt(nxt(nxt(v1))), nxt(v2), nxt(nxt(v2)), nil, nxt(nil)}
+lemma_grammar_args = [v1, v2]
+lemma_grammar_terms = {v1, v2, nxt(v1), nxt(nxt(v1)), nxt(nxt(nxt(v1))), nxt(v2), nxt(nxt(v2))}
 
 name = 'cyclic-rev'
 grammar_string = importlib_resources.read_text('experiments', 'grammar_{}.sy'.format(name))

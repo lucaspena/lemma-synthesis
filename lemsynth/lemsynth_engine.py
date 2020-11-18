@@ -75,30 +75,35 @@ def solveProblem(lemma_grammar_args, lemma_grammar_terms, goal, name, grammar_st
     # continuously get valid lemmas until goal has been proven
     while True:
         lemma = getSygusOutput(valid_lemmas, lemma_grammar_args, goal, name, grammar_string, config_params, annctx)
-        if lemma is None:
-            exit('Instance failed.')
 
-        # convert CVC4 versions of membership, insertion to z3py versions
-        SetIntSort = SetSort(IntSort())
-        membership = Function('membership', IntSort(), SetIntSort, BoolSort())
-        insertion = Function('insertion', IntSort(), SetIntSort, SetIntSort)
-        addl_decls = {'member': membership, 'insert': insertion}
-        swap_fcts = {insertion: SetAdd}
-        replace_fcts = {membership: IsMember}
+        read_lembools = config_params['solution']
+        z3py_lemma_body = read_lembools(lemma)
 
-        # testing translation of lemma
-        rhs_lemma = translateLemma(lemma[0], lemma_grammar_args, addl_decls, swap_fcts, replace_fcts, annctx)
-        index = int(lemma[1][-2])
-        recs = get_boolean_recursive_definitions()
-        lhs = recs[index]
-        lhs_arity = lhs.arity()
-        lhs_lemma_args = tuple(lemma_grammar_args[:lhs_arity])
-        lhs_lemma = lhs(lhs_lemma_args)
-        z3py_lemma_body = Implies(lhs_lemma, rhs_lemma)
-        z3py_lemma_params = tuple([arg for arg in lemma_grammar_args if is_var_decl(arg)])
-        z3py_lemma = (z3py_lemma_params, z3py_lemma_body)
+        # if lemma is None:
+        #     exit('Instance failed.')
+        # 
+        # # convert CVC4 versions of membership, insertion to z3py versions
+        # SetIntSort = SetSort(IntSort())
+        # membership = Function('membership', IntSort(), SetIntSort, BoolSort())
+        # insertion = Function('insertion', IntSort(), SetIntSort, SetIntSort)
+        # addl_decls = {'member': membership, 'insert': insertion}
+        # swap_fcts = {insertion: SetAdd}
+        # replace_fcts = {membership: IsMember}
+        # 
+        # # testing translation of lemma
+        # rhs_lemma = translateLemma(lemma[0], lemma_grammar_args, addl_decls, swap_fcts, replace_fcts, annctx)
+        # index = int(lemma[1][-2])
+        # recs = get_boolean_recursive_definitions()
+        # lhs = recs[index]
+        # lhs_arity = lhs.arity()
+        # lhs_lemma_args = tuple(lemma_grammar_args[:lhs_arity])
+        # lhs_lemma = lhs(lhs_lemma_args)
+        # z3py_lemma_body = Implies(lhs_lemma, rhs_lemma)
+        # z3py_lemma_params = tuple([arg for arg in lemma_grammar_args if is_var_decl(arg)])
+        # z3py_lemma = (z3py_lemma_params, z3py_lemma_body)
 
         print('proposed lemma: {}'.format(str(z3py_lemma_body)))
+        z3py_lemma = (tuple(lemma_grammar_args), z3py_lemma_body)
         if z3py_lemma in invalid_lemmas or z3py_lemma in valid_lemmas:
             print('lemma has already been proposed')
             if use_cex_models:

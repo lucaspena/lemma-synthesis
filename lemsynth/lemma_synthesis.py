@@ -136,7 +136,7 @@ def generateFalseConstraints(model, lemma_args, terms, annctx):
             curr_constraint = '(=> {} (not (=> {} {})))\n'.format(rswitch, lhs, rhs)
             curr = curr + curr_constraint
         constraints = constraints + '(and {})\n'.format(curr)
-    out = '(constraint (or {}))'.format(constraints)
+    out = '(assert (or {}))'.format(constraints)
     return out
 
 
@@ -171,7 +171,7 @@ def generateCexConstraints(model, lemma_args, annctx):
         pfp_formula_sexpr = cvc4_complicant_formula_sexpr(pfp_formula)
         curr_constraint = '(=> (= rswitch {0}) {1})'.format(i, pfp_formula_sexpr)
         constraints = constraints + curr_constraint
-    out = '(constraint (and {0}))\n'.format(constraints)
+    out = '(assert (and {0}))\n'.format(constraints)
     return out
 
 
@@ -291,7 +291,9 @@ def getSygusOutput(lemmas, lemma_args, goal, problem_instance_name, grammar_stri
         # true_constraints = generateAllTrueConstraints(true_models, lemma_args, fcts_z3)
         out.write(true_constraints)
         out.write('\n')
-        out.write('(check-synth)')
+        out.write('(check-sat)\n')
+        i = 6
+        out.write('(get-value ({}))\n'.format(' '.join(['b' + str(j+1) for j in range(i)])))
         out.close()
     # Optionally prefetching a bunch of lemmas to check each one rather than iterating through each one.
     # DO NOT use prefetching. Code is not updated to handle current sygus output.
@@ -300,7 +302,7 @@ def getSygusOutput(lemmas, lemma_args, goal, problem_instance_name, grammar_stri
         # Currently hardcoded
         prefetch_count = config_params.get('prefetch_count', 1)
         k_lemmas_file = '{}{}_KLemmas.txt'.format(options.log_file_path, problem_instance_name)
-        sygus_proc = subprocess.Popen(['cvc4', '--lang=sygus2', '--sygus-stream', out_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        sygus_proc = subprocess.Popen(['cvc4', '--lang=smt2', '--produce-models', out_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         prefetch_proc = subprocess.Popen(['python3', 'prefetch_lemmas.py', k_lemmas_file, str(prefetch_count)], stdin=sygus_proc.stdout, stdout=subprocess.PIPE, universal_newlines=True)
         try:
             # Timeout given is given in seconds.
@@ -317,7 +319,7 @@ def getSygusOutput(lemmas, lemma_args, goal, problem_instance_name, grammar_stri
             # List of lemmas returned in string format
             return lemmas
     else:
-        proc = subprocess.Popen(['cvc4', '--lang=sygus2', out_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        proc = subprocess.Popen(['cvc4', '--lang=smt2', out_file, '--produce-models'], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
         cvc4_out, err = proc.communicate()
         if cvc4_out == '':
             print(err)
@@ -326,5 +328,6 @@ def getSygusOutput(lemmas, lemma_args, goal, problem_instance_name, grammar_stri
             print('CVC4 SyGuS returns unknown. Exiting.')
             return None
         else:
-            lemma = str(cvc4_out).split('\n')[1:][:-1]
-            return lemma
+            lembools = str(cvc4_out).split('\n')[1][1:-1].split('(')[1:]
+            lemma_bool_values = [lembool.split(' ')[1].startswith('true') for lembool in lembools]
+            return lemma_bool_values

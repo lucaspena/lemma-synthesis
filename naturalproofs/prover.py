@@ -92,6 +92,9 @@ class NPSolver:
             z3solver.add(instantiations)
             if_sat = _solver_check(z3solver)
             model = z3solver.model() if if_sat else None
+            # print('initial terms: {}'.format(initial_terms))
+            # print('instantiation terms: {}'.format(instantiation_terms))
+            # print('extraction terms: {}'.format(extraction_terms))
             return NPSolution(if_sat=if_sat, model=model, extraction_terms=extraction_terms, 
                               instantiation_terms=instantiation_terms, options=options)
         # Automatic instantiation modes
@@ -103,15 +106,20 @@ class NPSolver:
                 instantiation_terms = initial_terms
                 tracked_terms = get_foreground_terms(tracked_instantiations, annctx=self.annctx)
                 extraction_terms = extraction_terms.union(tracked_terms)
-            z3solver.add(tracked_instantiations)
+            # z3solver.add(tracked_instantiations)
             untracked_instantiations = instantiate(lemmas, extraction_terms)
             if untracked_instantiations != set():
                 instantiation_terms = instantiation_terms.union(extraction_terms)
                 untracked_terms = get_foreground_terms(untracked_instantiations, annctx=self.annctx)
                 extraction_terms = extraction_terms.union(untracked_terms)
             z3solver.add(untracked_instantiations)
+            madhu_instantiations = instantiate(conservative_fo_abstractions, extraction_terms)
+            z3solver.add(madhu_instantiations)
             if_sat = _solver_check(z3solver)
             model = z3solver.model() if if_sat else None
+            # print('initial terms: {}'.format(initial_terms))
+            # print('instantiation terms: {}'.format(instantiation_terms))
+            # print('extraction terms: {}'.format(extraction_terms))
             return NPSolution(if_sat=if_sat, model=model, extraction_terms=extraction_terms, 
                               instantiation_terms=instantiation_terms, options=options)
         # Set up initial values of variables

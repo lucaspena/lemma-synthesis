@@ -1,24 +1,81 @@
 ;; lemma to synthesize
 ;; TODO: must be generated from problem parameters
-(synth-fun lemma ((x Int) (y Int) (k Int) (nil Int)) Bool
-           ((Start Bool) (B1 Bool) (S (Set Int)) (I Int) (Loc Int))
+;(synth-fun lemma ((x Int) (y Int)) Bool
+;           ((Start Bool) (B1 Bool) (B2 Bool) (I Int) (Loc Int))
+;
+;           ((Start Bool (
+;                  ;B1
+;                  (=> B1 B2)))
+;           (B1 Bool
+;                  ((<= I I)
+;                   (bst Loc)))
+;           (I Int (
+;                  (minr Loc)
+;                  (maxr Loc)
+;                  k))
+;           (Loc Int (x y
+;                     (lft x)
+;                     (rght x))))
+;)
 
-           ((Start Bool (B1
-                  (=> B1 B1)))
-           (B1 Bool
-                  ((<= I I)
-                   (not (= x nil))
-                   (member Loc S)
-                   (bst Loc)))
-           (S (Set Int)
-                  ((hbst Loc)))
-           (I Int (
-                  (minr Loc)
-                  (maxr Loc)))
-           (Loc Int (x y)))
+
+;(synth-fun lemma ((x Int) (y Int)) Bool
+;           ((Start Bool) (B1 Bool) (B2 Bool) (B3 Bool) (Loc Int))
+;
+;           ((Start Bool (
+;                  (=> B1 (and B2 B3))))
+;           (B1 Bool
+;                  ((member Loc (hbst Loc))))
+;          (B2 Bool
+;                  ((<= (key Loc) (maxr Loc))))
+;           (B3 Bool
+;                  ((<= (minr Loc) (key Loc))))
+;           (Loc Int (x
+;                     y))
+;
+;))
+
+
+(declare-const b1 Bool)
+(declare-const b2 Bool)
+(declare-const b3 Bool)
+(declare-const b4 Bool)
+(declare-const b5 Bool)
+(declare-const b6 Bool)
+
+(define-fun Loc1 ((x Int) (y Int)) Int
+(ite b1 x y)
+)
+(define-fun Loc2 ((x Int) (y Int)) Int
+(ite b2 x y)
+)
+(define-fun Loc3 ((x Int) (y Int)) Int
+(ite b3 x y)
+)
+(define-fun Loc4 ((x Int) (y Int)) Int
+(ite b4 x y)
+)
+(define-fun Loc5 ((x Int) (y Int)) Int
+(ite b5 x y)
+)
+(define-fun Loc6 ((x Int) (y Int)) Int
+(ite b6 x y)
 )
 
-(synth-fun rswitch () Int
-           ((Start Int))
-           ((Start Int (0)))
-)
+
+(define-fun lemma ((x Int) (y Int)) Bool
+(=> (member (Loc1 x y) (hbst (Loc2 x y))) 
+     (and (<= (key (Loc3 x y)) (maxr (Loc4 x y)))
+          (<= (minr (Loc5 x y)) (key (Loc6 x y)))
+     )
+))
+
+
+;(synth-fun rswitch () Int
+;           ((Start Int))
+;           ((Start Int (0)))
+;)
+
+(define-fun rswitch () Int 0)
+
+;Implies(bst(x), Implies(IsMember(y, hbst(x)), And(key(y) <= maxr(x), minr(x) <= key(y))))
