@@ -37,6 +37,49 @@ AddRecDefinition(hbst, x, If(x == nil, fgsetsort.lattice_bottom,
 AddAxiom((), lft(nil) == nil)
 AddAxiom((), rght(nil) == nil)
 
+# Lemma template
+# (define-fun lemma ((x Int) (y Int)) Bool
+# (=> (member (Loc1 x y) (hbst (Loc2 x y))) 
+#      (and (<= (key (Loc3 x y)) (maxr (Loc4 x y)))
+#           (<= (minr (Loc5 x y)) (key (Loc6 x y)))
+#      )
+# ))
+
+
+# Uncomment this section for blind enumerative synthesis
+# from naturalproofs.prover import NPSolver
+# from naturalproofs.pfp import make_pfp_formula
+# var = Vars('x1 x2 x3 x4 x5 x6 x7', fgsort)
+# var_lemma = Implies(bst(var[0]), Implies(IsMember(var[1], hbst(var[2])), And(key(var[3]) <= maxr(var[4]), minr(var[5]) <= key(var[6]))))
+# args = list(itertools.product([x, y], repeat=7))
+# good_lemmas = set()
+# for i in range(len(args)):
+#     arg = args[i]
+#     actual_lemma = z3.substitute(var_lemma, list(zip(var, list(arg))))
+#     bound_lemma = {((x, y), actual_lemma)}
+#     # Pfp of lemma must be true
+#     pfpsolver = NPSolver()
+#     pfp_lemma = make_pfp_formula(actual_lemma)
+#     pfpsolution = pfpsolver.solve(pfp_lemma)
+#     if pfpsolution.if_sat:
+#         # pfp is not provable
+#         print('n', end='', flush=True)
+#         continue
+#     # Lemma must help prove goal
+#     goalsolver = NPSolver()
+#     goal = Implies(bst(x), Implies(And(x != nil, And(IsMember(y, hbst(lft(x))), IsMember(z, hbst(rght(x))))), key(y) <= key(z)))
+#     npsolution = goalsolver.solve(goal, bound_lemma)
+#     if not npsolution.if_sat:
+#         print('y', end='', flush=True)
+#         good_lemmas.add(actual_lemma)
+#     else:
+#         print('n', end='', flush=True)
+# print('\nLemmas that would have been good:')
+# for good_lemma in good_lemmas:
+#     print(good_lemma)
+
+
+
 # AddAxiom((x,), Implies(bst(x), minr(lft(x)) <= minr(x)))
 # Problem parameters
 # goal = Implies(bst(x), Implies(And(x != nil,
@@ -75,28 +118,3 @@ config_params['solution'] = read_lembools
 
 solveProblem(lemma_grammar_args, lemma_grammar_terms, goal, name, grammar_string, config_params=config_params)
 
-
-
-# (define-fun lemma ((x Int) (y Int)) Bool
-# (=> (member (Loc1 x y) (hbst (Loc2 x y))) 
-#      (and (<= (key (Loc3 x y)) (maxr (Loc4 x y)))
-#           (<= (minr (Loc5 x y)) (key (Loc6 x y)))
-#      )
-# ))
-
-
-# var = Vars('x1 x2 x3 x4 x5 x6 x7', fgsort)
-# var_axiom = Implies(bst(var[0]), Implies(IsMember(var[1], hbst(var[2])), And(key(var[3]) <= maxr(var[4]), minr(var[5]) <= key(var[6]))))
-# args = list(itertools.product([x, y], repeat=7))
-# for i in range(len(args)):
-#     arg = args[i]
-#     actual_axiom = z3.substitute(var_axiom, list(zip(var, list(arg))))
-#     bound_axiom = {((x, y), actual_axiom)}
-#     npsolver = NPSolver()
-#     goal = Implies(bst(x), Implies(And(x != nil, And(IsMember(y, hbst(lft(x))), IsMember(z, hbst(rght(x))))), key(y) <= key(z)))
-#     npsolution = npsolver.solve(goal, bound_axiom)
-# 
-#     if not npsolution.if_sat:
-#         print('s', end='')
-#     else:
-#         print('n', end='')
