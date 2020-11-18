@@ -15,6 +15,7 @@ New tool
 - tests/lseg-list.py: when adding (nxt x) to grammar, lemma is reproposed --- solved
 - tests/dlseg-prev.py: running forever
 - tests/lseg-list-keys.py: ran for 35 mins, only proposed one lemma involving sets
+- tests/bst-minimal.py: sygus (fairly quickly) returns unknown, meaning grammar is exhausted
 
 
 Things to talk about the tool in the paper:
