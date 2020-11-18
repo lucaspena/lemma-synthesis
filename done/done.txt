@@ -53,12 +53,20 @@
       if (v2 != c) {v2 := n(v2)}
     endwhile
     {n(v2) = nil \/ v2 = c}
-    Lemma: reach(x) => v2(x) == v1(x)
+    Lemma: reach(x) => n(v2(x)) == v1(x) \/ v2(x) == c)
 
-11. Theorem: lseg(x, y) => (If(x == nil, ret == nil, ret == nxt(x)) => (y == nil => lst(ret)))
+11. {v1 = n(v2)}
+    while (v1 != nil) do
+      v1 := n(v1);
+      v2 := n(v2)
+    endwhile
+    {n(v2) = nil}
+    Lemma: reach(x) => n(v2(x)) == v1(x)
+
+12. Theorem: lseg(x, y) => (If(x == nil, ret == nil, ret == nxt(x)) => (y == nil => lst(ret)))
     Lemma: lseg(x, y) => (list(y) => list(n(x)))
 
-12. Theorem: lseg(x, y) => (list(y) /\ x != c /\ next(y) == z => (lseg(x, z) /\ list(z)))
+13. Theorem: lseg(x, y) => (list(y) /\ x != c /\ next(y) == z => (lseg(x, z) /\ list(z)))
     Lemmas: list(x) => lseg(y, y) -- not needed
             lseg(x, y) => (lseg(y, z) => lseg(x, z))
     Notes: restricted grammar
