@@ -84,9 +84,11 @@ class NPSolver:
         # Instantiate and check for provability according to options
         # Handle manual instantiation mode first
         if options.instantiation_mode == proveroptions.manual_instantiation:
-            instantiation_terms = options.terms_to_instantiate
-            instantiations = instantiate(fo_abstractions, instantiation_terms)
-            extraction_terms = extraction_terms.union(get_foreground_terms(instantiations, annctx=self.annctx))
+            terms_to_instantiate = options.terms_to_instantiate
+            instantiations = instantiate(fo_abstractions, terms_to_instantiate)
+            if instantiations != set():
+                instantiation_terms = terms_to_instantiate
+                extraction_terms = extraction_terms.union(get_foreground_terms(instantiations, annctx=self.annctx))
             z3solver.add(instantiations)
             if_sat = _solver_check(z3solver)
             model = z3solver.model() if if_sat else None
@@ -97,17 +99,21 @@ class NPSolver:
         if options.instantiation_mode == proveroptions.depth_one_untracked_lemma_instantiation:
             conservative_fo_abstractions = axioms | recdef_unfoldings
             tracked_instantiations = instantiate(conservative_fo_abstractions, initial_terms)
-            tracked_terms = get_foreground_terms(tracked_instantiations, annctx=self.annctx)
-            extraction_terms = extraction_terms.union(tracked_terms)
+            if tracked_instantiations != set():
+                instantiation_terms = initial_terms
+                tracked_terms = get_foreground_terms(tracked_instantiations, annctx=self.annctx)
+                extraction_terms = extraction_terms.union(tracked_terms)
             z3solver.add(tracked_instantiations)
-            untracked_instantiations = instantiate(lemmas, tracked_terms)
-            untracked_terms = get_foreground_terms(untracked_instantiations, annctx=self.annctx)
-            extraction_terms = extraction_terms.union(untracked_terms)
+            untracked_instantiations = instantiate(lemmas, extraction_terms)
+            if untracked_instantiations != set():
+                instantiation_terms = instantiation_terms.union(extraction_terms)
+                untracked_terms = get_foreground_terms(untracked_instantiations, annctx=self.annctx)
+                extraction_terms = extraction_terms.union(untracked_terms)
             z3solver.add(untracked_instantiations)
             if_sat = _solver_check(z3solver)
             model = z3solver.model() if if_sat else None
             return NPSolution(if_sat=if_sat, model=model, extraction_terms=extraction_terms, 
-                              instantiation_terms=tracked_terms, options=options)
+                              instantiation_terms=instantiation_terms, options=options)
         # Set up initial values of variables
         depth_counter = 0
         # Keep track of formulae produced by instantiation
@@ -128,6 +134,9 @@ class NPSolver:
                 #  are done in every round. But optimisation is difficult in the presence of multiple arities.
                 instantiation_terms = extraction_terms
                 instantiations = instantiate(fo_abstractions, instantiation_terms)
+                if instantiations == set():
+                    instantiation_terms = set()
+                    break
                 depth_counter = depth_counter + 1
                 new_terms = get_foreground_terms(instantiations, annctx=self.annctx)
                 extraction_terms = extraction_terms.union(new_terms)

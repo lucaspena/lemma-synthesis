@@ -1,7 +1,7 @@
 # This module defines the API to declare variables and functions in the UCT fragment.
 
 import z3
-from naturalproofs.uct import UCTSort, is_expr_fg_sort
+from naturalproofs.uct import UCTSort, is_expr_fg_sort, boolsort
 from naturalproofs.AnnotatedContext import AnnotatedContext, default_annctx
 
 
@@ -234,14 +234,16 @@ def get_boolean_recursive_definitions(annctx=default_annctx):
     """
     Returns sorted list of all recursive definitions that return a boolean.
     Returns [] if no recursive definitions exist in the context.
+    Recursive definitions are sorted by .name() attribute
     :param annctx: naturalproofs.AnnotatedContext.AnnotatedContext
-    :return: [recdefs] such that recdef[i].name() < recdef[j].name() if i < j
+    :return: list of z3.FuncDeclRef
     """
     recdef_set = annctx.get_recdef_annotation()
     recs = set(x[0] for x in recdef_set)
     sorted_recs = sorted(recs, key=lambda x: x.name())
-    bool_recs = [x for x in sorted_recs if x.range().name() == 'Bool']
+    bool_recs = [x for x in sorted_recs if get_uct_signature(x)[-1] == boolsort]
     return bool_recs
+
 
 def get_all_axioms(annctx=default_annctx):
     """

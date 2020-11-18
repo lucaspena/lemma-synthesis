@@ -184,25 +184,38 @@ def generateAllCexConstraints(models, lemma_args, annctx):
 
 
 # write output to a file that can be parsed by CVC4 SyGuS
-def getSygusOutput(lemmas, lemma_args, vc, problem_instance_name, grammar_string, config_params, annctx):
+def getSygusOutput(lemmas, lemma_args, goal, problem_instance_name, grammar_string, config_params, annctx):
     # Make log folder if it does not exist already
     os.makedirs(options.log_file_path, exist_ok=True)
 
     out_file = '{}/out_{}.sy'.format(options.log_file_path, problem_instance_name)
 
-    vcsolver = NPSolver()
-    vcsolver.options.instantiation_mode = proveroptions.depth_one_untracked_lemma_instantiation
-    vc_npsolution = vcsolver.solve(vc, lemmas)
-    if not vc_npsolution.if_sat:
+    goal_fo_solver = NPSolver()
+    goal_fo_solver.options.instantiation_mode = proveroptions.depth_one_untracked_lemma_instantiation
+    goal_npsolution = goal_fo_solver.solve(goal, lemmas)
+    if not goal_npsolution.if_sat:
         # Lemmas generated up to this point are useful. Exit.
         print('VC has been proven. Lemmas used to prove original vc:')
         for lemma in lemmas:
             print(lemma[1])
         exit(0)
 
-    vc_extraction_terms = vc_npsolution.extraction_terms
-    vc_instantiation_terms = vc_npsolution.instantiation_terms
-    false_finitemodel = FiniteModel(vc_npsolution.model, vc_extraction_terms, annctx=annctx)
+    goal_extraction_terms = config_params.get('goal_extraction_terms', None)
+    if goal_extraction_terms is not None:
+        if options.debug:
+            # Goal extraction terms must be a superset of actual extraction terms
+            # Otherwise finite model extraction will not work
+            remaining_terms = goal_npsolution.extraction_terms - goal_extraction_terms
+            if remaining_terms != set():
+                raise ValueError('Lemma terms is too small. '
+                                 'Terms remaining after instantiation: {}'.format(remaining_terms))
+        else:
+            warnings.warn('The set of terms in the proof of the goal is likely to vary. '
+                          'Tool may produce false negatives.')
+            goal_extraction_terms = goal_npsolution.extraction_terms
+    goal_instantiation_terms = config_params.get('goal_npsolution_instantiation_terms', goal_npsolution.instantiation_terms)
+
+    false_finitemodel = FiniteModel(goal_npsolution.model, goal_extraction_terms, annctx=annctx)
 
     use_cex_models = config_params.get('use_cex_models', True)
     cex_models = config_params.get('cex_models', [])
@@ -269,7 +282,7 @@ def getSygusOutput(lemmas, lemma_args, vc, problem_instance_name, grammar_string
             out.write('\n')
         out.write('\n')
         out.write(';; constraints from false model\n')
-        false_constraints = generateFalseConstraints(false_finitemodel, lemma_args, vc_instantiation_terms, annctx)
+        false_constraints = generateFalseConstraints(false_finitemodel, lemma_args, goal_instantiation_terms, annctx)
         out.write(false_constraints)
         out.write('\n')
         out.write('\n')

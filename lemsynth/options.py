@@ -14,3 +14,4 @@ exclude_set_type_definitions_switch = 'off'
 log_file_path = os.path.abspath(importlib_resources.files('lemsynth')/'../logs')
 
 debug = True
+aggressive_debug = False
