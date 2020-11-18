@@ -1,19 +1,15 @@
 ;; lemma to synthesize
 ;; TODO: must be generated from problem parameters
 
-(synth-fun lemma ((x Int) (nil Int) (y Int) (yp Int)) Bool
+(synth-fun lemma ((x Int) (y Int) (z Int) (nil Int)) Bool
 
            ((Start Bool) (I Int))
 
            ((Start Bool
                   ((=> Start Start)
-                   (and Start Start)
-                   ;(or Start Start)
-                   (not Start)
-                   (= I I)
-                   (list I) (lsegy I) (lsegyp I)
+                   (lseg I I)
                    ))
-            (I Int (x nil y yp
+            (I Int (x y z
                    )))
 
 )
@@ -22,6 +18,6 @@
 
            ((Start Int))
 
-           ((Start Int (0 1 2)))
+           ((Start Int (0 1)))
 
 )

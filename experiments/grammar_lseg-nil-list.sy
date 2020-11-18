@@ -1,27 +1,26 @@
 ;; lemma to synthesize
 ;; TODO: must be generated from problem parameters
 
-(synth-fun lemma ((x Int) (nil Int) (y Int)) Bool
+(synth-fun lemma ((x Int) (y Int) (nil Int)) Bool
 
-           ((Start Bool) (I Int))
+           ((Start Bool) (BLeaf Bool) (Loc Int) (LocLeaf Int))
 
-           ((Start Bool
-                  ((=> Start Start)
-                   (and Start Start)
-                   (or Start Start)
-                   (not Start)
-                   (= I I)
-                   (list I) (lsegy I)))
-            (I Int (x y nil
-                   (next I)
-                   )))
+           ((Start Bool (BLeaf
+                   (=> BLeaf BLeaf)
+                   (= BLeaf BLeaf)))
+
+           (BLeaf Bool (
+                  (lst Loc)
+                  (lseg Loc Loc)))
+            (Loc Int (LocLeaf))
+            (LocLeaf Int (x y nil
+                         (nxt x))))
 
 )
 
 (synth-fun rswitch () Int
 
            ((Start Int))
-
            ((Start Int (0 1)))
 
 )
