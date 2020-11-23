@@ -109,7 +109,9 @@ class NPSolver:
                 instantiation_terms = instantiation_terms.union(extraction_terms)
                 untracked_terms = get_foreground_terms(untracked_instantiations, annctx=self.annctx)
                 extraction_terms = extraction_terms.union(untracked_terms)
+            other_instantiations = instantiate(conservative_fo_abstractions, extraction_terms)
             z3solver.add(untracked_instantiations)
+            z3solver.add(other_instantiations)
             if_sat = _solver_check(z3solver)
             model = z3solver.model() if if_sat else None
             return NPSolution(if_sat=if_sat, model=model, extraction_terms=extraction_terms, 
