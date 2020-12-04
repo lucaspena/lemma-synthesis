@@ -11,32 +11,39 @@ import naturalproofs.proveroptions as proveroptions
 
 from lemsynth.lemsynth_engine import solveProblem
 
-x, y, z, z1 = Vars('x y z z1', fgsort)
+x, y, tx = Vars('x y tx', fgsort)
+hx = Var('hx', intsort)
 
 # ADT definition of lists
 nil = Const('nil', fgsort)
-cons = Function('cons', fgsort, fgsort)
+cons = Function('cons', intsort, fgsort, fgsort)
+
+# projections for cons
+head = Function('head', fgsort, intsort)
 tail = Function('tail', fgsort, fgsort)
 
-append = RecFunction('append', fgsort, fgsort, fgsort, boolsort)
+# rec defs
+append = RecFunction('append', fgsort, fgsort, fgsort)
 length = RecFunction('length', fgsort, intsort)
-
-AddRecDefinition(append, (x, y, z), If(x == nil, z == y,
-                                       Exists(z1, z == cons(append(tail(x), y, z1)))))
+AddRecDefinition(append, (x, y), If(x == nil, y, cons(head(x), append(tail(x), y))))
 AddRecDefinition(length, x, If(x == nil, 0, length(tail(x)) + 1))
 
-AddAxiom((), tail(nil) == nil)
-# need axiom relating tail and cons
+# axioms
+AddAxiom(x, head(cons(hx, x)) == hx)
+AddAxiom(x, tail(cons(hx, x)) == x)
+AddAxiom(x, cons(hx, x) != nil)
 
 # len(append(x, y)) = len(x) + len(y)
-goal = Implies(append(x, y, z), length(z) == length(x) + length(y))
+goal = length(append(x, y)) == length(x) + length(y)
 
-name = 'append-elts'
+# adt pfp of goal
+base_case = length(append(nil, y)) == length(nil) + length(y)
+induction_hypothesis = length(append(tx, y)) == length(tx) + length(y)
+induction_step = length(append(cons(hx, tx), y)) == length(cons(hx, tx)) + length(y)
 
-# leave all things related to grammar as empty, just using natural proof engine
-lemma_grammar_args = []
-lemma_grammar_terms = {}
+pfp_goal = Implies(induction_hypothesis, induction_step)
 
-grammar_string = ''
+np_solver = NPSolver()
+solution = np_solver.solve(pfp_goal)
+print(solution.if_sat)
 
-solveProblem(lemma_grammar_args, lemma_grammar_terms, goal, name, grammar_string)
