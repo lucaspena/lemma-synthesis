@@ -41,7 +41,7 @@ base_case = length(append(nil, y)) == length(nil) + length(y)
 induction_hypothesis = length(append(tx, y)) == length(tx) + length(y)
 induction_step = length(append(cons(hx, tx), y)) == length(cons(hx, tx)) + length(y)
 
-pfp_goal = Implies(induction_hypothesis, induction_step)
+pfp_goal = And(base_case, Implies(induction_hypothesis, induction_step))
 
 np_solver = NPSolver()
 solution = np_solver.solve(pfp_goal)
