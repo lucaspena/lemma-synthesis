@@ -45,5 +45,6 @@ pfp_goal = And(base_case, Implies(induction_hypothesis, induction_step))
 
 np_solver = NPSolver()
 solution = np_solver.solve(pfp_goal)
-print(solution.if_sat)
 
+if not solution.if_sat:
+    print('goal is valid')
