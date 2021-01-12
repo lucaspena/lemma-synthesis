@@ -14,4 +14,9 @@
             (I1 Int (x nil)))
 )
 
-(define-fun rswitch () Int 0)
+(synth-fun rswitch () Int
+
+           ((Start Int))
+           ((Start Int (0 1)))
+
+)
