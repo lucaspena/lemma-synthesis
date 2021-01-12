@@ -319,7 +319,7 @@ def getSygusOutput(lemmas, lemma_args, goal, problem_instance_name, grammar_stri
             # List of lemmas returned in string format
             return lemmas
     else:
-        if options.constraint_based_solver == 'off':
+        if options.constraint_based_solver == 'on':
             grammars, smt_file = replace_grammars(out_file)
             proc = subprocess.Popen('cvc4 {} -m --lang=smt2'.format(smt_file), shell=True,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
