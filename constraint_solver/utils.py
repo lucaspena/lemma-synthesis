@@ -9,7 +9,7 @@ def find_replaced(line, symbol):
     m = len(symbol)
     repl = []
     for w in [w.start() for w in re.finditer(symbol, line)
-              if line[w.start()+m].isdigit() or line[w.start()+m] == '_']:
+              if line[w.start()+m] == '_']:
         num = ''
         s = w + m
         while s < len(line) and (line[s].isdigit() or line[s] == '_'):

@@ -11,6 +11,7 @@ class grammar():
         self.line_start = 0
         self.line_end = 0
         self.lemma_name = ''
+        self.type = ''
         self.arguments = {}
         self.symbols = {}
         self.replacements = []
@@ -68,7 +69,11 @@ class grammar():
                         rules = False
                         break
                 elif '(synth-fun ' == line[:11]:
-                    self.lemma_name = line.split(' ')[1]
+                    line_split = line.split(' ')
+                    self.lemma_name = line_split[1]
+                    if line_split[-1][-1:] == '\n':
+                        line_split[-1] = line_split[-1][:-1]
+                    self.type = line_split[-1]
                     count -= 1
                     if count == 0:
                         self.line_start = c
@@ -138,9 +143,8 @@ class grammar():
                 init = self.counts_init[symbol]
             for f in range(init, self.counts[symbol]):
                 self.functions[symbol].append(
-                    '(define-fun {}{} ({}) {}\n{}\n)'.format(
-                        symbol,
-                        f+1 if not symbol[-1].isdigit() else ''.join(['_',str(f+1)]),
+                    '(define-fun {}_{} ({}) {}\n{}\n)'.format(
+                        symbol, f+1,
                         ' '.join(['({} {})'.format(arg, self.arguments[arg])
                                   for arg in self.arguments
                                   if arg in self.rules[symbol]['parameters']]),
@@ -191,7 +195,7 @@ class grammar():
         elif n > 1:
             self.counts[symbol] += 1
             replacement = ''.join([
-                '(', symbol, '_' if symbol[-1].isdigit() else '',
+                '(', symbol, '_',
                 str(self.counts[symbol]), ' ',
                 ' '.join([arg for arg in self.arguments
                           if arg in self.rules[symbol]['parameters']]),
@@ -247,7 +251,7 @@ class grammar():
         return line
     
     def func_name(self, symbol, num):
-        func = ''.join([symbol, '_' if symbol[-1].isdigit() else '', str(num)])
+        func = ''.join([symbol, '_', str(num)])
         name =  ''.join(['(', func, ' ', ' '.join([arg for arg in self.arguments
                                                    if arg in self.rules[symbol]['parameters']]),
                          ')'])
@@ -293,26 +297,28 @@ class grammar():
             for func in self.functions[symbol]:
                 print(func)
     
-    def print_lemma(self, model=None, ind=True):
+    def get_lemma(self, model=None, ind=True):
         if model:
             lem = self.apply_model(model)
         else:
             lem = self.lemma
         if ind:
             lem = indent(lem)
-        print('(define-fun {} ({}) Bool\n{})'.format(
+        out_lem = '(define-fun {} ({}) {}\n{})'.format(
             self.lemma_name,
             ' '.join(['({} {})'.format(arg, self.arguments[arg])
                       for arg in self.arguments]),
+            self.type,
             lem,
-        ))
+        )
+        return out_lem
     
     def print_output(self):
         self.print_bools()
         print('')
         self.print_functions()
         print('')
-        self.print_lemma()
+        print(self.get_lemma())
         
     def return_output(self):
         out = ['(declare-const b{} Bool)'.format(b+1)
@@ -320,10 +326,11 @@ class grammar():
         out.extend([' '.join(func.split('\n'))
                     for symbol in sorted(self.symbols, key=lambda s: self.rules[s]['height'])
                     for func in self.functions[symbol]])
-        out.append('(define-fun {} ({}) Bool {})'.format(
+        out.append('(define-fun {} ({}) {} {})'.format(
             self.lemma_name,
             ' '.join(['({} {})'.format(arg, self.arguments[arg])
                       for arg in self.arguments]),
+            self.type,
             ' '.join(self.lemma.split('\n')),
         ))
         return out
@@ -341,10 +348,11 @@ class grammar():
                     file.write(func)
                     file.write('\n')
             file.write('\n')
-            file.write('(define-fun {} ({}) Bool\n{})'.format(
+            file.write('(define-fun {} ({}) {}\n{})'.format(
                 self.lemma_name,
                 ' '.join(['({} {})'.format(arg, self.arguments[arg])
                           for arg in self.arguments]),
+                self.type,
                 indent(self.lemma),
             ))
     
@@ -366,10 +374,11 @@ class grammar():
                                 file.write(func)
                                 file.write('\n')
                         file.write('\n')
-                        file.write('(define-fun {} ({}) Bool\n{})'.format(
+                        file.write('(define-fun {} ({}) {}\n{})'.format(
                             self.lemma_name,
                             ' '.join(['({} {})'.format(arg, self.arguments[arg])
                                       for arg in self.arguments]),
+                            self.type,
                             indent(self.lemma),
                         ))
                         file.write('\n')
@@ -398,15 +407,14 @@ def replace_grammars(filename, repfile=None, mode='w'):
     if len(grammars) == 0:
         return
     if not repfile:
-        index = filename.rfind('/')
-        repfile = filename[:index] + '/output' + filename[index:-4] + '_repl.txt'
+        repfile = get_outfile_name(filename)
     with open(repfile, mode) as file:
         with open(filename) as infile:
             i = 0
             G = grammars[i]
             for c,line in enumerate(infile):
                 if c < G.line_start:
-                    file.write(line)
+                    file.write(convert_to_smt(line))
                 elif c == G.line_start:
                     for b in range(G.counts_init['bools'], G.bools):
                         file.write('(declare-const b{} Bool)\n'.format(b+1))
@@ -416,10 +424,11 @@ def replace_grammars(filename, repfile=None, mode='w'):
                             file.write(func)
                             file.write('\n')
                     file.write('\n')
-                    file.write('(define-fun {} ({}) Bool\n{})'.format(
+                    file.write('(define-fun {} ({}) {}\n{})'.format(
                         G.lemma_name,
                         ' '.join(['({} {})'.format(arg, G.arguments[arg])
                                   for arg in G.arguments]),
+                        G.type,
                         indent(G.lemma),
                     ))
                     file.write('\n')
@@ -429,7 +438,8 @@ def replace_grammars(filename, repfile=None, mode='w'):
                     i += 1
                     if i < len(grammars):
                         G = grammars[i]
-                    file.write(line)
+                    file.write(convert_to_smt(line))
+        file.write('\n(get-model)')
     return grammars, repfile
 
 def operate(filename, p=True):
@@ -455,8 +465,27 @@ def operate(filename, p=True):
             if p:
                 print('sat')
                 for G in grammars:
-                    print('\nsynth {}:\n{}'.format(G.lemma_name, G.lemma))
-                    print('model {}:\n{}'.format(G.lemma_name, G.apply_model(model)))
+                    print(G.lemma_name)
+                    print(G.apply_model(model))
         elif p:
             print('unsat')
-    
+
+def convert_to_smt(line):
+    index = len(line)
+    if ';' in line:
+        index = line.find(';')
+    if 'constraint' in line[:index]:
+        line = line[:index].replace('constraint','assert') + line[index:]
+    if 'check-synth' in line[:index]:
+        line = line[:index].replace('check-synth','check-sat') + line[index:]
+    return line
+
+def get_outfile_name(infile_name):
+    dot_index = infile_name.rfind('.')
+    slash_index = infile_name.rfind('/')
+    if slash_index == -1:
+        slash_index = 0
+        infile_name = '/' + infile_name
+    outfile_name = ''.join([infile_name[:slash_index],'/output',
+                            infile_name[slash_index:dot_index],'.smt'])
+    return outfile_name

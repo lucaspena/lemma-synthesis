@@ -319,23 +319,11 @@ def getSygusOutput(lemmas, lemma_args, goal, problem_instance_name, grammar_stri
             # List of lemmas returned in string format
             return lemmas
     else:
-        if options.constraint_based_solver == 'on':
+        if options.constraint_based_solver == 'off':
             grammars, smt_file = replace_grammars(out_file)
-            # print(grammars)
-            # print(smt_file)
-            # Hack around constraint-based solver not replacing constraint with assert
-            with open(smt_file, 'r') as f:
-                smt_file_string = f.read()
-                smt_file_string = smt_file_string.replace('constraint', 'assert')
-                smt_file_string = smt_file_string.replace('check-synth', 'check-sat')
-                # print(smt_file_string)
-            with open(smt_file,'w') as f:
-                f.write(smt_file_string.replace('constraint', 'assert'))
-            # End of hack
             proc = subprocess.Popen('cvc4 {} -m --lang=smt2'.format(smt_file), shell=True,
                             stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             cvc4_out, err = proc.communicate()
-            print(cvc4_out)
             if cvc4_out == '':
                 print(err)
                 return None
@@ -347,12 +335,16 @@ def getSygusOutput(lemmas, lemma_args, goal, problem_instance_name, grammar_stri
                         if 'define-fun' in line:
                             line = line.split(' ')
                             model[line[1]] = line[4][:-1] == 'true'
-                    print('sat\n')
+                    lemma = []
                     for G in grammars:
-                        G.print_lemma(model=model, ind=True)
-                        print('')
+                        curr = G.get_lemma(model=model, ind=True)
+                        curr = curr.replace('\n', ' ')
+                        curr = curr[:-2] + ')'
+                        lemma += [ curr ]
+                    return lemma
                 else:
                     print('unsat')
+                    return None
         else:
             proc = subprocess.Popen(['cvc4', '--lang=sygus2', out_file], stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             cvc4_out, err = proc.communicate()
